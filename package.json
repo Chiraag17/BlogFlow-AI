@@ -20,11 +20,19 @@
     "@langchain/langgraph": "^1.4.19",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.5",
     "@neondatabase/serverless": "^1.2.0",
-    "@prisma/adapter-neon": "^7.10.0",
+    "@prisma/adapter-neon": "^6.19.3",
     "@prisma/client": "^6.19.3",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
     "@types/pg": "^8.23.1",
     "bcryptjs": "^2.4.3",
+    "caniuse-lite": "^1.0.30001816",
+    "classnames": "^2.5.1",
+    "effect": "3.21.0",
+    "fast-check": "^4.10.2",
     "framer-motion": "^14.0.0",
+    "immer": "^11.1.21",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
     "lucide-react": "^1.51.0",
     "next": "16.3.8",
     "next-auth": "^4.24.15",
@@ -33,6 +41,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
+    "three": "^0.186.1",
     "uuid": "^14.0.2",
     "ws": "^8.22.0",
     "zod": "^4.6.5",
@@ -51,5 +60,8 @@
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^16.3.8"
   }
 }

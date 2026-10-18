@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Explicitly set the Turbopack workspace root
   turbopack: {
-    root: __dirname,
+    root: process.cwd(),
   },
   // add other Next.js options as needed
 };

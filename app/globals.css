@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
@@ -9,19 +9,26 @@
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root {
   /* Light theme colors */
-  --color-bg: #F8F7F3;               /* Warm ivory background */
-  --color-bg-subtle: #F8F7F3;          /* Subtle background for surfaces */
-  --color-surface: #FFFFFF;           /* Primary surface */
-  --color-text: #20211F;              /* Near‑black charcoal */
-  --color-text-secondary: #73756F;   /* Muted gray */
-  --color-border: #E7E5DE;           /* Subtle warm gray */
+  --color-bg: #F6F3EC;               /* Paper background */
+  --color-bg-subtle: #F6F3EC;          /* Subtle background for surfaces */
+  --color-surface: #FFFFFF;           /* White canvas */
+  --color-text: #222620;              /* Main text */
+  --color-text-secondary: #706F67;   /* Secondary text */
+  --color-border: #E4E0D7;           /* Subtle border */
 
-  --color-primary: #315C46;          /* Deep forest green */
-  --color-primary-hover: #274736;
-  --color-primary-light: #DCE8DC;    /* Muted sage background */
+  /* Primary palette */
+  --color-primary: #244737;          /* Primary forest green */
+  --color-primary-hover: #1e382c;    /* Darker hover */
+  --color-primary-light: #DCE8DC;    /* Light background for primary elements */
 
-  --color-accent: #C18A45;           /* Warm amber for highlights */
-  --color-accent-light: #FDEED2;
+  /* Accent palette */
+  --color-accent: #C49A55;           /* Muted brass accent */
+  --color-accent-light: #FDEED2;     /* Light accent */
+
+  /* Status colors */
+  --color-success: #E5EFE5;          /* Soft success background */
+  --color-warning: #F6EBD5;          /* Soft warning background */
+  --color-error: #F5E4E1;            /* Soft error background */
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
@@ -45,6 +52,43 @@
   --transition-base: 200ms cubic-bezier(0.4,0,0.2,1);
   --transition-slow: 300ms cubic-bezier(0.4,0,0.2,1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Dark mode overrides via .dark class */
 .dark {

@@ -1,8 +1,27 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Sun, Moon, ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { NavBar } from '../components/ui/NavBar';
+import { Footer } from '../components/ui/Footer';
+import { Card } from '../components/ui/Card';
+import type { DeskStage } from '@/components/3d/FloatingEditorialDesk';
+
+// Dynamic import, client-only
+const DynamicDesk = dynamic(() => import('@/components/3d/FloatingEditorialDesk'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[480px] max-w-md mx-auto flex items-center justify-center bg-[var(--color-bg-subtle)] rounded-lg">
+      <img
+        src="/fallback_floating_desk.jpg"
+        alt="Editorial desk preview"
+        className="w-48 h-48 object-cover rounded shadow-sm opacity-80"
+      />
+    </div>
+  ),
+});
 
 // Reusable component for workflow stages
 function WorkflowStage({ number, title, description, children }: {
@@ -45,13 +64,15 @@ function EditorialPreview() {
         <span>&#x2705; SEO ready</span>
       </div>
       {/* Approval status */}
-      <div className="text-xs text-[var(--color-accent)] font-medium">AWAITING REVIEW</div>
+      
     </div>
   );
 }
 
 export default function LandingPage() {
   const [isDark, setIsDark] = useState(false);
+  // Workflow stage for the 3D desk (research → draft → review → publish)
+  const [stage, setStage] = useState<DeskStage>('research');
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
     const prefers = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -60,39 +81,30 @@ export default function LandingPage() {
     const html = document.documentElement;
     if (init) html.classList.add('dark'); else html.classList.remove('dark');
   }, []);
+
   useEffect(() => {
     const html = document.documentElement;
     if (isDark) html.classList.add('dark'); else html.classList.remove('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
+  // Update the stage based on scroll position to drive the 3D scene
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      if (y < 400) setStage('research');
+      else if (y < 800) setStage('draft');
+      else if (y < 1200) setStage('review');
+      else setStage('publish');
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+
   return (
     <div className="font-sans text-[var(--color-text)] bg-[var(--color-bg)] min-h-screen flex flex-col">
-      {/* Navigation */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-        <Link href="/" className="text-xl font-serif text-[var(--color-primary)]">BlogFlow AI</Link>
-        <nav className="hidden md:flex gap-6 text-sm">
-          <Link href="#product" className="hover:text-[var(--color-primary)]">Product</Link>
-          <Link href="#workflow" className="hover:text-[var(--color-primary)]">Workflow</Link>
-          <Link href="#features" className="hover:text-[var(--color-primary)]">Features</Link>
-          <Link href="#creators" className="hover:text-[var(--color-primary)]">For creators</Link>
-        </nav>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]">Sign in</Link>
-          <Link href="/generator" className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-surface)] rounded-md hover:bg-[var(--color-primary-hover)] flex items-center">
-            Start creating
-            <ArrowRight className="ml-1" size={16} />
-          </Link>
-          <button
-            onClick={() => setIsDark(prev => !prev)}
-            className="p-2 rounded-md bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-bg-subtle)] transition-colors"
-            aria-label="Toggle light/dark mode"
-          >
-            <Sun size={18} className={isDark ? 'hidden' : ''} style={{ color: 'var(--color-text)' }} />
-            <Moon size={18} className={isDark ? '' : 'hidden'} style={{ color: 'var(--color-text)' }} />
-          </button>
-        </div>
-      </header>
+      <NavBar />
 
       {/* Hero */}
       <section id="hero" className="grid md:grid-cols-2 gap-8 px-6 py-16 max-w-7xl mx-auto items-center">
@@ -117,7 +129,8 @@ export default function LandingPage() {
           <p className="text-sm text-[var(--color-text-secondary)]">Human review stays in the loop.</p>
         </div>
         <div className="flex justify-center md:justify-end">
-          <EditorialPreview />
+          {/* Lazy-loaded 3D floating editorial desk */}
+          <DynamicDesk currentStage={stage} interactive={true} />
         </div>
       </section>
 
@@ -209,44 +222,22 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="px-6 py-12 bg-[var(--color-primary)] text-[var(--color-surface)]">
-        <div className="max-w-3xl mx-auto text-center space-y-4">
-          <h2 className="text-2xl font-serif">Your next article starts with an idea.</h2>
-          <p className="text-sm">Bring your research, drafting, review, and publishing workflow together in BlogFlow AI.</p>
-          <div className="flex justify-center gap-4 mt-4">
-            <Link href="/generator" className="px-5 py-2 bg-[var(--color-accent)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-accent-light)]">
-              Start creating
-            </Link>
-            <a href="#workflow" className="px-5 py-2 bg-[var(--color-surface)] text-[var(--color-primary)] rounded-md hover:bg-[var(--color-bg-subtle)]">
-              See how it works
-            </a>
-          </div>
-        </div>
-      </section>
+      <Card className="px-6 py-12 bg-[var(--color-primary)] text-[var(--color-surface)]">
+  <div className="max-w-3xl mx-auto text-center space-y-4">
+    <h2 className="text-2xl font-serif">Your next article starts with an idea.</h2>
+    <p className="text-sm">Bring your research, drafting, review, and publishing workflow together in BlogFlow AI.</p>
+    <div className="flex justify-center gap-4 mt-4">
+      <Link href="/generator" className="px-5 py-2 bg-[var(--color-accent)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-accent-light)]">
+        Start creating
+      </Link>
+      <a href="#workflow" className="px-5 py-2 bg-[var(--color-surface)] text-[var(--color-primary)] rounded-md hover:bg-[var(--color-bg-subtle)]">
+        See how it works
+      </a>
+    </div>
+  </div>
+</Card>
 
-      {/* Footer */}
-      <footer className="px-6 py-8 border-t border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg)]">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="font-serif text-[var(--color-text)] mb-2">BlogFlow AI</h3>
-            <p>AI-assisted content research, drafting and publishing in one editorial studio.</p>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2 text-[var(--color-text)]">Product</h4>
-            <ul className="space-y-1">
-              <li><a href="#product" className="hover:text-[var(--color-primary)]">Product</a></li>
-              <li><a href="#workflow" className="hover:text-[var(--color-primary)]">Workflow</a></li>
-              <li><a href="#features" className="hover:text-[var(--color-primary)]">Features</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2 text-[var(--color-text)]">Account</h4>
-            <ul className="space-y-1">
-              <li><Link href="/login" className="hover:text-[var(--color-primary)]">Sign in</Link></li>
-            </ul>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

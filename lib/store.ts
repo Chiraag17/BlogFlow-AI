@@ -61,7 +61,7 @@ interface AppState {
 
 const now = () => new Date().toISOString();
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>()((set, get) => ({
   // Initialize with demo data
   websites: DEMO_WEBSITES,
   research: DEMO_RESEARCH,
