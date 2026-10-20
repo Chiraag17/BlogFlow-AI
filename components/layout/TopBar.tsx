@@ -9,6 +9,8 @@ import {
   ChevronDown, LogOut, Settings, Loader2,
 } from 'lucide-react';
 
+import { useTheme } from '@/lib/theme';
+
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Overview',
   '/websites': 'Websites',
@@ -33,7 +35,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [signingOut, setSigningOut] = useState(false);
-  const [isDark, setIsDark] = useState<boolean>(false);
+  const { isDark, toggleTheme } = useTheme();
 
   const pageTitle =
     Object.entries(PAGE_TITLES).find(([path]) =>
@@ -48,23 +50,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
     setProfileOpen(false);
     await signOut({ callbackUrl: '/login' });
   };
-
-  // initialise theme from localStorage / OS preference
-  useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = saved ? saved === 'dark' : prefersDark;
-    setIsDark(initial);
-    const html = document.documentElement;
-    if (initial) html.classList.add('dark'); else html.classList.remove('dark');
-  }, []);
-
-  // sync class when isDark changes
-  useEffect(() => {
-    const html = document.documentElement;
-    if (isDark) html.classList.add('dark'); else html.classList.remove('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
 
   return (
     <header className="topbar">
@@ -187,7 +172,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
       </div>
       {/* Theme toggle */}
       <button
-        onClick={() => setIsDark(prev => !prev)}
+        onClick={toggleTheme}
         className="p-2 rounded-md bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-bg-muted)] transition-colors"
         aria-label="Toggle light/dark mode"
       >

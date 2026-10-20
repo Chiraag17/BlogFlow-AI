@@ -8,14 +8,17 @@ import { useEffect, useState, useRef } from 'react';
 import {
   Globe, Search, Lightbulb, CheckCircle, Send,
   ArrowRight, Play, ChevronRight, BookOpen,
-  FileText, BarChart2, UserCheck, Layers, Rss
+  FileText, BarChart2, UserCheck, Layers, Rss,
+  Sun, Moon
 } from 'lucide-react';
+import { useTheme } from '@/lib/theme';
 
 /* ============================================================
    NAVBAR
    ============================================================ */
 function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { isDark, toggleTheme, mounted } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -28,11 +31,11 @@ function LandingNavbar() {
       <Link href="/" className="lp-nav-logo">
         <span className="lp-nav-logo-icon" aria-hidden="true">
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 2h7l3 3v9H3V2z" stroke="#F7F4EC" strokeWidth="1.5" strokeLinejoin="round"/>
-            <path d="M10 2v3h3" stroke="#F7F4EC" strokeWidth="1.5" strokeLinejoin="round"/>
-            <line x1="5.5" y1="7" x2="10.5" y2="7" stroke="#F7F4EC" strokeWidth="1.2" strokeLinecap="round"/>
-            <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="#F7F4EC" strokeWidth="1.2" strokeLinecap="round"/>
-            <line x1="5.5" y1="12" x2="8.5" y2="12" stroke="#F7F4EC" strokeWidth="1.2" strokeLinecap="round"/>
+            <path d="M3 2h7l3 3v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M10 2v3h3" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+            <line x1="5.5" y1="7" x2="10.5" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="5.5" y1="12" x2="8.5" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
           </svg>
         </span>
         BlogFlow AI
@@ -46,6 +49,27 @@ function LandingNavbar() {
       </ul>
 
       <div className="lp-nav-actions">
+        {/* Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="lp-theme-toggle"
+          aria-label={mounted && isDark ? "Switch to light mode" : "Switch to dark mode"}
+          title={mounted && isDark ? "Switch to light mode" : "Switch to dark mode"}
+          id="theme-toggle-btn"
+        >
+          <span className="lp-theme-toggle-icon" aria-hidden="true">
+            {mounted && isDark ? (
+              <Moon size={16} />
+            ) : (
+              <Sun size={16} />
+            )}
+          </span>
+          <span className="lp-theme-toggle-label">
+            {mounted && isDark ? 'Dark' : 'Light'}
+          </span>
+        </button>
+
         <Link href="/login" className="lp-nav-signin">Sign in</Link>
         <Link href="/generator" className="lp-btn-primary" id="nav-cta">
           Start creating

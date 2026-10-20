@@ -92,18 +92,35 @@
 
 /* Dark mode overrides via .dark class */
 .dark {
-  --color-bg: #1E1E1C;               /* Deep charcoal background */
-  --color-bg-subtle: #2A2A27;       /* Slightly lighter surface */
-  --color-surface: #252525;        /* Dark surface */
-  --color-text: #E5E5E5;           /* Soft light text */
-  --color-text-secondary: #B0B0B0; /* Muted secondary text */
-  --color-border: #3D3D3D;        /* Subtle border */
-  --color-primary: #2C7A7B;       /* Muted teal */
-  --color-primary-hover: #27655F; /* Darker teal hover */
-  --color-primary-light: #DDEDEA; /* Light teal for accents */
-  --color-accent: #C99720;        /* Warm amber */
-  --color-accent-light: #F4E5C2;   /* Soft amber highlight */
+  --color-bg: #101714;               /* Deep forest / midnight editorial studio */
+  --color-bg-subtle: #17211D;       /* Elevated dark green surface */
+  --color-surface: #17211D;        /* Dark surface */
+  --color-text: #F3F0E8;           /* Warm soft ivory text */
+  --color-text-secondary: #8E9E95; /* Muted sage secondary text */
+  --color-border: rgba(235, 242, 237, 0.12); /* Subtle light border */
+  --color-primary: #B8D5C5;       /* Muted sage */
+  --color-primary-hover: #CCE5D7; /* Brighter sage */
+  --color-primary-light: rgba(184, 213, 197, 0.15); /* Light sage highlight */
+  --color-accent: #D4AF67;        /* Refined subtle brass / warm gold */
+  --color-accent-light: rgba(212, 175, 103, 0.15); /* Subtle brass highlight */
+  --color-bg-muted: #1D2A24;
+  --color-border-light: rgba(235, 242, 237, 0.08);
 }
+
+/* Smooth Theme Transitions */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              fill 280ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 280ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-delay: 0s !important;
+}
+
 
 
 /* --- Base Styles --- */
