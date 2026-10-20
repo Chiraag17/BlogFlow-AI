@@ -1,243 +1,791 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import React from 'react';
+
+import './landing.css';
 import Link from 'next/link';
-import { Sun, Moon, ArrowRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { NavBar } from '../components/ui/NavBar';
-import { Footer } from '../components/ui/Footer';
-import { Card } from '../components/ui/Card';
-import type { DeskStage } from '@/components/3d/FloatingEditorialDesk';
+import { useEffect, useState, useRef } from 'react';
+import {
+  Globe, Search, Lightbulb, CheckCircle, Send,
+  ArrowRight, Play, ChevronRight, BookOpen,
+  FileText, BarChart2, UserCheck, Layers, Rss
+} from 'lucide-react';
 
-// Dynamic import, client-only
-const DynamicDesk = dynamic(() => import('@/components/3d/FloatingEditorialDesk'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[480px] max-w-md mx-auto flex items-center justify-center bg-[var(--color-bg-subtle)] rounded-lg">
-      <img
-        src="/fallback_floating_desk.jpg"
-        alt="Editorial desk preview"
-        className="w-48 h-48 object-cover rounded shadow-sm opacity-80"
-      />
-    </div>
-  ),
-});
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+function LandingNavbar() {
+  const [scrolled, setScrolled] = useState(false);
 
-// Reusable component for workflow stages
-function WorkflowStage({ number, title, description, children }: {
-  number: number;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <div className="flex flex-col md:flex-row items-start gap-4 md:gap-8">
-      <div className="flex-shrink-0 text-2xl font-bold text-[var(--color-primary)]">{number}</div>
-      <div className="flex-1">
-        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">{title}</h3>
-        <p className="text-sm text-[var(--color-text-secondary)] mb-3">{description}</p>
-        {children}
+    <nav id="lp-navbar" className={`lp-nav${scrolled ? ' scrolled' : ''}`} role="navigation" aria-label="Main navigation">
+      <Link href="/" className="lp-nav-logo">
+        <span className="lp-nav-logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 2h7l3 3v9H3V2z" stroke="#F7F4EC" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M10 2v3h3" stroke="#F7F4EC" strokeWidth="1.5" strokeLinejoin="round"/>
+            <line x1="5.5" y1="7" x2="10.5" y2="7" stroke="#F7F4EC" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="#F7F4EC" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="5.5" y1="12" x2="8.5" y2="12" stroke="#F7F4EC" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
+        </span>
+        BlogFlow AI
+      </Link>
+
+      <ul className="lp-nav-links">
+        <li><a href="#product">Product</a></li>
+        <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#creators">For creators</a></li>
+      </ul>
+
+      <div className="lp-nav-actions">
+        <Link href="/login" className="lp-nav-signin">Sign in</Link>
+        <Link href="/generator" className="lp-btn-primary" id="nav-cta">
+          Start creating
+          <span className="btn-arrow" aria-hidden="true"><ArrowRight size={14} /></span>
+        </Link>
       </div>
-    </div>
+    </nav>
   );
 }
 
-// Minimal product visual representing the editorial workflow
-function EditorialPreview() {
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+function HeroSection() {
+  const [seoCount, setSeoCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const target = 87;
+    const step = Math.ceil(target / 40);
+    const timer = setInterval(() => {
+      start = Math.min(start + step, target);
+      setSeoCount(start);
+      if (start >= target) clearInterval(timer);
+    }, 40);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="grid grid-cols-1 gap-3 p-4 border border-[var(--color-border)] rounded-md bg-[var(--color-surface)] shadow-sm max-w-md">
-      {/* Source panel */}
-      <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-        <span className="inline-block w-4 h-4 bg-[var(--color-primary)] rounded-sm" />
-        <span>Source: example.com</span>
+    <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
+      <div className="lp-hero-bg" aria-hidden="true" />
+      <div className="lp-container">
+        <div className="lp-hero-inner">
+
+          {/* Left: Copy */}
+          <div className="lp-hero-left">
+            <div className="lp-hero-badge" aria-label="Editorial automation platform">
+              <span className="lp-hero-badge-dot" />
+              AI-Powered Editorial Automation
+            </div>
+
+            <h1 className="lp-hero-headline" id="hero-headline">
+              Research. Think.<br /><em>Publish.</em>
+            </h1>
+
+            <p className="lp-hero-desc">
+              BlogFlow AI transforms any website, topic or idea into well-researched,
+              SEO-optimised articles — so you can focus on what matters most: your ideas.
+            </p>
+
+            <div className="lp-hero-ctas">
+              <Link href="/generator" className="lp-btn-primary" id="hero-cta-primary">
+                Start creating
+                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
+              </Link>
+              <a href="#workflow" className="lp-btn-secondary" id="hero-cta-secondary">
+                <Play size={14} />
+                Watch how it works
+              </a>
+            </div>
+
+            <div className="lp-hero-social">
+              <div className="lp-hero-avatars" aria-hidden="true">
+                <div className="lp-hero-avatar">C</div>
+                <div className="lp-hero-avatar">M</div>
+                <div className="lp-hero-avatar">T</div>
+              </div>
+              <span className="lp-hero-social-text">
+                Loved by creators, marketers &amp; teams
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Workspace visual */}
+          <div className="lp-hero-right" aria-hidden="true">
+            <div className="lp-workspace">
+
+              {/* Laptop mockup */}
+              <div className="lp-laptop">
+                <div className="lp-laptop-body">
+                  <div className="lp-laptop-screen">
+                    <div className="lp-laptop-screen-inner">
+                      <div className="lp-screen-topbar">
+                        <div className="lp-screen-dot" />
+                        <div className="lp-screen-dot" />
+                        <div className="lp-screen-dot" />
+                      </div>
+                      <div className="lp-screen-content">
+                        <div className="lp-screen-article-title">
+                          The Future of AI-Powered Search
+                        </div>
+                        <div className="lp-screen-article-meta">
+                          <span>Draft</span>
+                          <span>·</span>
+                          <span>1,240 words</span>
+                          <span>·</span>
+                          <span>SEO 87</span>
+                        </div>
+                        <div className="lp-screen-img" />
+                        <div className="lp-screen-lines">
+                          <div className="lp-screen-line" />
+                          <div className="lp-screen-line" />
+                          <div className="lp-screen-line" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="lp-laptop-base" />
+                </div>
+              </div>
+
+              {/* Notebook */}
+              <div className="lp-notebook">
+                <div className="lp-notebook-body">
+                  <div className="lp-notebook-spine" />
+                  <div className="lp-notebook-title">Ideas</div>
+                  <div className="lp-notebook-line" />
+                  <div className="lp-notebook-line" />
+                  <div className="lp-notebook-line" />
+                  <div className="lp-notebook-line" />
+                  <div className="lp-notebook-line" />
+                </div>
+              </div>
+
+              {/* Book stack */}
+              <div className="lp-books">
+                <div className="lp-book" data-label="Research" style={{ width: 30, height: 90, background: 'linear-gradient(135deg,#244737,#163F32)' }} />
+                <div className="lp-book" data-label="Ideas" style={{ width: 26, height: 80, background: 'linear-gradient(135deg,#315B4B,#244737)' }} />
+                <div className="lp-book" data-label="Publish" style={{ width: 22, height: 70, background: 'linear-gradient(135deg,#C8A15A,#b08945)' }} />
+              </div>
+
+              {/* Glass card: Researching sources */}
+              <div className="glass-card gc-research">
+                <div className="glass-card-inner">
+                  <div className="gc-title">Researching Sources…</div>
+                  <div className="gc-item">
+                    <div className="gc-dot gc-dot-success">✓</div>
+                    Websites
+                  </div>
+                  <div className="gc-item">
+                    <div className="gc-dot gc-dot-success">✓</div>
+                    Academic papers
+                  </div>
+                  <div className="gc-item">
+                    <div className="gc-dot gc-dot-success">✓</div>
+                    News &amp; blogs
+                  </div>
+                  <div className="gc-item">
+                    <div className="gc-dot gc-dot-progress">◉</div>
+                    Analysing insights…
+                  </div>
+                </div>
+              </div>
+
+              {/* Glass card: Top Sources */}
+              <div className="glass-card gc-sources">
+                <div className="glass-card-inner">
+                  <div className="gc-title">Top Sources</div>
+                  {[
+                    { label: 'MIT Technology Review', color: '#c41e3a', initial: 'M' },
+                    { label: 'Nature', color: '#1a6b2f', initial: 'N' },
+                    { label: 'TechCrunch', color: '#006747', initial: 'T' },
+                    { label: 'Wikipedia', color: '#333', initial: 'W' },
+                  ].map((s) => (
+                    <div className="gc-source-item" key={s.label}>
+                      <div className="gc-source-icon" style={{ background: s.color }}>{s.initial}</div>
+                      {s.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Glass card: Article draft */}
+              <div className="glass-card gc-article">
+                <div className="glass-card-inner">
+                  <div className="gc-title">Article Draft</div>
+                  {[
+                    { label: 'Research', done: true },
+                    { label: 'Outline', done: true },
+                    { label: 'Writing', done: true },
+                    { label: 'Review', done: false },
+                    { label: 'Publish', done: false },
+                  ].map((r) => (
+                    <div className="gc-status-row" key={r.label}>
+                      {r.label}
+                      <div className={`gc-status-check ${r.done ? 'gc-check-done' : 'gc-check-pending'}`}>
+                        {r.done ? '✓' : '○'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Glass card: SEO score */}
+              <div className="glass-card gc-seo">
+                <div className="glass-card-inner">
+                  <div className="gc-title">SEO Score</div>
+                  <div className="gc-seo-score">{seoCount}</div>
+                  <div className="gc-seo-label">Excellent</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </div>
-      {/* Topic discovery */}
-      <div className="text-sm font-medium text-[var(--color-text)]">Emerging developer tools worth watching</div>
-      {/* Article preview */}
-      <div className="border-t border-[var(--color-border)] pt-2">
-        <h4 className="font-serif text-base text-[var(--color-text)]">How AI is reshaping the dev toolkit</h4>
-        <p className="text-xs text-[var(--color-text-secondary)] mt-1">An overview of recent AI-driven extensions, linters, and code-gen tools.</p>
+
+      {/* Trust strip */}
+      <div className="lp-trust" style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+        <div className="lp-trust-inner">
+          {[
+            'Research before writing.',
+            'Structure before polish.',
+            'Review before publishing.',
+            'Your content, your final approval.',
+          ].map((t) => (
+            <div className="lp-trust-item" key={t}>
+              <span className="lp-trust-dot" aria-hidden="true" />
+              {t}
+            </div>
+          ))}
+        </div>
       </div>
-      {/* Quality review */}
-      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-        <span>&#x2705; Structure reviewed</span>
-        <span>&#x2705; SEO ready</span>
-      </div>
-      {/* Approval status */}
-      
-    </div>
+    </section>
   );
 }
 
-export default function LandingPage() {
-  const [isDark, setIsDark] = useState(false);
-  // Workflow stage for the 3D desk (research → draft → review → publish)
-  const [stage, setStage] = useState<DeskStage>('research');
-  useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-    const prefers = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const init = saved ? saved === 'dark' : prefers;
-    setIsDark(init);
-    const html = document.documentElement;
-    if (init) html.classList.add('dark'); else html.classList.remove('dark');
-  }, []);
-
-  useEffect(() => {
-    const html = document.documentElement;
-    if (isDark) html.classList.add('dark'); else html.classList.remove('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
-
-  // Update the stage based on scroll position to drive the 3D scene
-  useEffect(() => {
-    const handleScroll = () => {
-      const y = window.scrollY;
-      if (y < 400) setStage('research');
-      else if (y < 800) setStage('draft');
-      else if (y < 1200) setStage('review');
-      else setStage('publish');
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  
+/* ============================================================
+   WORKFLOW SECTION
+   ============================================================ */
+function WorkflowSection() {
+  const stages = [
+    {
+      n: '01',
+      icon: <Globe size={22} />,
+      title: 'Discover',
+      desc: 'Find relevant topics and opportunities from any source URL.',
+      tag: 'Web search + AI',
+    },
+    {
+      n: '02',
+      icon: <Search size={22} />,
+      title: 'Research',
+      desc: 'Analyse multiple sources and extract key insights and facts.',
+      tag: 'Multi-source analysis',
+    },
+    {
+      n: '03',
+      icon: <Lightbulb size={22} />,
+      title: 'Think',
+      desc: 'AI synthesises information into a structured outline and draft.',
+      tag: 'Smart AI synthesis',
+    },
+    {
+      n: '04',
+      icon: <UserCheck size={22} />,
+      title: 'Review',
+      desc: 'Human approval for quality, accuracy and brand voice.',
+      tag: 'Editorial review',
+    },
+    {
+      n: '05',
+      icon: <Send size={22} />,
+      title: 'Publish',
+      desc: 'Auto-publish to your CMS (WordPress) or save as draft.',
+      tag: 'CMS integration',
+    },
+  ];
 
   return (
-    <div className="font-sans text-[var(--color-text)] bg-[var(--color-bg)] min-h-screen flex flex-col">
-      <NavBar />
-
-      {/* Hero */}
-      <section id="hero" className="grid md:grid-cols-2 gap-8 px-6 py-16 max-w-7xl mx-auto items-center">
-        <div className="space-y-6">
-          <p className="text-sm font-medium uppercase tracking-widest text-[var(--color-primary)]">The Content Workflow Studio</p>
-          <h1 className="font-serif text-4xl md:text-5xl font-bold leading-tight text-[var(--color-text)]">
-            Good ideas deserve a better way to get published.
-          </h1>
-          <p className="text-base text-[var(--color-text-secondary)] max-w-prose">
-            Research topics, turn source material into thoughtful article drafts, check quality, and publish when you are ready. BlogFlow AI brings your content workflow into one place.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/generator" className="px-5 py-3 bg-[var(--color-primary)] text-[var(--color-surface)] rounded-md hover:bg-[var(--color-primary-hover)] flex items-center">
-              Create your first article
-              <ArrowRight className="ml-2" size={16} />
-            </Link>
-            <a href="#workflow" className="text-[var(--color-primary)] hover:underline flex items-center">
-              Explore the workflow
-              <ArrowRight className="ml-1" size={14} />
+    <section id="workflow" className="lp-workflow" aria-labelledby="workflow-heading">
+      <div className="lp-container">
+        <div className="lp-workflow-header">
+          <div>
+            <div className="lp-section-label">The complete workflow</div>
+            <h2 className="lp-section-heading" id="workflow-heading">
+              From idea to published article —{' '}
+              <em>automatically.</em>
+            </h2>
+            <a href="#features" className="lp-workflow-explore">
+              Explore the workflow <ChevronRight size={14} />
             </a>
           </div>
-          <p className="text-sm text-[var(--color-text-secondary)]">Human review stays in the loop.</p>
-        </div>
-        <div className="flex justify-center md:justify-end">
-          {/* Lazy-loaded 3D floating editorial desk */}
-          <DynamicDesk currentStage={stage} interactive={true} />
-        </div>
-      </section>
-
-      {/* Editorial trust strip */}
-      <section className="bg-[var(--color-surface)] py-4 border-t border-b border-[var(--color-border)]">
-        <div className="max-w-5xl mx-auto flex justify-between text-center text-sm text-[var(--color-text-secondary)]">
-          <div>Research before writing.</div>
-          <div>Structure before polish.</div>
-          <div>Review before publishing.</div>
-          <div>Your content, your final approval.</div>
-        </div>
-      </section>
-
-      {/* Workflow section */}
-      <section id="workflow" className="px-6 py-12 max-w-5xl mx-auto space-y-12">
-        <h2 className="text-2xl font-serif text-[var(--color-text)] text-center mb-4">One idea. A complete publishing workflow.</h2>
-        <p className="text-center text-sm text-[var(--color-text-secondary)] mb-8">Move from a promising topic to a reviewable article without stitching together disconnected tools.</p>
-        <div className="space-y-8">
-          <WorkflowStage number={1} title="Discover" description="Start with a website URL and content preferences to surface relevant topics.">
-            <div className="text-sm text-[var(--color-text-secondary)]">Sample source URL: <code className="bg-[var(--color-bg-subtle)] px-1 rounded">example.com</code></div>
-          </WorkflowStage>
-          <WorkflowStage number={2} title="Research" description="The platform gathers and organizes supporting context from multiple sources.">
-            <div className="text-sm text-[var(--color-text-secondary)]">Notes, quotes, and key points appear as a concise list.</div>
-          </WorkflowStage>
-          <WorkflowStage number={3} title="Draft" description="AI turns the curated material into a structured article draft.">
-            <div className="text-sm text-[var(--color-text-secondary)]">An outline with headings, sub-headings, and starter paragraphs.</div>
-          </WorkflowStage>
-          <WorkflowStage number={4} title="Refine" description="Grammar, readability, and SEO checks are run; results appear as simple checkmarks.">
-            <div className="text-sm text-[var(--color-text-secondary)]">&#x2705; Grammar &#x2705; Readability &#x2705; SEO</div>
-          </WorkflowStage>
-          <WorkflowStage number={5} title="Publish" description="After human approval, the article is sent to the configured CMS destination.">
-            <div className="text-sm text-[var(--color-text-secondary)]">Supported: WordPress, Ghost (conceptual).</div>
-          </WorkflowStage>
-        </div>
-      </section>
-
-      {/* Article preview section */}
-      <section id="features" className="px-6 py-12 bg-[var(--color-bg-subtle)]">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-start">
-          <div className="space-y-6">
-            <h2 className="text-2xl font-serif text-[var(--color-text)]">From a rough idea to a considered first draft.</h2>
-            <p className="text-[var(--color-text-secondary)] max-w-prose">
-              The editor shows the article title, heading hierarchy, excerpt, and a quick review panel - all within a clean, paper-like interface.
+          <div>
+            <p className="lp-section-desc">
+              Our AI handles the heavy lifting, so you can focus on creativity, strategy
+              and your unique perspective. Every article goes through a structured pipeline
+              that ensures quality before it ever reaches publishing.
             </p>
           </div>
-          <EditorialPreview />
         </div>
-      </section>
 
-      {/* Human control section */}
-      <section id="creators" className="px-6 py-12 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-serif text-[var(--color-text)] mb-4">Automation should move the work forward, not take the editor out of it.</h2>
-        <p className="text-[var(--color-text-secondary)] max-w-prose">
-          Let automation handle repetitive steps while you retain control over what gets approved and published.
-        </p>
-        <div className="grid md:grid-cols-2 gap-8 mt-6">
-          <div className="bg-[var(--color-surface)] p-4 rounded border border-[var(--color-border)]">
-            <h3 className="font-medium text-[var(--color-primary)] mb-2">Automated</h3>
-            <ul className="list-disc list-inside text-sm text-[var(--color-text-secondary)]">
-              <li>Topic discovery</li>
-              <li>Research aggregation</li>
-              <li>First-draft generation</li>
-              <li>Quality checks</li>
-            </ul>
-          </div>
-          <div className="bg-[var(--color-surface)] p-4 rounded border border-[var(--color-border)]">
-            <h3 className="font-medium text-[var(--color-primary)] mb-2">Human decisions</h3>
-            <ul className="list-disc list-inside text-sm text-[var(--color-text-secondary)]">
-              <li>Review draft</li>
-              <li>Edit content</li>
-              <li>Approve publication</li>
-              <li>Choose destination</li>
-            </ul>
-          </div>
+        <div className="lp-pipeline" role="list">
+          {stages.map((s, i) => (
+            <React.Fragment key={s.title}>
+              <div className="lp-stage" role="listitem">
+                <div className="lp-stage-card">
+                  <span className="lp-stage-number">{s.n}</span>
+                  <div className="lp-stage-icon" aria-hidden="true">{s.icon}</div>
+                  <h3 className="lp-stage-title">{s.title}</h3>
+                  <p className="lp-stage-desc">{s.desc}</p>
+                  <span className="lp-stage-tag">{s.tag}</span>
+                </div>
+              </div>
+              {i < stages.length - 1 && (
+                <div className="lp-pipeline-arrow" aria-hidden="true">
+                  <ChevronRight />
+                  <div className="lp-pipeline-signal" style={{ animationDelay: `${i * 0.8}s` }} />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* Publishing destination */}
-      <section className="px-6 py-12 bg-[var(--color-surface)]">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-2xl font-serif text-[var(--color-text)] mb-4">Finish the work where your audience reads it.</h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">
-            Approved articles can be sent directly to your CMS. Currently supported integrations include WordPress.
+/* ============================================================
+   FEATURES SECTION
+   ============================================================ */
+function FeatureSection() {
+  return (
+    <section id="features" className="lp-features" aria-labelledby="features-heading">
+      <div className="lp-container">
+        <div className="lp-features-header">
+          <div className="lp-section-label">Thy BlogFlow AI</div>
+          <h2 className="lp-section-heading" id="features-heading">
+            Built for creators, marketers and teams.
+          </h2>
+          <p className="lp-section-desc">
+            Everything you need to create high-quality, SEO-friendly content — without the manual work.
           </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-surface)] rounded-md">
-            WordPress integration
+        </div>
+
+        <div className="lp-feature-grid">
+
+          {/* Large: AI Research */}
+          <div className="lp-feat-card lp-feat-card-large">
+            <div className="lp-feat-icon"><BookOpen size={22} /></div>
+            <div className="lp-feat-label">AI-Powered Research</div>
+            <h3 className="lp-feat-title">Find the most relevant and credible sources, automatically.</h3>
+            <p className="lp-feat-desc">
+              BlogFlow searches across websites, academic papers, and news to surface the most
+              meaningful insights for your topic. Every article begins with real research —
+              not hallucinations.
+            </p>
+            <div className="lp-feat-preview">
+              <div className="gc-title" style={{ marginBottom: 10 }}>Analysing Sources</div>
+              {[
+                { label: 'MIT Technology Review', color: '#c41e3a', initial: 'M' },
+                { label: 'Nature', color: '#1a6b2f', initial: 'N' },
+                { label: 'TechCrunch', color: '#006747', initial: 'T' },
+              ].map((s) => (
+                <div className="lp-feat-source" key={s.label}>
+                  <div className="lp-feat-source-icon" style={{ background: s.color }}>{s.initial}</div>
+                  <div className="lp-feat-source-name">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SEO Optimised */}
+          <div className="lp-feat-card">
+            <div className="lp-feat-icon"><BarChart2 size={22} /></div>
+            <div className="lp-feat-label">SEO Optimised</div>
+            <h3 className="lp-feat-title">Built-in SEO checks before publishing.</h3>
+            <div className="lp-feat-preview" style={{ textAlign: 'center' }}>
+              <div className="lp-feat-score-big">87</div>
+              <div className="lp-feat-score-label">Excellent</div>
+            </div>
+          </div>
+
+          {/* CMS Integration */}
+          <div className="lp-feat-card">
+            <div className="lp-feat-icon"><Rss size={22} /></div>
+            <div className="lp-feat-label">CMS Integration</div>
+            <h3 className="lp-feat-title">Publish directly to WordPress or save as draft.</h3>
+          </div>
+
+          {/* Human in the Loop */}
+          <div className="lp-feat-card">
+            <div className="lp-feat-icon"><UserCheck size={22} /></div>
+            <div className="lp-feat-label">Human in the Loop</div>
+            <h3 className="lp-feat-title">Get approval before publishing. Stay in control.</h3>
+            <div className="lp-feat-preview">
+              <div className="lp-check-list">
+                {['Structure', 'Readability', 'SEO', 'Sources'].map((c) => (
+                  <div className="lp-check-item" key={c}>
+                    <div className="lp-check-icon">✓</div>
+                    {c} reviewed
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Customisable Workflow */}
+          <div className="lp-feat-card">
+            <div className="lp-feat-icon"><Layers size={22} /></div>
+            <div className="lp-feat-label">Customisable Workflow</div>
+            <h3 className="lp-feat-title">Adapt the process to your content strategy and brand voice.</h3>
+          </div>
+
+          {/* Analytics */}
+          <div className="lp-feat-card">
+            <div className="lp-feat-icon"><FileText size={22} /></div>
+            <div className="lp-feat-label">Analytics &amp; Insights</div>
+            <h3 className="lp-feat-title">Track performance, engagement and what works best.</h3>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   AUTOMATION vs HUMAN SECTION
+   ============================================================ */
+function AutomationSection() {
+  const automated = [
+    'Topic discovery',
+    'Research aggregation',
+    'Draft generation',
+    'Quality checks',
+  ];
+  const human = [
+    'Review draft',
+    'Edit content',
+    'Approve publication',
+    'Choose destination',
+  ];
+
+  return (
+    <section id="creators" className="lp-automation" aria-labelledby="automation-heading">
+      <div className="lp-container">
+        <div style={{ maxWidth: 600, margin: '0 auto 64px' }}>
+          <div className="lp-section-label">Philosophy</div>
+          <h2 className="lp-section-heading" id="automation-heading">
+            Automation should move the work forward,<br />
+            not take the <em>editor</em> out of it.
+          </h2>
+          <p className="lp-section-desc">
+            Let automation handle repetitive steps while you retain control over what gets
+            approved and published.
+          </p>
+        </div>
+
+        <div className="lp-automation-inner">
+          {/* Automated */}
+          <div className="lp-automation-col">
+            <div className="lp-auto-title lp-auto-title-light">Automation</div>
+            <div className="lp-auto-rule lp-auto-rule-light" />
+            {automated.map((item) => (
+              <div className="lp-auto-item lp-auto-item-light" key={item}>
+                <div className="lp-auto-bullet lp-auto-bullet-light" />
+                <span className="lp-auto-text lp-auto-text-light">{item}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="lp-automation-divider" aria-hidden="true">
+            <div className="lp-automation-divider-line" />
+            <span className="lp-automation-divider-label">prepares → decides</span>
+            <div className="lp-automation-divider-line" />
+          </div>
+
+          {/* Human */}
+          <div className="lp-automation-col lp-automation-col-dark">
+            <div className="lp-auto-title lp-auto-title-dark">Human decisions</div>
+            <div className="lp-auto-rule lp-auto-rule-dark" />
+            {human.map((item) => (
+              <div className="lp-auto-item lp-auto-item-dark" key={item}>
+                <div className="lp-auto-bullet lp-auto-bullet-dark" />
+                <span className="lp-auto-text lp-auto-text-dark">{item}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* Final CTA */}
-      <Card className="px-6 py-12 bg-[var(--color-primary)] text-[var(--color-surface)]">
-  <div className="max-w-3xl mx-auto text-center space-y-4">
-    <h2 className="text-2xl font-serif">Your next article starts with an idea.</h2>
-    <p className="text-sm">Bring your research, drafting, review, and publishing workflow together in BlogFlow AI.</p>
-    <div className="flex justify-center gap-4 mt-4">
-      <Link href="/generator" className="px-5 py-2 bg-[var(--color-accent)] text-[var(--color-text)] rounded-md hover:bg-[var(--color-accent-light)]">
-        Start creating
-      </Link>
-      <a href="#workflow" className="px-5 py-2 bg-[var(--color-surface)] text-[var(--color-primary)] rounded-md hover:bg-[var(--color-bg-subtle)]">
-        See how it works
-      </a>
-    </div>
-  </div>
-</Card>
+/* ============================================================
+   EDITORIAL PREVIEW SECTION
+   ============================================================ */
+function EditorialPreviewSection() {
+  return (
+    <section className="lp-preview-section" aria-labelledby="preview-heading">
+      <div className="lp-container">
+        <div className="lp-preview-inner">
 
-      <Footer />
+          {/* Doc */}
+          <div style={{ position: 'relative' }}>
+            <div className="lp-article-doc">
+              <div className="lp-article-doc-topbar">
+                <div className="lp-screen-dot" />
+                <div className="lp-screen-dot" />
+                <div className="lp-screen-dot" />
+              </div>
+              <h3 className="lp-article-doc-title">
+                How AI is reshaping the developer toolkit
+              </h3>
+              <div className="lp-article-doc-meta">
+                <span>Draft · 1,240 words</span>
+                <span>·</span>
+                <span>SEO 87 · Excellent</span>
+              </div>
+              <div className="lp-article-doc-h2">Introduction</div>
+              <div className="lp-article-doc-lines">
+                <div className="lp-article-doc-line" />
+                <div className="lp-article-doc-line" />
+                <div className="lp-article-doc-line" />
+              </div>
+              <div className="lp-article-doc-h2">Key Insights</div>
+              <div className="lp-article-doc-lines">
+                <div className="lp-article-doc-line" />
+                <div className="lp-article-doc-line" />
+              </div>
+            </div>
+
+            {/* Content health glass card */}
+            <div className="lp-article-health" aria-label="Content health check">
+              <div className="lp-health-title">Content Health</div>
+              {['Structure', 'Readability', 'SEO', 'Sources'].map((h) => (
+                <div className="lp-health-item" key={h}>
+                  <div className="lp-health-check" aria-hidden="true">✓</div>
+                  {h}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Copy */}
+          <div>
+            <div className="lp-section-label">Editorial Preview</div>
+            <h2 className="lp-section-heading" id="preview-heading">
+              From research to a considered <em>first draft.</em>
+            </h2>
+            <p className="lp-section-desc">
+              The editor shows the article title, heading hierarchy, excerpt, and a quick review
+              panel — all within a clean, paper-like interface that feels like a real document,
+              not a form.
+            </p>
+            <div style={{ marginTop: 32 }}>
+              <Link href="/generator" className="lp-btn-primary">
+                Start your first draft
+                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={14} /></span>
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   CMS SECTION
+   ============================================================ */
+function CMSSection() {
+  const steps = [
+    { label: 'BlogFlow AI', title: 'Article researched & drafted', primary: true, icon: <FileText size={20} /> },
+    { label: 'Human review', title: 'Approved by editor', primary: false, icon: <UserCheck size={20} /> },
+    { label: 'WordPress', title: 'Published or saved as draft', primary: false, icon: <Rss size={20} /> },
+  ];
+
+  return (
+    <section className="lp-cms" aria-labelledby="cms-heading">
+      <div className="lp-container">
+        <div className="lp-cms-inner">
+
+          {/* Copy */}
+          <div>
+            <div className="lp-section-label">Publishing</div>
+            <h2 className="lp-section-heading" id="cms-heading">
+              Finish the work where your audience reads it.
+            </h2>
+            <p className="lp-section-desc" style={{ marginBottom: 32 }}>
+              Approved articles can be sent directly to your CMS.
+              Currently supported: WordPress. Save as draft or publish immediately.
+            </p>
+
+            {/* Flow */}
+            <div className="lp-cms-flow" aria-label="Publishing workflow">
+              {steps.map((s, i) => (
+                <div key={s.title}>
+                  <div className="lp-cms-step">
+                    <div className={`lp-cms-step-icon ${s.primary ? 'lp-cms-step-icon-primary' : 'lp-cms-step-icon-light'}`} aria-hidden="true">
+                      {s.icon}
+                    </div>
+                    <div className="lp-cms-step-content">
+                      <div className="lp-cms-step-label">{s.label}</div>
+                      <div className="lp-cms-step-title">{s.title}</div>
+                    </div>
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div className="lp-cms-connector" aria-hidden="true" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Visual card */}
+          <div>
+            <div className="lp-publish-card">
+              <div className="lp-wp-icon" aria-hidden="true">W</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--lp-text)' }}>WordPress</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--lp-text-muted)', marginTop: 2 }}>
+                  Direct CMS integration
+                </div>
+                <div className="lp-publish-status">
+                  <span>●</span> Published
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   FINAL CTA
+   ============================================================ */
+function FinalCTA() {
+  return (
+    <section className="lp-final-cta" aria-labelledby="cta-heading">
+      <div className="lp-container">
+        <div className="lp-cta-panel">
+          <div className="lp-cta-highlight" aria-hidden="true" />
+          <div className="lp-cta-grain" aria-hidden="true" />
+          <div className="lp-cta-inner">
+            <div className="lp-cta-pretitle">Get started today</div>
+            <h2 className="lp-cta-heading" id="cta-heading">
+              Your next article starts<br />with <em>an idea.</em>
+            </h2>
+            <p className="lp-cta-desc">
+              Bring research, drafting, review and publishing together in BlogFlow AI.
+              One studio for the entire editorial workflow.
+            </p>
+            <div className="lp-cta-actions">
+              <Link href="/generator" className="lp-btn-cta-primary" id="final-cta-btn">
+                Start creating
+                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
+              </Link>
+              <a href="#workflow" className="lp-btn-cta-secondary">
+                See how it works
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+function LandingFooter() {
+  return (
+    <footer className="lp-footer" role="contentinfo">
+      <div className="lp-container">
+        <div className="lp-footer-inner">
+
+          <div className="lp-footer-brand">
+            <Link href="/" className="lp-footer-logo">
+              BlogFlow AI
+            </Link>
+            <p className="lp-footer-tagline">
+              AI-assisted research, drafting and publishing in one editorial studio.
+            </p>
+          </div>
+
+          <div>
+            <div className="lp-footer-col-title">Product</div>
+            <ul className="lp-footer-links">
+              <li><a href="#product">Product</a></li>
+              <li><a href="#workflow">Workflow</a></li>
+              <li><a href="#features">Features</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="lp-footer-col-title">Account</div>
+            <ul className="lp-footer-links">
+              <li><Link href="/login">Sign in</Link></li>
+              <li><Link href="/register">Create account</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="lp-footer-col-title">Resources</div>
+            <ul className="lp-footer-links">
+              <li><Link href="/generator">Generator</Link></li>
+              <li><a href="https://github.com" target="_blank" rel="noreferrer">Documentation</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="lp-footer-bottom">
+          <span className="lp-footer-copy">
+            © {new Date().getFullYear()} BlogFlow AI. All rights reserved.
+          </span>
+          <span className="lp-footer-editorial">
+            Research. Think. Publish.
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ============================================================
+   PAGE ROOT
+   ============================================================ */
+export default function LandingPage() {
+  return (
+    <div className="lp-root">
+      <LandingNavbar />
+      <main>
+        <HeroSection />
+        <WorkflowSection />
+        <FeatureSection />
+        <AutomationSection />
+        <EditorialPreviewSection />
+        <CMSSection />
+        <FinalCTA />
+      </main>
+      <LandingFooter />
     </div>
   );
 }
