@@ -12,6 +12,37 @@ import {
   Sun, Moon
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
+import { AvatarCircles } from '@/components/ui/avatar-circles';
+import { KineticText } from '@/components/ui/kinetic-text';
+
+const CREATOR_AVATARS = [
+  {
+    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+    profileUrl: '#',
+    name: 'Sarah Chen · Content Lead',
+  },
+  {
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces',
+    profileUrl: '#',
+    name: 'Alex Rivera · Tech Editor',
+  },
+  {
+    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces',
+    profileUrl: '#',
+    name: 'Elena Rostova · SEO Strategist',
+  },
+  {
+    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces',
+    profileUrl: '#',
+    name: 'Marcus Vance · Publisher',
+  },
+  {
+    imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces',
+    profileUrl: '#',
+    name: 'Chloe Kim · Editorial Director',
+  },
+];
+
 
 /* ============================================================
    NAVBAR
@@ -112,7 +143,15 @@ function HeroSection() {
             </div>
 
             <h1 className="lp-hero-headline" id="hero-headline">
-              Research. Think.<br /><em>Publish.</em>
+              <span className="block">
+                <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
+                <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
+              </span>
+              <KineticText
+                text="Publish."
+                as="em"
+                className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
+              />
             </h1>
 
             <p className="lp-hero-desc">
@@ -132,14 +171,20 @@ function HeroSection() {
             </div>
 
             <div className="lp-hero-social">
-              <div className="lp-hero-avatars" aria-hidden="true">
-                <div className="lp-hero-avatar">C</div>
-                <div className="lp-hero-avatar">M</div>
-                <div className="lp-hero-avatar">T</div>
+              <AvatarCircles
+                avatarUrls={CREATOR_AVATARS}
+                numPeople={2400}
+                avatarSize={36}
+              />
+              <div className="lp-hero-social-info">
+                <div className="lp-hero-stars">
+                  <span className="lp-hero-stars-icon" aria-hidden="true">★★★★★</span>
+                  <span>4.9 / 5 rating</span>
+                </div>
+                <span className="lp-hero-social-text">
+                  Loved by <strong>2,400+</strong> creators &amp; editorial teams
+                </span>
               </div>
-              <span className="lp-hero-social-text">
-                Loved by creators, marketers &amp; teams
-              </span>
             </div>
           </div>
 
@@ -347,7 +392,11 @@ function WorkflowSection() {
             <div className="lp-section-label">The complete workflow</div>
             <h2 className="lp-section-heading" id="workflow-heading">
               From idea to published article —{' '}
-              <em>automatically.</em>
+              <KineticText
+                text="automatically."
+                as="em"
+                className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
+              />
             </h2>
             <a href="#features" className="lp-workflow-explore">
               Explore the workflow <ChevronRight size={14} />
@@ -713,12 +762,27 @@ function FinalCTA() {
           <div className="lp-cta-inner">
             <div className="lp-cta-pretitle">Get started today</div>
             <h2 className="lp-cta-heading" id="cta-heading">
-              Your next article starts<br />with <em>an idea.</em>
+              Your next article starts<br />
+              with <KineticText text="an idea." as="em" className="italic inline-flex cursor-default font-serif" />
             </h2>
             <p className="lp-cta-desc">
               Bring research, drafting, review and publishing together in BlogFlow AI.
               One studio for the entire editorial workflow.
             </p>
+
+            {/* Social proof avatar stack */}
+            <div className="lp-cta-social-proof">
+              <AvatarCircles
+                avatarUrls={CREATOR_AVATARS}
+                numPeople={2400}
+                avatarSize={34}
+                className="justify-center"
+              />
+              <span className="lp-cta-social-text">
+                Join <strong>2,400+</strong> writers and marketing teams publishing with BlogFlow AI
+              </span>
+            </div>
+
             <div className="lp-cta-actions">
               <Link href="/generator" className="lp-btn-cta-primary" id="final-cta-btn">
                 Start creating

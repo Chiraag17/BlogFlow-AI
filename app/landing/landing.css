@@ -2375,11 +2375,126 @@
 }
 
 /* ============================================================
+   MAGIC UI - KINETIC TEXT ENHANCEMENTS
+   ============================================================ */
+.kinetic-text-root {
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-optical-sizing: auto;
+  user-select: none;
+  cursor: default;
+}
+
+.kinetic-char {
+  display: inline-block;
+  will-change: font-weight, padding, -webkit-text-stroke-width;
+  transition: font-weight 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+              padding 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+              -webkit-text-stroke-width 0.35s ease,
+              -webkit-text-stroke-color 0.35s ease;
+  -webkit-text-stroke-width: var(--text-stroke-width, 0.5px);
+  -webkit-text-stroke-color: transparent;
+  padding-inline: 0;
+}
+
+.kinetic-char:hover {
+  font-weight: 850 !important;
+  padding-inline: var(--hover-padding, calc(1em / 14)) !important;
+  -webkit-text-stroke-color: currentColor !important;
+  -webkit-text-stroke-width: calc(var(--text-stroke-width, 0.5px) * 2) !important;
+}
+
+.kinetic-char:has(+ .kinetic-char:hover),
+.kinetic-char:hover + .kinetic-char {
+  font-weight: 600 !important;
+  padding-inline: calc(var(--hover-padding, calc(1em / 14)) * 0.6) !important;
+}
+
+.kinetic-char:has(+ .kinetic-char + .kinetic-char:hover),
+.kinetic-char:hover + .kinetic-char + .kinetic-char {
+  font-weight: 450 !important;
+}
+
+/* ============================================================
+   MAGIC UI - AVATAR CIRCLES & SOCIAL PROOF ENHANCEMENTS
+   ============================================================ */
+.lp-hero-social {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.lp-hero-social-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lp-hero-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #E5A93C;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.lp-hero-stars-icon {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.lp-hero-social-text {
+  font-size: 0.84rem;
+  color: var(--lp-text-muted);
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.lp-hero-social-text strong {
+  color: var(--lp-text);
+  font-weight: 700;
+}
+
+.lp-cta-social-proof {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.lp-cta-social-text {
+  font-size: 0.875rem;
+  color: rgba(247,244,236,0.85);
+  font-weight: 500;
+}
+
+.lp-cta-social-text strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.dark .lp-cta-social-text {
+  color: #C5D4CC;
+}
+
+.dark .lp-cta-social-text strong {
+  color: #F3F0E8;
+}
+
+/* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .gc-research,.gc-sources,.gc-article,.gc-seo,.lp-laptop,.lp-notebook,.lp-books,
-  .lp-hero-bg::before,.lp-hero-bg::after,.lp-pipeline-signal,.gc-dot-progress,.lp-hero-badge-dot {
+  .lp-hero-bg::before,.lp-hero-bg::after,.lp-pipeline-signal,.gc-dot-progress,.lp-hero-badge-dot,
+  .kinetic-char {
     animation: none !important;
+    transition: none !important;
   }
 }
+
