@@ -13,6 +13,8 @@ export interface FloatingEditorialDeskProps {
   onStageChange?: (stage: DeskStage) => void;
   interactive?: boolean;
   reducedMotion?: boolean;
+  activeTopicTitle?: string;
+  activeTopicMetric?: string;
 }
 
 // Reusable module-scope math objects (zero GC in render loop)
@@ -320,6 +322,8 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
   onStageChange,
   interactive = true,
   reducedMotion = false,
+  activeTopicTitle,
+  activeTopicMetric,
 }) => {
   const canvasMountRef = useRef<HTMLDivElement | null>(null);
 
@@ -975,11 +979,11 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
       {/* Minimal Top-Left Spec Header (Unobstructed Center Viewport) */}
       <div className="lp-desk-hud-top">
         <div className="lp-desk-spec-kicker">
-          <span>STAGE {currentMeta.index}</span>
+          <span>STAGE {currentMeta.index}: {currentMeta.label.toUpperCase()}</span>
           <span aria-hidden="true">·</span>
-          <span>{currentMeta.agent}</span>
+          <span>{activeTopicTitle || currentMeta.agent}</span>
         </div>
-        <div className="lp-desk-spec-metric">{currentMeta.metric}</div>
+        <div className="lp-desk-spec-metric">{activeTopicMetric || currentMeta.metric}</div>
       </div>
 
       {/* Isolated WebGL Canvas Container */}

@@ -10,7 +10,7 @@ import {
   ArrowRight, Play, ChevronRight, BookOpen,
   FileText, BarChart2, UserCheck, Layers, Rss,
   Sun, Moon, Sparkles, CheckCircle2, ShieldCheck,
-  RotateCcw, XCircle, ExternalLink, Lock, Check, RefreshCw
+  RotateCcw, XCircle, Lock, Check, RefreshCw
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
@@ -71,7 +71,6 @@ interface HeroTopicPreset {
   h2Heading: string;
   excerptParagraphs: string[];
   sources: { label: string; color: string; initial: string; stat: string }[];
-  researchChecks: { label: string; count: string }[];
 }
 
 const HERO_TOPIC_PRESETS: HeroTopicPreset[] = [
@@ -94,12 +93,6 @@ const HERO_TOPIC_PRESETS: HeroTopicPreset[] = [
       { label: 'MIT Technology Review', color: '#991b1b', initial: 'M', stat: '41% precision lift' },
       { label: 'Stanford HAI Index', color: '#163F32', initial: 'S', stat: '2026 RAG Benchmark' },
       { label: 'Nature Machine Intel', color: '#1e40af', initial: 'N', stat: 'Citation grounding' },
-      { label: 'ArXiv Preprint', color: '#92400e', initial: 'A', stat: 'Dense retrieval latency' },
-    ],
-    researchChecks: [
-      { label: 'Technical whitepapers', count: '6 indexed' },
-      { label: 'Academic benchmarks', count: '4 verified' },
-      { label: 'SERP competitor gaps', count: '3 angles' },
     ],
   },
   {
@@ -121,12 +114,6 @@ const HERO_TOPIC_PRESETS: HeroTopicPreset[] = [
       { label: 'OpenView SaaS Report', color: '#163F32', initial: 'O', stat: '118% NDR median' },
       { label: 'Harvard Business Review', color: '#991b1b', initial: 'H', stat: 'Pricing elasticity' },
       { label: 'Stripe Economy Index', color: '#3730a3', initial: 'S', stat: 'Billing telemetry' },
-      { label: 'Bessemer Cloud Index', color: '#854d0e', initial: 'B', stat: 'AI margin analysis' },
-    ],
-    researchChecks: [
-      { label: 'Public S-1 filings', count: '8 analyzed' },
-      { label: 'Pricing page teardowns', count: '12 audited' },
-      { label: 'CFO survey insights', count: '5 cited' },
     ],
   },
   {
@@ -148,18 +135,12 @@ const HERO_TOPIC_PRESETS: HeroTopicPreset[] = [
       { label: 'NIST SP 800-207', color: '#1e3a8a', initial: 'N', stat: 'Zero-Trust Standard' },
       { label: 'CNCF Security Audit', color: '#163F32', initial: 'C', stat: 'SPIFFE/SPIRE spec' },
       { label: 'IEEE Security & Privacy', color: '#991b1b', initial: 'I', stat: 'eBPF latency <1.2%' },
-      { label: 'Cloudflare Radar', color: '#9a3412', initial: 'R', stat: 'Threat telemetry' },
-    ],
-    researchChecks: [
-      { label: 'NIST & CISA advisories', count: '5 verified' },
-      { label: 'Kernel eBPF benchmarks', count: '7 extracted' },
-      { label: 'Architecture diagrams', count: '3 mapped' },
     ],
   },
 ];
 
 /* ============================================================
-   3D STUDIO STAGE DETAILS
+   STAGE DETAILS FOR PHILOSOPHY SECTION
    ============================================================ */
 const STAGE_DETAILS: Record<
   DeskStage,
@@ -272,7 +253,7 @@ function LandingNavbar() {
         <li><a href="#product">Product</a></li>
         <li><a href="#workflow">Workflow</a></li>
         <li><a href="#features">Features</a></li>
-        <li><a href="#creators">3D Studio</a></li>
+        <li><a href="#creators">Philosophy</a></li>
       </ul>
 
       <div className="lp-nav-actions">
@@ -303,16 +284,21 @@ function LandingNavbar() {
 }
 
 /* ============================================================
-   1. INTERACTIVE "TOPIC-TO-ARTICLE" HERO STUDIO
+   1. HERO SECTION (Interactive Topic Simulator + 3D Studio Desk)
    ============================================================ */
-function HeroSection() {
+function HeroSection({
+  activeDeskStage,
+  onSelectDeskStage,
+}: {
+  activeDeskStage: DeskStage;
+  onSelectDeskStage: (stage: DeskStage) => void;
+}) {
   const [selectedPresetId, setSelectedPresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
   const [customTopicInput, setCustomTopicInput] = useState<string>('');
   const [customSynthesized, setCustomSynthesized] = useState<HeroTopicPreset | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
   const [streamedChars, setStreamedChars] = useState<number>(999);
   const [seoCount, setSeoCount] = useState<number>(HERO_TOPIC_PRESETS[0].seoScore);
-  const [completedStepCount, setCompletedStepCount] = useState<number>(4);
 
   const activeData: HeroTopicPreset =
     customSynthesized ||
@@ -321,48 +307,41 @@ function HeroSection() {
 
   const fullParagraphText = `${activeData.excerptParagraphs[0]} ${activeData.excerptParagraphs[1]}`;
 
-  // Trigger live streaming & animated SEO counter whenever topic changes
-  const triggerLiveSimulation = (targetScore: number) => {
+  useEffect(() => {
     setIsSynthesizing(true);
     setStreamedChars(0);
-    setSeoCount(45);
-    setCompletedStepCount(1);
+    setSeoCount(52);
 
-    const stepTimer1 = setTimeout(() => setCompletedStepCount(2), 260);
-    const stepTimer2 = setTimeout(() => setCompletedStepCount(3), 520);
-    const stepTimer3 = setTimeout(() => {
-      setCompletedStepCount(4);
+    // Sequence 3D desk stages as the topic synthesizes
+    onSelectDeskStage('research');
+    const stageTimer1 = setTimeout(() => onSelectDeskStage('draft'), 450);
+    const stageTimer2 = setTimeout(() => {
+      onSelectDeskStage('review');
       setIsSynthesizing(false);
-    }, 850);
+    }, 1050);
 
     // Animate SEO score counter
-    let currentSeo = 45;
+    let currentSeo = 52;
     const seoInterval = setInterval(() => {
-      currentSeo = Math.min(currentSeo + 3, targetScore);
+      currentSeo = Math.min(currentSeo + 3, activeData.seoScore);
       setSeoCount(currentSeo);
-      if (currentSeo >= targetScore) clearInterval(seoInterval);
-    }, 30);
+      if (currentSeo >= activeData.seoScore) clearInterval(seoInterval);
+    }, 28);
 
-    // Stream characters into laptop manuscript
+    // Stream characters into live manuscript preview strip
     let chars = 0;
     const streamInterval = setInterval(() => {
-      chars += 9;
+      chars += 10;
       setStreamedChars(chars);
       if (chars >= 360) clearInterval(streamInterval);
-    }, 22);
+    }, 20);
 
     return () => {
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
-      clearTimeout(stepTimer3);
+      clearTimeout(stageTimer1);
+      clearTimeout(stageTimer2);
       clearInterval(seoInterval);
       clearInterval(streamInterval);
     };
-  };
-
-  useEffect(() => {
-    const cleanup = triggerLiveSimulation(activeData.seoScore);
-    return cleanup;
   }, [selectedPresetId, customSynthesized]);
 
   const handleSelectPreset = (id: string) => {
@@ -381,12 +360,12 @@ function HeroSection() {
       shortLabel: cleanTopic.slice(0, 26),
       topicPrompt: cleanTopic,
       category: 'Custom Editorial Brief',
-      articleTitle: `${cleanTopic}: A Research-Backed Executive Analysis`,
+      articleTitle: `${cleanTopic}: Executive Analysis`,
       wordCount: '1,790 words',
       readTime: '7 min read',
       seoScore: 93,
       seoRating: 'Optimal',
-      h2Heading: `01. Core Mechanisms & Strategic Implications of ${cleanTopic.slice(0, 32)}`,
+      h2Heading: `01. Core Mechanisms of ${cleanTopic.slice(0, 32)}`,
       excerptParagraphs: [
         `Synthesizing live multi-source research reveals how ${cleanTopic.toLowerCase()} is reshaping modern operational benchmarks with measurable ROI [1].`,
         `Teams pairing structured domain citations with editorial verification outperform generic ungrounded content across organic SERP rankings [2].`,
@@ -395,12 +374,6 @@ function HeroSection() {
         { label: 'MIT Technology Review', color: '#991b1b', initial: 'M', stat: 'Primary benchmark' },
         { label: 'Gartner Research Brief', color: '#163F32', initial: 'G', stat: '2026 Market Guide' },
         { label: 'Harvard Business Review', color: '#1e40af', initial: 'H', stat: 'Executive framework' },
-        { label: 'Industry SERP Consensus', color: '#92400e', initial: 'I', stat: 'Top 5 gap analysis' },
-      ],
-      researchChecks: [
-        { label: 'Live Tavily web sources', count: '9 indexed' },
-        { label: 'Primary statistics', count: '5 extracted' },
-        { label: 'SERP intent alignment', count: '98% match' },
       ],
     };
     setCustomSynthesized(customPreset);
@@ -414,10 +387,10 @@ function HeroSection() {
       <div className="lp-container">
         <div className="lp-hero-inner">
 
-          {/* Left: Copy + Interactive Topic Playground */}
+          {/* Left: Copy + Interactive Topic-to-Article Simulator */}
           <div className="lp-hero-left">
             <div className="lp-hero-kicker">
-              AI-Powered Editorial Automation · Multi-Agent Studio
+              AI-Powered Editorial Automation · Interactive 3D Studio
             </div>
 
             <h1 className="lp-hero-headline" id="hero-headline">
@@ -434,17 +407,18 @@ function HeroSection() {
 
             <p className="lp-hero-desc">
               BlogFlow AI transforms any website, topic or idea into well-researched,
-              SEO-optimised articles — test a live editorial prompt below and watch the studio synthesize it.
+              SEO-optimised articles — pick a prompt below and watch the 3D Editorial Desk
+              orchestrate research, drafting, and quality verification live.
             </p>
 
-            {/* Interactive Topic-to-Article Controller */}
+            {/* Interactive Topic-to-Article Controller + Live Stream Output (Zero Overlap) */}
             <div className="lp-hero-playground" aria-label="Interactive Topic-to-Article Studio">
               <div className="lp-playground-header">
                 <span className="lp-playground-label">
                   <Sparkles size={13} /> Live Topic-to-Article Simulator
                 </span>
                 <span className="lp-playground-status">
-                  {isSynthesizing ? 'Synthesizing sources & draft…' : 'Ready · Click a prompt or type your own'}
+                  {isSynthesizing ? 'Animating 3D Studio pipeline…' : `SEO ${seoCount}/100 · ${activeData.wordCount}`}
                 </span>
               </div>
 
@@ -481,6 +455,30 @@ function HeroSection() {
                   Synthesize
                 </button>
               </form>
+
+              {/* Clean Unobstructed Live Output Preview Strip */}
+              <div className="lp-playground-live-card">
+                <div className="lp-playground-live-top">
+                  <span className="lp-playground-live-title">{activeData.articleTitle}</span>
+                  <span className="lp-playground-live-seo tabular-nums">
+                    SEO {seoCount} · {activeData.seoRating}
+                  </span>
+                </div>
+                <p className="lp-playground-live-prose">
+                  {visibleProse}
+                  {streamedChars < fullParagraphText.length && (
+                    <span className="lp-typing-caret" aria-hidden="true">|</span>
+                  )}
+                </p>
+                <div className="lp-playground-live-citations">
+                  {activeData.sources.map((s, idx) => (
+                    <React.Fragment key={s.label}>
+                      <span>[{idx + 1}] {s.label} ({s.stat})</span>
+                      {idx < activeData.sources.length - 1 && <span aria-hidden="true">·</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="lp-hero-ctas">
@@ -516,151 +514,15 @@ function HeroSection() {
             </div>
           </div>
 
-          {/* Right: Live Interactive Workspace Visual */}
-          <div className="lp-hero-right">
-            <div className="lp-workspace">
-
-              {/* Laptop mockup with REAL live-streamed manuscript */}
-              <div className="lp-laptop">
-                <div className="lp-laptop-body">
-                  <div className="lp-laptop-screen">
-                    <div className="lp-laptop-screen-inner">
-                      <div className="lp-screen-topbar">
-                        <div className="lp-screen-dot" />
-                        <div className="lp-screen-dot" />
-                        <div className="lp-screen-dot" />
-                        <span className="lp-screen-category-tag">
-                          {activeData.category}
-                        </span>
-                      </div>
-
-                      <div className="lp-screen-content lp-screen-live-manuscript">
-                        <div className="lp-screen-article-title">
-                          {activeData.articleTitle}
-                        </div>
-                        <div className="lp-screen-article-meta">
-                          <span>Draft</span>
-                          <span aria-hidden="true">·</span>
-                          <span>{activeData.wordCount}</span>
-                          <span aria-hidden="true">·</span>
-                          <span>{activeData.readTime}</span>
-                          <span aria-hidden="true">·</span>
-                          <span className="lp-screen-meta-seo">SEO {seoCount}</span>
-                        </div>
-
-                        <div className="lp-screen-h2">
-                          {activeData.h2Heading}
-                        </div>
-
-                        <p className="lp-screen-prose">
-                          {visibleProse}
-                          {streamedChars < fullParagraphText.length && (
-                            <span className="lp-typing-caret" aria-hidden="true">|</span>
-                          )}
-                        </p>
-
-                        <div className="lp-screen-footer-bar">
-                          <span>Citations: [1] {activeData.sources[0]?.label} · [2] {activeData.sources[1]?.label}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="lp-laptop-base" />
-                </div>
-              </div>
-
-              {/* Notebook */}
-              <div className="lp-notebook" aria-hidden="true">
-                <div className="lp-notebook-body">
-                  <div className="lp-notebook-spine" />
-                  <div className="lp-notebook-title">Ideas</div>
-                  <div className="lp-notebook-line" />
-                  <div className="lp-notebook-line" />
-                  <div className="lp-notebook-line" />
-                  <div className="lp-notebook-line" />
-                  <div className="lp-notebook-line" />
-                </div>
-              </div>
-
-              {/* Book stack */}
-              <div className="lp-books" aria-hidden="true">
-                <div className="lp-book" data-label="Research" style={{ width: 30, height: 90, background: 'linear-gradient(135deg,#244737,#163F32)' }} />
-                <div className="lp-book" data-label="Ideas" style={{ width: 26, height: 80, background: 'linear-gradient(135deg,#315B4B,#244737)' }} />
-                <div className="lp-book" data-label="Publish" style={{ width: 22, height: 70, background: 'linear-gradient(135deg,#C8A15A,#b08945)' }} />
-              </div>
-
-              {/* Glass card 1: Researching Sources */}
-              <div className="glass-card gc-research">
-                <div className="glass-card-inner">
-                  <div className="gc-title">
-                    {isSynthesizing ? 'Scanning Sources…' : 'Research Verified'}
-                  </div>
-                  {activeData.researchChecks.map((chk, idx) => {
-                    const isDone = completedStepCount > idx + 1;
-                    return (
-                      <div className="gc-item" key={chk.label}>
-                        <div className={`gc-dot ${isDone ? 'gc-dot-success' : 'gc-dot-progress'}`}>
-                          {isDone ? '✓' : '◉'}
-                        </div>
-                        <div className="gc-item-text-wrap">
-                          <span>{chk.label}</span>
-                          <span className="gc-item-sub">{chk.count}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Glass card 2: Top Sources (Dynamic per Topic) */}
-              <div className="glass-card gc-sources">
-                <div className="glass-card-inner">
-                  <div className="gc-title">Top Cited Sources</div>
-                  {activeData.sources.map((s) => (
-                    <div className="gc-source-item" key={s.label}>
-                      <div className="gc-source-icon" style={{ background: s.color }}>{s.initial}</div>
-                      <div className="gc-source-meta">
-                        <span className="gc-source-name-line">{s.label}</span>
-                        <span className="gc-source-stat-line">{s.stat}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Glass card 3: Article Draft Pipeline Status */}
-              <div className="glass-card gc-article">
-                <div className="glass-card-inner">
-                  <div className="gc-title">Agent Pipeline</div>
-                  {[
-                    { label: 'Tavily Research', step: 1 },
-                    { label: 'Outline Synthesis', step: 2 },
-                    { label: 'Gemini Drafting', step: 3 },
-                    { label: 'SEO Verification', step: 4 },
-                  ].map((r) => {
-                    const done = completedStepCount >= r.step;
-                    return (
-                      <div className="gc-status-row" key={r.label}>
-                        <span>{r.label}</span>
-                        <div className={`gc-status-check ${done ? 'gc-check-done' : 'gc-check-pending'}`}>
-                          {done ? '✓' : '○'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Glass card 4: Animated SEO Score */}
-              <div className="glass-card gc-seo">
-                <div className="glass-card-inner">
-                  <div className="gc-title">SEO Score</div>
-                  <div className="gc-seo-score tabular-nums">{seoCount}</div>
-                  <div className="gc-seo-label">{activeData.seoRating}</div>
-                </div>
-              </div>
-
-            </div>
+          {/* Right: 3D FloatingEditorialDesk Studio Directly in the Hero! */}
+          <div className="lp-hero-right-3d">
+            <FloatingEditorialDesk
+              currentStage={activeDeskStage}
+              onStageChange={onSelectDeskStage}
+              interactive={true}
+              activeTopicTitle={activeData.shortLabel}
+              activeTopicMetric={`SEO ${seoCount}/100 · ${activeData.wordCount} · ${activeData.sources.length} Citations`}
+            />
           </div>
         </div>
       </div>
@@ -778,8 +640,8 @@ function WorkflowSection({
                 className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
               />
             </h2>
-            <a href="#creators" className="lp-workflow-explore">
-              Inspect in 3D Editorial Studio <ChevronRight size={14} />
+            <a href="#hero" className="lp-workflow-explore">
+              View in 3D Hero Studio <ChevronRight size={14} />
             </a>
           </div>
           <div>
@@ -1268,7 +1130,7 @@ function WorkflowSection({
 }
 
 /* ============================================================
-   INTERACTIVE 3D EDITORIAL STUDIO & PHILOSOPHY SECTION
+   PHILOSOPHY SECTION (#creators — AI vs Human Governance)
    ============================================================ */
 function AutomationSection({
   activeDeskStage,
@@ -1289,10 +1151,9 @@ function AutomationSection({
   return (
     <section id="creators" className="lp-automation" aria-labelledby="automation-heading">
       <div className="lp-container">
-        {/* Header Row */}
         <div className="lp-studio-header">
           <div>
-            <div className="lp-section-label">Interactive 3D Editorial Studio · Philosophy</div>
+            <div className="lp-section-label">Editorial Philosophy · Governance</div>
             <h2 className="lp-section-heading" id="automation-heading">
               Automation should move the work forward,{' '}
               not take the <em>editor</em> out of it.
@@ -1300,15 +1161,15 @@ function AutomationSection({
           </div>
           <div>
             <p className="lp-section-desc">
-              Interact with the 3D Editorial Desk below — switch between <strong>Research</strong>,{' '}
-              <strong>Draft</strong>, <strong>Review</strong>, and <strong>Publish</strong>, drag to orbit,
-              or slide the layer explosion control to inspect how AI agents and human editors collaborate.
+              Every stage of BlogFlow AI separates mechanical synthesis from human editorial
+              judgment — select any stage below to see how autonomous preparation pairs with
+              human sign-off.
             </p>
           </div>
         </div>
 
-        {/* Interactive Stage Switcher Bar */}
-        <div className="lp-studio-stage-bar" role="tablist" aria-label="3D Desk Workflow Stage">
+        {/* Stage Switcher Bar */}
+        <div className="lp-studio-stage-bar" role="tablist" aria-label="Editorial Governance Stage">
           {stageOrder.map((st) => {
             const active = activeDeskStage === st.id;
             return (
@@ -1330,83 +1191,65 @@ function AutomationSection({
           })}
         </div>
 
-        {/* Main 2-Column Interactive 3D Showcase Grid */}
-        <div className="lp-studio-grid">
-          {/* Left: Upgraded Three.js 3D FloatingEditorialDesk */}
-          <div className="lp-studio-viewport-col">
-            <FloatingEditorialDesk
-              currentStage={activeDeskStage}
-              onStageChange={onSelectDeskStage}
-              interactive={true}
-            />
+        <div className="lp-inspector-card">
+          <div className="lp-inspector-kicker">
+            <span>STAGE {detail.stepNum} GOVERNANCE</span>
+            <span aria-hidden="true">·</span>
+            <span>{detail.artifactLabel}</span>
           </div>
 
-          {/* Right: Live Stage Inspector & Automation vs. Human Breakdown */}
-          <div className="lp-studio-inspector-col">
-            <div className="lp-inspector-card">
-              <div className="lp-inspector-kicker">
-                <span>STAGE {detail.stepNum} ACTIVE</span>
-                <span aria-hidden="true">·</span>
-                <span>{detail.artifactLabel}</span>
-              </div>
+          <h3 className="lp-inspector-title">{detail.title}</h3>
+          <p className="lp-inspector-subtitle">{detail.subtitle}</p>
 
-              <h3 className="lp-inspector-title">{detail.title}</h3>
-              <p className="lp-inspector-subtitle">{detail.subtitle}</p>
-
-              {/* Artifact Output Callout */}
-              <div className="lp-inspector-artifact">
-                <div className="lp-inspector-artifact-header">
-                  <Sparkles size={15} />
-                  <span>Live Stage Output</span>
-                </div>
-                <p className="lp-inspector-artifact-body">{detail.artifactPreview}</p>
-                <div className="lp-inspector-deliverables">
-                  {detail.deliverables.map((d, idx) => (
-                    <React.Fragment key={d}>
-                      <span>{d}</span>
-                      {idx < detail.deliverables.length - 1 && <span aria-hidden="true">·</span>}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dual-Column Automation vs Human Decisions */}
-              <div className="lp-inspector-split">
-                <div className="lp-inspector-panel lp-inspector-panel-auto">
-                  <div className="lp-inspector-panel-heading">AI Agent Prepares</div>
-                  <ul className="lp-inspector-list">
-                    {detail.automatedTasks.map((task) => (
-                      <li key={task}>
-                        <CheckCircle2 size={14} className="lp-inspector-icon-auto" />
-                        <span>{task}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="lp-inspector-panel lp-inspector-panel-human">
-                  <div className="lp-inspector-panel-heading">Human Editor Decides</div>
-                  <ul className="lp-inspector-list">
-                    {detail.humanDecisions.map((dec) => (
-                      <li key={dec}>
-                        <ShieldCheck size={14} className="lp-inspector-icon-human" />
-                        <span>{dec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Stage Quick-Advance Footer */}
-              <div className="lp-inspector-footer">
-                <span className="lp-inspector-hint">
-                  Tip: Drag the 3D desk to orbit or press <kbd>H</kbd> to toggle studio HUD
-                </span>
-                <Link href="/generator" className="lp-inspector-cta">
-                  Run this pipeline <ArrowRight size={14} />
-                </Link>
-              </div>
+          <div className="lp-inspector-artifact">
+            <div className="lp-inspector-artifact-header">
+              <Sparkles size={15} />
+              <span>Stage Deliverable</span>
             </div>
+            <p className="lp-inspector-artifact-body">{detail.artifactPreview}</p>
+            <div className="lp-inspector-deliverables">
+              {detail.deliverables.map((d, idx) => (
+                <React.Fragment key={d}>
+                  <span>{d}</span>
+                  {idx < detail.deliverables.length - 1 && <span aria-hidden="true">·</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          <div className="lp-inspector-split">
+            <div className="lp-inspector-panel lp-inspector-panel-auto">
+              <div className="lp-inspector-panel-heading">AI Agent Prepares</div>
+              <ul className="lp-inspector-list">
+                {detail.automatedTasks.map((task) => (
+                  <li key={task}>
+                    <CheckCircle2 size={14} className="lp-inspector-icon-auto" />
+                    <span>{task}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="lp-inspector-panel lp-inspector-panel-human">
+              <div className="lp-inspector-panel-heading">Human Editor Decides</div>
+              <ul className="lp-inspector-list">
+                {detail.humanDecisions.map((dec) => (
+                  <li key={dec}>
+                    <ShieldCheck size={14} className="lp-inspector-icon-human" />
+                    <span>{dec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="lp-inspector-footer">
+            <a href="#hero" className="lp-inspector-cta">
+              ↑ Inspect Stage {detail.stepNum} in the 3D Hero Desk
+            </a>
+            <Link href="/generator" className="lp-inspector-cta">
+              Launch Full Studio <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </div>
@@ -1696,8 +1539,8 @@ function FinalCTA() {
                 Start creating
                 <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </Link>
-              <a href="#creators" className="lp-btn-cta-secondary">
-                Inspect 3D Studio
+              <a href="#hero" className="lp-btn-cta-secondary">
+                Explore 3D Hero Desk
               </a>
             </div>
           </div>
@@ -1731,7 +1574,7 @@ function LandingFooter() {
               <li><a href="#product">Product</a></li>
               <li><a href="#workflow">Workflow</a></li>
               <li><a href="#features">Features</a></li>
-              <li><a href="#creators">3D Studio</a></li>
+              <li><a href="#creators">Philosophy</a></li>
             </ul>
           </div>
 
@@ -1776,7 +1619,10 @@ export default function LandingPage() {
     <div className="lp-root">
       <LandingNavbar />
       <main>
-        <HeroSection />
+        <HeroSection
+          activeDeskStage={activeDeskStage}
+          onSelectDeskStage={setActiveDeskStage}
+        />
         <WorkflowSection onSyncDeskStage={setActiveDeskStage} />
         <AutomationSection
           activeDeskStage={activeDeskStage}
