@@ -3129,6 +3129,707 @@
 }
 
 /* ============================================================
+   1. INTERACTIVE HERO TOPIC-TO-ARTICLE PLAYGROUND
+   ============================================================ */
+.lp-hero-playground {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border-mid);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 28px rgba(22, 63, 50, 0.06);
+  max-width: 540px;
+}
+
+.dark .lp-hero-playground {
+  background: rgba(23, 33, 29, 0.85);
+  border-color: rgba(235, 242, 237, 0.14);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.lp-playground-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lp-playground-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lp-primary);
+}
+
+.lp-playground-status {
+  font-size: 0.72rem;
+  color: var(--lp-text-muted);
+  font-weight: 500;
+}
+
+.lp-playground-presets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lp-preset-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-bg);
+  color: var(--lp-text-mid);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-preset-btn:hover {
+  border-color: var(--lp-primary);
+  color: var(--lp-text);
+}
+
+.lp-preset-btn.active {
+  background: var(--lp-primary);
+  border-color: var(--lp-primary);
+  color: var(--lp-primary-contrast);
+}
+
+.dark .lp-preset-btn {
+  background: #101714;
+  border-color: rgba(235, 242, 237, 0.12);
+}
+
+.dark .lp-preset-btn.active {
+  background: var(--lp-primary);
+  color: #102019;
+}
+
+.lp-playground-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-playground-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-border-mid);
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.lp-playground-input:focus {
+  border-color: var(--lp-primary);
+}
+
+.dark .lp-playground-input {
+  background: #101714;
+  border-color: rgba(235, 242, 237, 0.16);
+}
+
+.lp-playground-submit {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-accent);
+  background: var(--lp-accent);
+  color: #18211D;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.lp-playground-submit:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* Live Laptop Manuscript Overrides */
+.lp-screen-category-tag {
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lp-primary);
+}
+
+.lp-screen-live-manuscript {
+  justify-content: space-between;
+}
+
+.lp-screen-meta-seo {
+  font-weight: 700;
+  color: #16a34a;
+  font-variant-numeric: tabular-nums;
+}
+
+.dark .lp-screen-meta-seo {
+  color: #4ade80;
+}
+
+.lp-screen-h2 {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--lp-primary);
+  border-top: 1px solid var(--lp-border);
+  padding-top: 6px;
+  line-height: 1.3;
+}
+
+.lp-screen-prose {
+  font-size: 0.64rem;
+  line-height: 1.48;
+  color: var(--lp-text-mid);
+  margin: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.lp-typing-caret {
+  display: inline-block;
+  margin-left: 2px;
+  font-weight: 700;
+  color: var(--lp-accent);
+}
+
+.lp-screen-footer-bar {
+  font-size: 0.58rem;
+  font-family: monospace;
+  color: var(--lp-text-muted);
+  border-top: 1px solid var(--lp-border);
+  padding-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Enhanced Glass Card Sub-details */
+.gc-item-text-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 6px;
+}
+
+.gc-item-sub {
+  font-size: 0.62rem;
+  font-family: monospace;
+  color: var(--lp-text-muted);
+  white-space: nowrap;
+}
+
+.gc-source-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gc-source-name-line {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gc-source-stat-line {
+  font-size: 0.62rem;
+  color: var(--lp-text-muted);
+}
+
+/* ============================================================
+   2. INTERACTIVE 5-STAGE AGENT PIPELINE INSPECTOR (#workflow)
+   ============================================================ */
+.lp-workflow-inspector-wrap {
+  margin-top: 28px;
+}
+
+.lp-wf-panel {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border-mid);
+  border-radius: 22px;
+  padding: 36px;
+  box-shadow: 0 16px 48px rgba(22, 63, 50, 0.07);
+}
+
+.dark .lp-wf-panel {
+  background: #17211D;
+  border-color: rgba(235, 242, 237, 0.14);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+  .lp-wf-panel {
+    padding: 24px;
+  }
+}
+
+.lp-wf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (max-width: 980px) {
+  .lp-wf-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+.lp-wf-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lp-wf-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-accent);
+}
+
+.lp-wf-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+  line-height: 1.18;
+  color: var(--lp-text);
+  margin: 0;
+}
+
+.lp-wf-desc {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--lp-text-muted);
+  margin: 0;
+}
+
+.lp-wf-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--lp-border);
+}
+
+.lp-wf-metric-val {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--lp-primary);
+  line-height: 1.1;
+}
+
+.lp-wf-metric-lbl {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--lp-text-muted);
+  margin-top: 4px;
+}
+
+.lp-wf-demo-box {
+  background: var(--lp-bg);
+  border: 1px solid var(--lp-border);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dark .lp-wf-demo-box {
+  background: #101714;
+  border-color: rgba(235, 242, 237, 0.1);
+}
+
+.lp-wf-demo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--lp-border);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  flex-wrap: wrap;
+}
+
+.lp-wf-demo-meta {
+  font-size: 0.72rem;
+  font-family: monospace;
+  color: var(--lp-primary);
+}
+
+/* Stage 01: Competitor Gap Items */
+.lp-wf-gap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-wf-gap-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+}
+
+.dark .lp-wf-gap-item {
+  background: #17211D;
+}
+
+.lp-wf-gap-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 4px;
+}
+
+.lp-wf-gap-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--lp-text-muted);
+}
+
+.lp-wf-gap-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--lp-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lp-wf-gap-action:hover {
+  text-decoration: underline;
+}
+
+/* Stage 02: Live Tavily Citation Cards */
+.lp-wf-citation-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-wf-citation-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dark .lp-wf-citation-card {
+  background: #17211D;
+}
+
+.lp-wf-citation-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lp-wf-citation-ref {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.lp-wf-citation-stat {
+  font-size: 0.7rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--lp-accent);
+}
+
+.lp-wf-citation-quote {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--lp-text-mid);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.lp-wf-citation-url {
+  font-size: 0.68rem;
+  font-family: monospace;
+  color: var(--lp-text-muted);
+}
+
+/* Stage 03: Gemini Outline Tree */
+.lp-wf-outline-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-wf-outline-node {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+}
+
+.dark .lp-wf-outline-node {
+  background: #17211D;
+}
+
+.lp-wf-outline-node.is-indented {
+  margin-left: 24px;
+}
+
+.lp-wf-outline-tag {
+  font-family: monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--lp-accent);
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.lp-wf-outline-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.lp-wf-outline-meta {
+  font-size: 0.7rem;
+  color: var(--lp-text-muted);
+  margin-top: 2px;
+}
+
+/* Stage 04: Interactive Review Console */
+.lp-wf-review-console {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lp-wf-review-scores {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  font-family: monospace;
+  color: var(--lp-text-mid);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+}
+
+.dark .lp-wf-review-scores {
+  background: #17211D;
+}
+
+.lp-wf-review-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--lp-text-muted);
+}
+
+.lp-wf-review-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-border-mid);
+  background: var(--lp-surface);
+  color: var(--lp-text);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+}
+
+.dark .lp-wf-review-input {
+  background: #17211D;
+}
+
+.lp-wf-review-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lp-wf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid var(--lp-border-mid);
+  background: var(--lp-surface);
+  color: var(--lp-text);
+  transition: all 0.15s ease;
+}
+
+.dark .lp-wf-btn {
+  background: #17211D;
+}
+
+.lp-wf-btn-approve:hover,
+.lp-wf-btn-approve.active {
+  background: #163F32;
+  border-color: #163F32;
+  color: #F7F4EC;
+}
+
+.dark .lp-wf-btn-approve:hover,
+.dark .lp-wf-btn-approve.active {
+  background: #B8D5C5;
+  border-color: #B8D5C5;
+  color: #102019;
+}
+
+.lp-wf-btn-revise:hover,
+.lp-wf-btn-revise.active {
+  background: #C8A15A;
+  border-color: #C8A15A;
+  color: #18211D;
+}
+
+.lp-wf-btn-reject:hover,
+.lp-wf-btn-reject.active {
+  background: #991b1b;
+  border-color: #991b1b;
+  color: #ffffff;
+}
+
+.lp-wf-review-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+  color: var(--lp-text);
+}
+
+.dark .lp-wf-review-feedback {
+  background: #17211D;
+}
+
+/* Stage 05: WordPress REST API Console */
+.lp-wf-publish-console {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lp-wf-publish-modes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lp-wf-mode-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+  color: var(--lp-text-mid);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dark .lp-wf-mode-btn {
+  background: #17211D;
+}
+
+.lp-wf-mode-btn.active {
+  background: var(--lp-primary);
+  border-color: var(--lp-primary);
+  color: var(--lp-primary-contrast);
+}
+
+.lp-wf-code-preview {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #101714;
+  border: 1px solid rgba(235, 242, 237, 0.14);
+  color: #B8D5C5;
+  font-family: monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.lp-wf-publish-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lp-wf-publish-confirm {
+  font-size: 0.76rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.dark .lp-wf-publish-confirm {
+  color: #4ade80;
+}
+
+/* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -3139,5 +3840,6 @@
     transition: none !important;
   }
 }
+
 
 

@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import './landing.css';
 import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Globe, Search, Lightbulb, Send,
   ArrowRight, Play, ChevronRight, BookOpen,
   FileText, BarChart2, UserCheck, Layers, Rss,
-  Sun, Moon, Sparkles, CheckCircle2, ShieldCheck
+  Sun, Moon, Sparkles, CheckCircle2, ShieldCheck,
+  RotateCcw, XCircle, ExternalLink, Lock, Check, RefreshCw
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
@@ -53,6 +55,112 @@ const CREATOR_AVATARS = [
   },
 ];
 
+/* ============================================================
+   HERO INTERACTIVE TOPIC PRESETS
+   ============================================================ */
+interface HeroTopicPreset {
+  id: string;
+  shortLabel: string;
+  topicPrompt: string;
+  category: string;
+  articleTitle: string;
+  wordCount: string;
+  readTime: string;
+  seoScore: number;
+  seoRating: string;
+  h2Heading: string;
+  excerptParagraphs: string[];
+  sources: { label: string; color: string; initial: string; stat: string }[];
+  researchChecks: { label: string; count: string }[];
+}
+
+const HERO_TOPIC_PRESETS: HeroTopicPreset[] = [
+  {
+    id: 'ai-search',
+    shortLabel: 'AI Search Architecture',
+    topicPrompt: 'How RAG & Semantic Indexing Are Replacing Traditional Keyword Search',
+    category: 'AI & Engineering',
+    articleTitle: 'The Architecture of AI-Native Search Engines',
+    wordCount: '1,680 words',
+    readTime: '6 min read',
+    seoScore: 94,
+    seoRating: 'Optimal',
+    h2Heading: '01. Retrieval-Augmented Generation vs. Lexical Matching',
+    excerptParagraphs: [
+      'Modern search pipelines combine dense vector embeddings with real-time citation verification to eliminate hallucinated synthesis [1].',
+      'Enterprise benchmarks indicate hybrid semantic retrieval improves answer precision by 41% across technical documentation [2].',
+    ],
+    sources: [
+      { label: 'MIT Technology Review', color: '#991b1b', initial: 'M', stat: '41% precision lift' },
+      { label: 'Stanford HAI Index', color: '#163F32', initial: 'S', stat: '2026 RAG Benchmark' },
+      { label: 'Nature Machine Intel', color: '#1e40af', initial: 'N', stat: 'Citation grounding' },
+      { label: 'ArXiv Preprint', color: '#92400e', initial: 'A', stat: 'Dense retrieval latency' },
+    ],
+    researchChecks: [
+      { label: 'Technical whitepapers', count: '6 indexed' },
+      { label: 'Academic benchmarks', count: '4 verified' },
+      { label: 'SERP competitor gaps', count: '3 angles' },
+    ],
+  },
+  {
+    id: 'saas-pricing',
+    shortLabel: 'Usage-Based SaaS Pricing',
+    topicPrompt: 'Why Hybrid Seat + Consumption Pricing Wins Enterprise Retention in 2026',
+    category: 'SaaS & Growth',
+    articleTitle: 'The Shift to Hybrid Usage-Based SaaS Pricing',
+    wordCount: '1,920 words',
+    readTime: '7 min read',
+    seoScore: 91,
+    seoRating: 'Excellent',
+    h2Heading: '01. Aligning Revenue Expansion with Customer Value Metrics',
+    excerptParagraphs: [
+      'Pure seat-based subscriptions face contraction as autonomous workflows compress headcount per department [1].',
+      'Software leaders adopting committed base tiers paired with elastic usage credits report 118% net dollar retention [2].',
+    ],
+    sources: [
+      { label: 'OpenView SaaS Report', color: '#163F32', initial: 'O', stat: '118% NDR median' },
+      { label: 'Harvard Business Review', color: '#991b1b', initial: 'H', stat: 'Pricing elasticity' },
+      { label: 'Stripe Economy Index', color: '#3730a3', initial: 'S', stat: 'Billing telemetry' },
+      { label: 'Bessemer Cloud Index', color: '#854d0e', initial: 'B', stat: 'AI margin analysis' },
+    ],
+    researchChecks: [
+      { label: 'Public S-1 filings', count: '8 analyzed' },
+      { label: 'Pricing page teardowns', count: '12 audited' },
+      { label: 'CFO survey insights', count: '5 cited' },
+    ],
+  },
+  {
+    id: 'zero-trust',
+    shortLabel: 'Zero-Trust Cloud Security',
+    topicPrompt: 'Implementing Identity-First Microsegmentation for Multi-Cloud Kubernetes',
+    category: 'Cybersecurity',
+    articleTitle: 'Zero-Trust Microsegmentation in Multi-Cloud Environments',
+    wordCount: '2,150 words',
+    readTime: '8 min read',
+    seoScore: 96,
+    seoRating: 'Exceptional',
+    h2Heading: '01. Ephemeral Workload Identities & eBPF Policy Enforcement',
+    excerptParagraphs: [
+      'Static perimeter firewalls fail when containerized workloads spin up and terminate across distributed clusters in seconds [1].',
+      'Cryptographic SPIFFE identities paired with kernel-level eBPF observability block lateral movement before packet routing [2].',
+    ],
+    sources: [
+      { label: 'NIST SP 800-207', color: '#1e3a8a', initial: 'N', stat: 'Zero-Trust Standard' },
+      { label: 'CNCF Security Audit', color: '#163F32', initial: 'C', stat: 'SPIFFE/SPIRE spec' },
+      { label: 'IEEE Security & Privacy', color: '#991b1b', initial: 'I', stat: 'eBPF latency <1.2%' },
+      { label: 'Cloudflare Radar', color: '#9a3412', initial: 'R', stat: 'Threat telemetry' },
+    ],
+    researchChecks: [
+      { label: 'NIST & CISA advisories', count: '5 verified' },
+      { label: 'Kernel eBPF benchmarks', count: '7 extracted' },
+      { label: 'Architecture diagrams', count: '3 mapped' },
+    ],
+  },
+];
+
+/* ============================================================
+   3D STUDIO STAGE DETAILS
+   ============================================================ */
 const STAGE_DETAILS: Record<
   DeskStage,
   {
@@ -195,22 +303,110 @@ function LandingNavbar() {
 }
 
 /* ============================================================
-   HERO SECTION
+   1. INTERACTIVE "TOPIC-TO-ARTICLE" HERO STUDIO
    ============================================================ */
 function HeroSection() {
-  const [seoCount, setSeoCount] = useState(0);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
+  const [customTopicInput, setCustomTopicInput] = useState<string>('');
+  const [customSynthesized, setCustomSynthesized] = useState<HeroTopicPreset | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
+  const [streamedChars, setStreamedChars] = useState<number>(999);
+  const [seoCount, setSeoCount] = useState<number>(HERO_TOPIC_PRESETS[0].seoScore);
+  const [completedStepCount, setCompletedStepCount] = useState<number>(4);
+
+  const activeData: HeroTopicPreset =
+    customSynthesized ||
+    HERO_TOPIC_PRESETS.find((p) => p.id === selectedPresetId) ||
+    HERO_TOPIC_PRESETS[0];
+
+  const fullParagraphText = `${activeData.excerptParagraphs[0]} ${activeData.excerptParagraphs[1]}`;
+
+  // Trigger live streaming & animated SEO counter whenever topic changes
+  const triggerLiveSimulation = (targetScore: number) => {
+    setIsSynthesizing(true);
+    setStreamedChars(0);
+    setSeoCount(45);
+    setCompletedStepCount(1);
+
+    const stepTimer1 = setTimeout(() => setCompletedStepCount(2), 260);
+    const stepTimer2 = setTimeout(() => setCompletedStepCount(3), 520);
+    const stepTimer3 = setTimeout(() => {
+      setCompletedStepCount(4);
+      setIsSynthesizing(false);
+    }, 850);
+
+    // Animate SEO score counter
+    let currentSeo = 45;
+    const seoInterval = setInterval(() => {
+      currentSeo = Math.min(currentSeo + 3, targetScore);
+      setSeoCount(currentSeo);
+      if (currentSeo >= targetScore) clearInterval(seoInterval);
+    }, 30);
+
+    // Stream characters into laptop manuscript
+    let chars = 0;
+    const streamInterval = setInterval(() => {
+      chars += 9;
+      setStreamedChars(chars);
+      if (chars >= 360) clearInterval(streamInterval);
+    }, 22);
+
+    return () => {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
+      clearInterval(seoInterval);
+      clearInterval(streamInterval);
+    };
+  };
 
   useEffect(() => {
-    let start = 0;
-    const target = 87;
-    const step = Math.ceil(target / 40);
-    const timer = setInterval(() => {
-      start = Math.min(start + step, target);
-      setSeoCount(start);
-      if (start >= target) clearInterval(timer);
-    }, 40);
-    return () => clearInterval(timer);
-  }, []);
+    const cleanup = triggerLiveSimulation(activeData.seoScore);
+    return cleanup;
+  }, [selectedPresetId, customSynthesized]);
+
+  const handleSelectPreset = (id: string) => {
+    setCustomSynthesized(null);
+    setSelectedPresetId(id);
+  };
+
+  const handleCustomTopicSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = customTopicInput.trim();
+    if (!trimmed) return;
+
+    const cleanTopic = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    const customPreset: HeroTopicPreset = {
+      id: 'custom',
+      shortLabel: cleanTopic.slice(0, 26),
+      topicPrompt: cleanTopic,
+      category: 'Custom Editorial Brief',
+      articleTitle: `${cleanTopic}: A Research-Backed Executive Analysis`,
+      wordCount: '1,790 words',
+      readTime: '7 min read',
+      seoScore: 93,
+      seoRating: 'Optimal',
+      h2Heading: `01. Core Mechanisms & Strategic Implications of ${cleanTopic.slice(0, 32)}`,
+      excerptParagraphs: [
+        `Synthesizing live multi-source research reveals how ${cleanTopic.toLowerCase()} is reshaping modern operational benchmarks with measurable ROI [1].`,
+        `Teams pairing structured domain citations with editorial verification outperform generic ungrounded content across organic SERP rankings [2].`,
+      ],
+      sources: [
+        { label: 'MIT Technology Review', color: '#991b1b', initial: 'M', stat: 'Primary benchmark' },
+        { label: 'Gartner Research Brief', color: '#163F32', initial: 'G', stat: '2026 Market Guide' },
+        { label: 'Harvard Business Review', color: '#1e40af', initial: 'H', stat: 'Executive framework' },
+        { label: 'Industry SERP Consensus', color: '#92400e', initial: 'I', stat: 'Top 5 gap analysis' },
+      ],
+      researchChecks: [
+        { label: 'Live Tavily web sources', count: '9 indexed' },
+        { label: 'Primary statistics', count: '5 extracted' },
+        { label: 'SERP intent alignment', count: '98% match' },
+      ],
+    };
+    setCustomSynthesized(customPreset);
+  };
+
+  const visibleProse = fullParagraphText.slice(0, streamedChars);
 
   return (
     <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
@@ -218,7 +414,7 @@ function HeroSection() {
       <div className="lp-container">
         <div className="lp-hero-inner">
 
-          {/* Left: Copy */}
+          {/* Left: Copy + Interactive Topic Playground */}
           <div className="lp-hero-left">
             <div className="lp-hero-kicker">
               AI-Powered Editorial Automation · Multi-Agent Studio
@@ -238,17 +434,67 @@ function HeroSection() {
 
             <p className="lp-hero-desc">
               BlogFlow AI transforms any website, topic or idea into well-researched,
-              SEO-optimised articles — so you can focus on what matters most: your ideas.
+              SEO-optimised articles — test a live editorial prompt below and watch the studio synthesize it.
             </p>
 
+            {/* Interactive Topic-to-Article Controller */}
+            <div className="lp-hero-playground" aria-label="Interactive Topic-to-Article Studio">
+              <div className="lp-playground-header">
+                <span className="lp-playground-label">
+                  <Sparkles size={13} /> Live Topic-to-Article Simulator
+                </span>
+                <span className="lp-playground-status">
+                  {isSynthesizing ? 'Synthesizing sources & draft…' : 'Ready · Click a prompt or type your own'}
+                </span>
+              </div>
+
+              {/* 3 Curated Editorial Prompts */}
+              <div className="lp-playground-presets" role="tablist" aria-label="Curated editorial prompts">
+                {HERO_TOPIC_PRESETS.map((preset) => {
+                  const isActive = !customSynthesized && selectedPresetId === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => handleSelectPreset(preset.id)}
+                      className={`lp-preset-btn${isActive ? ' active' : ''}`}
+                    >
+                      {preset.shortLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Topic Input Form */}
+              <form onSubmit={handleCustomTopicSubmit} className="lp-playground-form">
+                <input
+                  type="text"
+                  value={customTopicInput}
+                  onChange={(e) => setCustomTopicInput(e.target.value)}
+                  placeholder="Or type any topic (e.g., Sustainable Aviation Fuels in 2026)…"
+                  className="lp-playground-input"
+                  aria-label="Custom article topic"
+                />
+                <button type="submit" className="lp-playground-submit">
+                  Synthesize
+                </button>
+              </form>
+            </div>
+
             <div className="lp-hero-ctas">
-              <Link href="/generator" className="lp-btn-primary" id="hero-cta-primary">
-                Start creating
+              <Link
+                href={`/generator?topic=${encodeURIComponent(activeData.topicPrompt)}`}
+                className="lp-btn-primary"
+                id="hero-cta-primary"
+              >
+                Open in Full Generator
                 <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </Link>
-              <a href="#creators" className="lp-btn-secondary" id="hero-cta-secondary">
+              <a href="#workflow" className="lp-btn-secondary" id="hero-cta-secondary">
                 <Play size={14} />
-                Explore 3D Editorial Desk
+                Inspect 5-Agent Pipeline
               </a>
             </div>
 
@@ -270,11 +516,11 @@ function HeroSection() {
             </div>
           </div>
 
-          {/* Right: Workspace visual */}
-          <div className="lp-hero-right" aria-hidden="true">
+          {/* Right: Live Interactive Workspace Visual */}
+          <div className="lp-hero-right">
             <div className="lp-workspace">
 
-              {/* Laptop mockup */}
+              {/* Laptop mockup with REAL live-streamed manuscript */}
               <div className="lp-laptop">
                 <div className="lp-laptop-body">
                   <div className="lp-laptop-screen">
@@ -283,23 +529,38 @@ function HeroSection() {
                         <div className="lp-screen-dot" />
                         <div className="lp-screen-dot" />
                         <div className="lp-screen-dot" />
+                        <span className="lp-screen-category-tag">
+                          {activeData.category}
+                        </span>
                       </div>
-                      <div className="lp-screen-content">
+
+                      <div className="lp-screen-content lp-screen-live-manuscript">
                         <div className="lp-screen-article-title">
-                          The Future of AI-Powered Search
+                          {activeData.articleTitle}
                         </div>
                         <div className="lp-screen-article-meta">
                           <span>Draft</span>
-                          <span>·</span>
-                          <span>1,240 words</span>
-                          <span>·</span>
-                          <span>SEO 87</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{activeData.wordCount}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{activeData.readTime}</span>
+                          <span aria-hidden="true">·</span>
+                          <span className="lp-screen-meta-seo">SEO {seoCount}</span>
                         </div>
-                        <div className="lp-screen-img" />
-                        <div className="lp-screen-lines">
-                          <div className="lp-screen-line" />
-                          <div className="lp-screen-line" />
-                          <div className="lp-screen-line" />
+
+                        <div className="lp-screen-h2">
+                          {activeData.h2Heading}
+                        </div>
+
+                        <p className="lp-screen-prose">
+                          {visibleProse}
+                          {streamedChars < fullParagraphText.length && (
+                            <span className="lp-typing-caret" aria-hidden="true">|</span>
+                          )}
+                        </p>
+
+                        <div className="lp-screen-footer-bar">
+                          <span>Citations: [1] {activeData.sources[0]?.label} · [2] {activeData.sources[1]?.label}</span>
                         </div>
                       </div>
                     </div>
@@ -309,7 +570,7 @@ function HeroSection() {
               </div>
 
               {/* Notebook */}
-              <div className="lp-notebook">
+              <div className="lp-notebook" aria-hidden="true">
                 <div className="lp-notebook-body">
                   <div className="lp-notebook-spine" />
                   <div className="lp-notebook-title">Ideas</div>
@@ -322,80 +583,80 @@ function HeroSection() {
               </div>
 
               {/* Book stack */}
-              <div className="lp-books">
+              <div className="lp-books" aria-hidden="true">
                 <div className="lp-book" data-label="Research" style={{ width: 30, height: 90, background: 'linear-gradient(135deg,#244737,#163F32)' }} />
                 <div className="lp-book" data-label="Ideas" style={{ width: 26, height: 80, background: 'linear-gradient(135deg,#315B4B,#244737)' }} />
                 <div className="lp-book" data-label="Publish" style={{ width: 22, height: 70, background: 'linear-gradient(135deg,#C8A15A,#b08945)' }} />
               </div>
 
-              {/* Glass card: Researching sources */}
+              {/* Glass card 1: Researching Sources */}
               <div className="glass-card gc-research">
                 <div className="glass-card-inner">
-                  <div className="gc-title">Researching Sources…</div>
-                  <div className="gc-item">
-                    <div className="gc-dot gc-dot-success">✓</div>
-                    Websites
+                  <div className="gc-title">
+                    {isSynthesizing ? 'Scanning Sources…' : 'Research Verified'}
                   </div>
-                  <div className="gc-item">
-                    <div className="gc-dot gc-dot-success">✓</div>
-                    Academic papers
-                  </div>
-                  <div className="gc-item">
-                    <div className="gc-dot gc-dot-success">✓</div>
-                    News &amp; blogs
-                  </div>
-                  <div className="gc-item">
-                    <div className="gc-dot gc-dot-progress">◉</div>
-                    Analysing insights…
-                  </div>
+                  {activeData.researchChecks.map((chk, idx) => {
+                    const isDone = completedStepCount > idx + 1;
+                    return (
+                      <div className="gc-item" key={chk.label}>
+                        <div className={`gc-dot ${isDone ? 'gc-dot-success' : 'gc-dot-progress'}`}>
+                          {isDone ? '✓' : '◉'}
+                        </div>
+                        <div className="gc-item-text-wrap">
+                          <span>{chk.label}</span>
+                          <span className="gc-item-sub">{chk.count}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Glass card: Top Sources */}
+              {/* Glass card 2: Top Sources (Dynamic per Topic) */}
               <div className="glass-card gc-sources">
                 <div className="glass-card-inner">
-                  <div className="gc-title">Top Sources</div>
-                  {[
-                    { label: 'MIT Technology Review', color: '#c41e3a', initial: 'M' },
-                    { label: 'Nature', color: '#1a6b2f', initial: 'N' },
-                    { label: 'TechCrunch', color: '#006747', initial: 'T' },
-                    { label: 'Wikipedia', color: '#333', initial: 'W' },
-                  ].map((s) => (
+                  <div className="gc-title">Top Cited Sources</div>
+                  {activeData.sources.map((s) => (
                     <div className="gc-source-item" key={s.label}>
                       <div className="gc-source-icon" style={{ background: s.color }}>{s.initial}</div>
-                      {s.label}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Glass card: Article draft */}
-              <div className="glass-card gc-article">
-                <div className="glass-card-inner">
-                  <div className="gc-title">Article Draft</div>
-                  {[
-                    { label: 'Research', done: true },
-                    { label: 'Outline', done: true },
-                    { label: 'Writing', done: true },
-                    { label: 'Review', done: false },
-                    { label: 'Publish', done: false },
-                  ].map((r) => (
-                    <div className="gc-status-row" key={r.label}>
-                      {r.label}
-                      <div className={`gc-status-check ${r.done ? 'gc-check-done' : 'gc-check-pending'}`}>
-                        {r.done ? '✓' : '○'}
+                      <div className="gc-source-meta">
+                        <span className="gc-source-name-line">{s.label}</span>
+                        <span className="gc-source-stat-line">{s.stat}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Glass card: SEO score */}
+              {/* Glass card 3: Article Draft Pipeline Status */}
+              <div className="glass-card gc-article">
+                <div className="glass-card-inner">
+                  <div className="gc-title">Agent Pipeline</div>
+                  {[
+                    { label: 'Tavily Research', step: 1 },
+                    { label: 'Outline Synthesis', step: 2 },
+                    { label: 'Gemini Drafting', step: 3 },
+                    { label: 'SEO Verification', step: 4 },
+                  ].map((r) => {
+                    const done = completedStepCount >= r.step;
+                    return (
+                      <div className="gc-status-row" key={r.label}>
+                        <span>{r.label}</span>
+                        <div className={`gc-status-check ${done ? 'gc-check-done' : 'gc-check-pending'}`}>
+                          {done ? '✓' : '○'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Glass card 4: Animated SEO Score */}
               <div className="glass-card gc-seo">
                 <div className="glass-card-inner">
                   <div className="gc-title">SEO Score</div>
-                  <div className="gc-seo-score">{seoCount}</div>
-                  <div className="gc-seo-label">Excellent</div>
+                  <div className="gc-seo-score tabular-nums">{seoCount}</div>
+                  <div className="gc-seo-label">{activeData.seoRating}</div>
                 </div>
               </div>
 
@@ -425,16 +686,25 @@ function HeroSection() {
 }
 
 /* ============================================================
-   WORKFLOW SECTION (Synchronized with 3D Desk Stage)
+   2. INTERACTIVE 5-STAGE AGENT PIPELINE (#workflow)
    ============================================================ */
+type PipelineStageId = 'discover' | 'research' | 'think' | 'review' | 'publish';
+
 function WorkflowSection({
-  activeDeskStage,
-  onSelectDeskStage,
+  onSyncDeskStage,
 }: {
-  activeDeskStage: DeskStage;
-  onSelectDeskStage: (stage: DeskStage) => void;
+  onSyncDeskStage: (stage: DeskStage) => void;
 }) {
+  const [selectedStage, setSelectedStage] = useState<PipelineStageId>('discover');
+
+  // Interactive states inside Stage 04 (Review) and Stage 05 (Publish)
+  const [reviewDecision, setReviewDecision] = useState<'pending' | 'approved' | 'revision' | 'rejected'>('pending');
+  const [reviewerNote, setReviewerNote] = useState<string>('Strong primary citations in Section 02. Approved for WordPress staging.');
+  const [wpPublishMode, setWpPublishMode] = useState<'draft' | 'schedule'>('draft');
+  const [wpPushSimulated, setWpPushSimulated] = useState<boolean>(false);
+
   const stages: {
+    id: PipelineStageId;
     n: string;
     icon: React.ReactNode;
     title: string;
@@ -443,53 +713,63 @@ function WorkflowSection({
     deskStage: DeskStage;
   }[] = [
     {
+      id: 'discover',
       n: '01',
       icon: <Globe size={22} />,
       title: 'Discover',
-      desc: 'Find relevant topics and opportunities from any source URL.',
+      desc: 'Niche analysis & competitor content gap detection from any URL.',
       tag: 'Web search + AI',
       deskStage: 'research',
     },
     {
+      id: 'research',
       n: '02',
       icon: <Search size={22} />,
       title: 'Research',
-      desc: 'Analyse multiple sources and extract key insights and facts.',
+      desc: 'Live Tavily citation extraction with verified domain statistics.',
       tag: 'Multi-source analysis',
       deskStage: 'research',
     },
     {
+      id: 'think',
       n: '03',
       icon: <Lightbulb size={22} />,
-      title: 'Think & Draft',
-      desc: 'AI synthesises information into a structured outline and draft.',
+      title: 'Think',
+      desc: 'Gemini outline synthesis, H2/H3 hierarchy & thesis structuring.',
       tag: 'Smart AI synthesis',
       deskStage: 'draft',
     },
     {
+      id: 'review',
       n: '04',
       icon: <UserCheck size={22} />,
       title: 'Review',
-      desc: 'Human approval for quality, accuracy and brand voice.',
+      desc: 'Human-in-the-loop approval bar for quality, tone, and accuracy.',
       tag: 'Editorial review',
       deskStage: 'review',
     },
     {
+      id: 'publish',
       n: '05',
       icon: <Send size={22} />,
       title: 'Publish',
-      desc: 'Auto-publish to your CMS (WordPress) or save as draft.',
+      desc: 'Encrypted WordPress REST API draft push or scheduled release.',
       tag: 'CMS integration',
       deskStage: 'publish',
     },
   ];
+
+  const handleStageClick = (stage: (typeof stages)[number]) => {
+    setSelectedStage(stage.id);
+    onSyncDeskStage(stage.deskStage);
+  };
 
   return (
     <section id="workflow" className="lp-workflow" aria-labelledby="workflow-heading">
       <div className="lp-container">
         <div className="lp-workflow-header">
           <div>
-            <div className="lp-section-label">The complete workflow</div>
+            <div className="lp-section-label">The complete 5-agent workflow</div>
             <h2 className="lp-section-heading" id="workflow-heading">
               From idea to published article —{' '}
               <KineticText
@@ -504,25 +784,28 @@ function WorkflowSection({
           </div>
           <div>
             <p className="lp-section-desc">
-              Click any stage below to synchronize the interactive 3D Editorial Desk.
-              Every article progresses through a structured multi-agent pipeline that verifies
-              citations, structure, and SEO before reaching your CMS.
+              Click any of the 5 pipeline stages below to inspect what happens under the hood —
+              from live competitor gap discovery and Tavily citation extraction to human editorial
+              sign-off and encrypted WordPress REST publishing.
             </p>
           </div>
         </div>
 
-        <div className="lp-pipeline" role="list">
+        {/* 5 Interactive Pipeline Cards */}
+        <div className="lp-pipeline" role="tablist" aria-label="5-stage editorial workflow">
           {stages.map((s, i) => {
-            const isSelected = activeDeskStage === s.deskStage && (s.n !== '01' || activeDeskStage === 'research');
+            const isSelected = selectedStage === s.id;
             return (
-              <React.Fragment key={s.title}>
-                <div className="lp-stage" role="listitem">
+              <React.Fragment key={s.id}>
+                <div className="lp-stage">
                   <button
                     type="button"
-                    onClick={() => onSelectDeskStage(s.deskStage)}
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => handleStageClick(s)}
                     className={`lp-stage-card lp-stage-card-btn${isSelected ? ' is-active-stage' : ''}`}
                   >
-                    <span className="lp-stage-number">{s.n}</span>
+                    <span className="lp-stage-number">STAGE {s.n}</span>
                     <div className="lp-stage-icon" aria-hidden="true">{s.icon}</div>
                     <h3 className="lp-stage-title">{s.title}</h3>
                     <p className="lp-stage-desc">{s.desc}</p>
@@ -537,6 +820,447 @@ function WorkflowSection({
               </React.Fragment>
             );
           })}
+        </div>
+
+        {/* Animated Stage Inspector Panel Below Pipeline */}
+        <div className="lp-workflow-inspector-wrap">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedStage}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="lp-wf-panel"
+              role="tabpanel"
+            >
+              {/* STAGE 01: DISCOVER */}
+              {selectedStage === 'discover' && (
+                <div className="lp-wf-grid">
+                  <div className="lp-wf-info">
+                    <div className="lp-wf-kicker">01. DISCOVER · NICHE &amp; COMPETITOR GAP DETECTION</div>
+                    <h3 className="lp-wf-title">Crawl target domains to uncover high-intent topic gaps.</h3>
+                    <p className="lp-wf-desc">
+                      Agent 01 scans your connected website URL, extracts existing topic clusters,
+                      and cross-references competitor SERPs to identify high-value articles your audience
+                      is actively searching for.
+                    </p>
+                    <div className="lp-wf-metrics-row">
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">92/100</span>
+                        <span className="lp-wf-metric-lbl">Opportunity Score</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">3.4x</span>
+                        <span className="lp-wf-metric-lbl">Organic Traffic Potential</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">12</span>
+                        <span className="lp-wf-metric-lbl">Content Gaps Found</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lp-wf-demo-box">
+                    <div className="lp-wf-demo-header">
+                      <span>Target Domain Scan: acmecloud.io</span>
+                      <span className="lp-wf-demo-meta">3 High-Opportunity Gaps</span>
+                    </div>
+                    <div className="lp-wf-gap-list">
+                      {[
+                        {
+                          topic: 'Zero-Trust Microsegmentation for Multi-Cloud Kubernetes',
+                          intent: 'Technical Decision-Makers',
+                          gap: 'Missing from site · High SERP demand · Opportunity 96%',
+                        },
+                        {
+                          topic: 'eBPF vs. Sidecar Proxies: Service Mesh Latency Benchmarks',
+                          intent: 'Platform Engineers',
+                          gap: 'Competitors lack 2026 benchmarks · Opportunity 91%',
+                        },
+                        {
+                          topic: 'Automating SOC2 Compliance Audits in Ephemeral Clusters',
+                          intent: 'CISOs & VP Engineering',
+                          gap: 'High commercial intent · Opportunity 88%',
+                        },
+                      ].map((item) => (
+                        <div key={item.topic} className="lp-wf-gap-item">
+                          <div className="lp-wf-gap-main">
+                            <div className="lp-wf-gap-title">{item.topic}</div>
+                            <div className="lp-wf-gap-sub">
+                              <span>Audience: {item.intent}</span>
+                              <span aria-hidden="true">·</span>
+                              <span>{item.gap}</span>
+                            </div>
+                          </div>
+                          <Link
+                            href={`/generator?topic=${encodeURIComponent(item.topic)}`}
+                            className="lp-wf-gap-action"
+                          >
+                            Draft Topic <ArrowRight size={12} />
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STAGE 02: RESEARCH */}
+              {selectedStage === 'research' && (
+                <div className="lp-wf-grid">
+                  <div className="lp-wf-info">
+                    <div className="lp-wf-kicker">02. RESEARCH · LIVE TAVILY CITATION EXTRACTION</div>
+                    <h3 className="lp-wf-title">Every claim grounded in verified sources and statistics.</h3>
+                    <p className="lp-wf-desc">
+                      Before a single paragraph is written, the Research Agent dispatches targeted Tavily
+                      search queries across academic journals, standards bodies, and primary industry reports
+                      to build a factual dossier.
+                    </p>
+                    <div className="lp-wf-metrics-row">
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">14</span>
+                        <span className="lp-wf-metric-lbl">Verified URLs Indexed</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">100%</span>
+                        <span className="lp-wf-metric-lbl">Inline Citation Mapping</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">0</span>
+                        <span className="lp-wf-metric-lbl">Fabricated Citations</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lp-wf-demo-box">
+                    <div className="lp-wf-demo-header">
+                      <span>Tavily Live Citation Dossier</span>
+                      <span className="lp-wf-demo-meta">Extracted Statistics &amp; Proofs</span>
+                    </div>
+                    <div className="lp-wf-citation-grid">
+                      {[
+                        {
+                          source: 'MIT Technology Review (2026)',
+                          url: 'technologyreview.com/rag-enterprise',
+                          stat: '41% Precision Gain',
+                          quote: 'Hybrid semantic + lexical retrieval reduces factual errors by 41% compared to dense-only vector lookup.',
+                        },
+                        {
+                          source: 'NIST Special Publication 800-207',
+                          url: 'csrc.nist.gov/pubs/sp/800/207/final',
+                          stat: 'Zero-Trust Architecture',
+                          quote: 'Continuous per-request cryptographic verification replaces implicit network-location trust zones.',
+                        },
+                        {
+                          source: 'CNCF Annual Cloud Native Survey',
+                          url: 'cncf.io/reports/cloud-native-2026',
+                          stat: '78% Production Adoption',
+                          quote: '78% of enterprise platform teams now run multi-cluster workloads requiring automated policy sync.',
+                        },
+                      ].map((cit, idx) => (
+                        <div key={cit.source} className="lp-wf-citation-card">
+                          <div className="lp-wf-citation-top">
+                            <span className="lp-wf-citation-ref">[{idx + 1}] {cit.source}</span>
+                            <span className="lp-wf-citation-stat">{cit.stat}</span>
+                          </div>
+                          <p className="lp-wf-citation-quote">“{cit.quote}”</p>
+                          <span className="lp-wf-citation-url">{cit.url}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STAGE 03: THINK (GEMINI OUTLINE SYNTHESIS) */}
+              {selectedStage === 'think' && (
+                <div className="lp-wf-grid">
+                  <div className="lp-wf-info">
+                    <div className="lp-wf-kicker">03. THINK · GEMINI OUTLINE SYNTHESIS &amp; H2/H3 STRUCTURE</div>
+                    <h3 className="lp-wf-title">Architectural outlines engineered for depth and search intent.</h3>
+                    <p className="lp-wf-desc">
+                      Google Gemini synthesizes the research dossier into a logical H2/H3 narrative tree,
+                      allocating target word counts, primary/secondary keywords, and specific source citations
+                      to each section before drafting full prose.
+                    </p>
+                    <div className="lp-wf-metrics-row">
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">6 H2s</span>
+                        <span className="lp-wf-metric-lbl">Structured Sections</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">1,950</span>
+                        <span className="lp-wf-metric-lbl">Target Word Budget</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">5 FAQs</span>
+                        <span className="lp-wf-metric-lbl">Schema.org Ready</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lp-wf-demo-box">
+                    <div className="lp-wf-demo-header">
+                      <span>Synthesized Semantic Outline Tree</span>
+                      <span className="lp-wf-demo-meta">Gemini 2.5 Pro Architect</span>
+                    </div>
+                    <div className="lp-wf-outline-tree">
+                      {[
+                        {
+                          tag: 'H1',
+                          heading: 'The Architecture of Autonomous Enterprise Search Systems',
+                          meta: 'Thesis & Executive Hook · 220 words',
+                          indent: false,
+                        },
+                        {
+                          tag: 'H2',
+                          heading: '01. Why Lexical Keyword Matching Fails Complex Queries',
+                          meta: 'Cites [1] MIT Tech Review · Focus KW included · 380 words',
+                          indent: false,
+                        },
+                        {
+                          tag: 'H3',
+                          heading: '1.1 Dense Vector Embeddings vs. BM25 Hybrid Reranking',
+                          meta: 'Technical latency breakdown table · 290 words',
+                          indent: true,
+                        },
+                        {
+                          tag: 'H2',
+                          heading: '02. Verifiable Citation Grounding & Hallucination Guardrails',
+                          meta: 'Cites [2] Stanford HAI · Actionable framework · 440 words',
+                          indent: false,
+                        },
+                        {
+                          tag: 'H2',
+                          heading: '03. Frequently Asked Questions (Structured FAQ Schema)',
+                          meta: '4 direct-answer blocks for Featured Snippets · 320 words',
+                          indent: false,
+                        },
+                      ].map((node) => (
+                        <div
+                          key={node.heading}
+                          className={`lp-wf-outline-node${node.indent ? ' is-indented' : ''}`}
+                        >
+                          <span className="lp-wf-outline-tag">{node.tag}</span>
+                          <div className="lp-wf-outline-body">
+                            <div className="lp-wf-outline-heading">{node.heading}</div>
+                            <div className="lp-wf-outline-meta">{node.meta}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STAGE 04: REVIEW (HUMAN-IN-THE-LOOP APPROVAL BAR) */}
+              {selectedStage === 'review' && (
+                <div className="lp-wf-grid">
+                  <div className="lp-wf-info">
+                    <div className="lp-wf-kicker">04. REVIEW · HUMAN-IN-THE-LOOP EDITORIAL GATEKEEPER</div>
+                    <h3 className="lp-wf-title">Nothing goes live without your explicit editorial sign-off.</h3>
+                    <p className="lp-wf-desc">
+                      The Quality Evaluator scores readability, SEO structure, and factual grounding,
+                      then pauses the LangGraph workflow at a human checkpoint. Test the live approval
+                      controls on the right to see how editors govern every draft.
+                    </p>
+                    <div className="lp-wf-metrics-row">
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">94%</span>
+                        <span className="lp-wf-metric-lbl">SEO Readiness</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">Grade 8.4</span>
+                        <span className="lp-wf-metric-lbl">Flesch-Kincaid</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">1.6%</span>
+                        <span className="lp-wf-metric-lbl">Keyword Density</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lp-wf-demo-box">
+                    <div className="lp-wf-demo-header">
+                      <span>Interactive Human Approval Console</span>
+                      <span className="lp-wf-demo-meta">
+                        Status:{' '}
+                        {reviewDecision === 'pending'
+                          ? 'Awaiting Editor Action'
+                          : reviewDecision === 'approved'
+                          ? 'Approved for WordPress'
+                          : reviewDecision === 'revision'
+                          ? 'Revision Queued'
+                          : 'Rejected'}
+                      </span>
+                    </div>
+
+                    <div className="lp-wf-review-console">
+                      <div className="lp-wf-review-scores">
+                        <span>Grammar: 98/100</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Readability: 91/100</span>
+                        <span aria-hidden="true">·</span>
+                        <span>SEO: 94/100</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Citations: 4/4 Verified</span>
+                      </div>
+
+                      <label htmlFor="wf-reviewer-note" className="lp-wf-review-label">
+                        Editorial Reviewer Note / Revision Instructions
+                      </label>
+                      <input
+                        id="wf-reviewer-note"
+                        type="text"
+                        value={reviewerNote}
+                        onChange={(e) => setReviewerNote(e.target.value)}
+                        className="lp-wf-review-input"
+                      />
+
+                      <div className="lp-wf-review-actions">
+                        <button
+                          type="button"
+                          onClick={() => setReviewDecision('approved')}
+                          className={`lp-wf-btn lp-wf-btn-approve${reviewDecision === 'approved' ? ' active' : ''}`}
+                        >
+                          <CheckCircle2 size={15} /> Approve Draft
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReviewDecision('revision')}
+                          className={`lp-wf-btn lp-wf-btn-revise${reviewDecision === 'revision' ? ' active' : ''}`}
+                        >
+                          <RotateCcw size={15} /> Request Revision
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReviewDecision('rejected')}
+                          className={`lp-wf-btn lp-wf-btn-reject${reviewDecision === 'rejected' ? ' active' : ''}`}
+                        >
+                          <XCircle size={15} /> Reject
+                        </button>
+                      </div>
+
+                      {reviewDecision !== 'pending' && (
+                        <div className={`lp-wf-review-feedback is-${reviewDecision}`}>
+                          {reviewDecision === 'approved' && (
+                            <>
+                              <Check size={15} />
+                              <span>
+                                <strong>Approved!</strong> Manuscript unlocked for Stage 05 WordPress REST API dispatch.
+                              </span>
+                            </>
+                          )}
+                          {reviewDecision === 'revision' && (
+                            <>
+                              <RefreshCw size={15} />
+                              <span>
+                                <strong>Revision Triggered:</strong> Sent back to Gemini Writer with note: “{reviewerNote}”
+                              </span>
+                            </>
+                          )}
+                          {reviewDecision === 'rejected' && (
+                            <>
+                              <XCircle size={15} />
+                              <span>
+                                <strong>Rejected:</strong> Article archived in audit log; pipeline halted safely.
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STAGE 05: PUBLISH (ENCRYPTED WORDPRESS REST API PUSH) */}
+              {selectedStage === 'publish' && (
+                <div className="lp-wf-grid">
+                  <div className="lp-wf-info">
+                    <div className="lp-wf-kicker">05. PUBLISH · ENCRYPTED WORDPRESS REST API DISPATCH</div>
+                    <h3 className="lp-wf-title">Push formatted drafts directly to WordPress with zero copy-pasting.</h3>
+                    <p className="lp-wf-desc">
+                      Application Passwords are encrypted at rest with AES-256-GCM. Once approved, the
+                      Publishing Agent formats Gutenberg/HTML blocks, maps categories and tags, and
+                      pushes the post via `/wp-json/wp/v2/posts`.
+                    </p>
+                    <div className="lp-wf-metrics-row">
+                      <div>
+                        <span className="lp-wf-metric-val">AES-256</span>
+                        <span className="lp-wf-metric-lbl">Credential Encryption</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val">Draft First</span>
+                        <span className="lp-wf-metric-lbl">Safe Publishing Policy</span>
+                      </div>
+                      <div>
+                        <span className="lp-wf-metric-val tabular-nums">1.2s</span>
+                        <span className="lp-wf-metric-lbl">REST Sync Latency</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lp-wf-demo-box">
+                    <div className="lp-wf-demo-header">
+                      <span>WordPress REST API Dispatch Console</span>
+                      <span className="lp-wf-demo-meta">
+                        <Lock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                        POST /wp-json/wp/v2/posts
+                      </span>
+                    </div>
+
+                    <div className="lp-wf-publish-console">
+                      <div className="lp-wf-publish-modes" role="radiogroup" aria-label="WordPress publish mode">
+                        <button
+                          type="button"
+                          onClick={() => { setWpPublishMode('draft'); setWpPushSimulated(false); }}
+                          className={`lp-wf-mode-btn${wpPublishMode === 'draft' ? ' active' : ''}`}
+                        >
+                          Save as WordPress Draft (Recommended)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setWpPublishMode('schedule'); setWpPushSimulated(false); }}
+                          className={`lp-wf-mode-btn${wpPublishMode === 'schedule' ? ' active' : ''}`}
+                        >
+                          Schedule Live Release (Thu 09:00 UTC)
+                        </button>
+                      </div>
+
+                      <pre className="lp-wf-code-preview">
+{`{
+  "title": "The Architecture of AI-Native Search Engines",
+  "slug": "architecture-ai-native-search-engines",
+  "status": "${wpPublishMode === 'draft' ? 'draft' : 'future'}",
+  "categories": [14, 28],
+  "meta": { "yoast_wpseo_metadesc": "Enterprise RAG & citation..." }
+}`}
+                      </pre>
+
+                      <div className="lp-wf-publish-footer">
+                        <button
+                          type="button"
+                          onClick={() => setWpPushSimulated(true)}
+                          className="lp-btn-primary"
+                        >
+                          <Send size={14} />
+                          {wpPushSimulated ? 'Synced to WordPress!' : 'Simulate WordPress REST Push'}
+                        </button>
+
+                        {wpPushSimulated && (
+                          <span className="lp-wf-publish-confirm">
+                            ✓ 201 Created · WP Post ID #4892 ({wpPublishMode === 'draft' ? 'Draft' : 'Scheduled'})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </section>
@@ -1048,23 +1772,12 @@ function LandingFooter() {
 export default function LandingPage() {
   const [activeDeskStage, setActiveDeskStage] = useState<DeskStage>('research');
 
-  const handleSelectStageFromWorkflow = (stage: DeskStage) => {
-    setActiveDeskStage(stage);
-    const el = document.getElementById('creators');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <div className="lp-root">
       <LandingNavbar />
       <main>
         <HeroSection />
-        <WorkflowSection
-          activeDeskStage={activeDeskStage}
-          onSelectDeskStage={handleSelectStageFromWorkflow}
-        />
+        <WorkflowSection onSyncDeskStage={setActiveDeskStage} />
         <AutomationSection
           activeDeskStage={activeDeskStage}
           onSelectDeskStage={setActiveDeskStage}
