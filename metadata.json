@@ -1,0 +1,8 @@
+{
+  "name": "BlogFlow AI",
+  "description": "Automate blog creation with AI. Research topics, generate SEO-optimized content, manage approvals, and publish directly to your CMS.",
+  "requestFramePermissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -32,6 +32,7 @@ export function AvatarCircles({
         const ImageNode = (
           <img
             key={index}
+            referrerPolicy="no-referrer"
             className="rounded-full border-2 border-[var(--lp-bg,#ffffff)] bg-[var(--lp-surface,#f8fafc)] object-cover shadow-sm transition-all duration-200 hover:scale-115 hover:z-30 hover:shadow-lg dark:border-[var(--lp-bg,#121a15)]"
             src={url}
             width={avatarSize}

@@ -1,48 +1,136 @@
 'use client';
 
-import React from 'react';
-
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import './landing.css';
 import Link from 'next/link';
-import { useEffect, useState, useRef } from 'react';
 import {
-  Globe, Search, Lightbulb, CheckCircle, Send,
+  Globe, Search, Lightbulb, Send,
   ArrowRight, Play, ChevronRight, BookOpen,
   FileText, BarChart2, UserCheck, Layers, Rss,
-  Sun, Moon
+  Sun, Moon, Sparkles, CheckCircle2, ShieldCheck
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
 import { KineticText } from '@/components/ui/kinetic-text';
+import type { DeskStage } from '@/components/3d/FloatingEditorialDesk';
+
+const FloatingEditorialDesk = dynamic(
+  () => import('@/components/3d/FloatingEditorialDesk'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="lp-desk-loading">
+        <div className="lp-desk-loading-inner">
+          <span className="lp-desk-loading-kicker">INITIALIZING 3D STUDIO</span>
+          <p className="lp-desk-loading-text">Preparing spatial editorial desk &amp; PBR materials…</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 const CREATOR_AVATARS = [
   {
-    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+    imageUrl: '/fallback_floating_desk.jpg',
     profileUrl: '#',
     name: 'Sarah Chen · Content Lead',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces',
+    imageUrl: '/window.svg',
     profileUrl: '#',
     name: 'Alex Rivera · Tech Editor',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces',
+    imageUrl: '/globe.svg',
     profileUrl: '#',
     name: 'Elena Rostova · SEO Strategist',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces',
+    imageUrl: '/file.svg',
     profileUrl: '#',
     name: 'Marcus Vance · Publisher',
   },
-  {
-    imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces',
-    profileUrl: '#',
-    name: 'Chloe Kim · Editorial Director',
-  },
 ];
 
+const STAGE_DETAILS: Record<
+  DeskStage,
+  {
+    stepNum: string;
+    title: string;
+    subtitle: string;
+    automatedTasks: string[];
+    humanDecisions: string[];
+    artifactLabel: string;
+    artifactPreview: string;
+    deliverables: string[];
+  }
+> = {
+  research: {
+    stepNum: '01',
+    title: 'Multi-Source Web Research & Citation Discovery',
+    subtitle: 'Brushed brass optical loupe & indexed citation dossiers on the studio desk',
+    automatedTasks: [
+      'Live web & academic query expansion via Tavily',
+      'Competitor SERP structure & content gap extraction',
+    ],
+    humanDecisions: [
+      'Select primary angle & target reader persona',
+      'Curate or exclude specific domain sources',
+    ],
+    artifactLabel: 'Research Dossier #01',
+    artifactPreview: '14 verified citations indexed across MIT Tech Review, Nature, and industry benchmarks.',
+    deliverables: ['Source URL verification', 'Key factual claims', 'Search intent mapping'],
+  },
+  draft: {
+    stepNum: '02',
+    title: 'Structured Long-Form Synthesis & Drafting',
+    subtitle: 'Archival manuscript stack & fountain pen actively composing structured prose',
+    automatedTasks: [
+      'Gemini synthesizes outline into H2/H3 long-form prose',
+      'Inline footnote citations & FAQ schema generation',
+    ],
+    humanDecisions: [
+      'Refine narrative voice & executive thesis',
+      'Adjust section depth or trigger targeted AI revisions',
+    ],
+    artifactLabel: 'Editorial Manuscript #02',
+    artifactPreview: '1,840 words drafted with semantic heading hierarchy and embedded source attributions.',
+    deliverables: ['Full Markdown manuscript', 'FAQ structured block', 'Meta title & slug'],
+  },
+  review: {
+    stepNum: '03',
+    title: 'Quality Gatekeeper & Human Editorial Sign-Off',
+    subtitle: 'Translucent emerald telemetry slab & brass approval seal descending on the draft',
+    automatedTasks: [
+      'Automated SEO score, keyword density & readability audit',
+      'Hallucination & duplicate-content verification',
+    ],
+    humanDecisions: [
+      'Inspect quality scorecard & approve manuscript',
+      'Request granular section rewrites with reviewer notes',
+    ],
+    artifactLabel: 'Quality Audit #03',
+    artifactPreview: 'SEO Score 94/100 · Readability Grade 8.4 · 100% citation alignment verified.',
+    deliverables: ['SEO & Readability report', 'Editorial approval log', 'Revision audit trail'],
+  },
+  publish: {
+    stepNum: '04',
+    title: 'Encrypted CMS Dispatch & WordPress Sync',
+    subtitle: 'Hardcover monograph folio sealed with brass clasps ready for WordPress REST dispatch',
+    automatedTasks: [
+      'AES-256-GCM authenticated WordPress REST API push',
+      'Automatic category, tag, and SEO metadata mapping',
+    ],
+    humanDecisions: [
+      'Choose initial Draft mode or scheduled live release',
+      'Confirm destination website & final publication slot',
+    ],
+    artifactLabel: 'CMS Dispatch #04',
+    artifactPreview: 'Synced directly to WordPress as a formatted draft with categories, tags, and schema.',
+    deliverables: ['WordPress Draft Post ID', 'Live preview link', 'Publishing history record'],
+  },
+};
 
 /* ============================================================
    NAVBAR
@@ -76,25 +164,20 @@ function LandingNavbar() {
         <li><a href="#product">Product</a></li>
         <li><a href="#workflow">Workflow</a></li>
         <li><a href="#features">Features</a></li>
-        <li><a href="#creators">For creators</a></li>
+        <li><a href="#creators">3D Studio</a></li>
       </ul>
 
       <div className="lp-nav-actions">
-        {/* Theme Toggle Button */}
         <button
           type="button"
           onClick={toggleTheme}
           className="lp-theme-toggle"
-          aria-label={mounted && isDark ? "Switch to light mode" : "Switch to dark mode"}
-          title={mounted && isDark ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={mounted && isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={mounted && isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           id="theme-toggle-btn"
         >
           <span className="lp-theme-toggle-icon" aria-hidden="true">
-            {mounted && isDark ? (
-              <Moon size={16} />
-            ) : (
-              <Sun size={16} />
-            )}
+            {mounted && isDark ? <Moon size={16} /> : <Sun size={16} />}
           </span>
           <span className="lp-theme-toggle-label">
             {mounted && isDark ? 'Dark' : 'Light'}
@@ -137,9 +220,8 @@ function HeroSection() {
 
           {/* Left: Copy */}
           <div className="lp-hero-left">
-            <div className="lp-hero-badge" aria-label="Editorial automation platform">
-              <span className="lp-hero-badge-dot" />
-              AI-Powered Editorial Automation
+            <div className="lp-hero-kicker">
+              AI-Powered Editorial Automation · Multi-Agent Studio
             </div>
 
             <h1 className="lp-hero-headline" id="hero-headline">
@@ -164,9 +246,9 @@ function HeroSection() {
                 Start creating
                 <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </Link>
-              <a href="#workflow" className="lp-btn-secondary" id="hero-cta-secondary">
+              <a href="#creators" className="lp-btn-secondary" id="hero-cta-secondary">
                 <Play size={14} />
-                Watch how it works
+                Explore 3D Editorial Desk
               </a>
             </div>
 
@@ -343,16 +425,30 @@ function HeroSection() {
 }
 
 /* ============================================================
-   WORKFLOW SECTION
+   WORKFLOW SECTION (Synchronized with 3D Desk Stage)
    ============================================================ */
-function WorkflowSection() {
-  const stages = [
+function WorkflowSection({
+  activeDeskStage,
+  onSelectDeskStage,
+}: {
+  activeDeskStage: DeskStage;
+  onSelectDeskStage: (stage: DeskStage) => void;
+}) {
+  const stages: {
+    n: string;
+    icon: React.ReactNode;
+    title: string;
+    desc: string;
+    tag: string;
+    deskStage: DeskStage;
+  }[] = [
     {
       n: '01',
       icon: <Globe size={22} />,
       title: 'Discover',
       desc: 'Find relevant topics and opportunities from any source URL.',
       tag: 'Web search + AI',
+      deskStage: 'research',
     },
     {
       n: '02',
@@ -360,13 +456,15 @@ function WorkflowSection() {
       title: 'Research',
       desc: 'Analyse multiple sources and extract key insights and facts.',
       tag: 'Multi-source analysis',
+      deskStage: 'research',
     },
     {
       n: '03',
       icon: <Lightbulb size={22} />,
-      title: 'Think',
+      title: 'Think & Draft',
       desc: 'AI synthesises information into a structured outline and draft.',
       tag: 'Smart AI synthesis',
+      deskStage: 'draft',
     },
     {
       n: '04',
@@ -374,6 +472,7 @@ function WorkflowSection() {
       title: 'Review',
       desc: 'Human approval for quality, accuracy and brand voice.',
       tag: 'Editorial review',
+      deskStage: 'review',
     },
     {
       n: '05',
@@ -381,6 +480,7 @@ function WorkflowSection() {
       title: 'Publish',
       desc: 'Auto-publish to your CMS (WordPress) or save as draft.',
       tag: 'CMS integration',
+      deskStage: 'publish',
     },
   ];
 
@@ -398,39 +498,192 @@ function WorkflowSection() {
                 className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
               />
             </h2>
-            <a href="#features" className="lp-workflow-explore">
-              Explore the workflow <ChevronRight size={14} />
+            <a href="#creators" className="lp-workflow-explore">
+              Inspect in 3D Editorial Studio <ChevronRight size={14} />
             </a>
           </div>
           <div>
             <p className="lp-section-desc">
-              Our AI handles the heavy lifting, so you can focus on creativity, strategy
-              and your unique perspective. Every article goes through a structured pipeline
-              that ensures quality before it ever reaches publishing.
+              Click any stage below to synchronize the interactive 3D Editorial Desk.
+              Every article progresses through a structured multi-agent pipeline that verifies
+              citations, structure, and SEO before reaching your CMS.
             </p>
           </div>
         </div>
 
         <div className="lp-pipeline" role="list">
-          {stages.map((s, i) => (
-            <React.Fragment key={s.title}>
-              <div className="lp-stage" role="listitem">
-                <div className="lp-stage-card">
-                  <span className="lp-stage-number">{s.n}</span>
-                  <div className="lp-stage-icon" aria-hidden="true">{s.icon}</div>
-                  <h3 className="lp-stage-title">{s.title}</h3>
-                  <p className="lp-stage-desc">{s.desc}</p>
-                  <span className="lp-stage-tag">{s.tag}</span>
+          {stages.map((s, i) => {
+            const isSelected = activeDeskStage === s.deskStage && (s.n !== '01' || activeDeskStage === 'research');
+            return (
+              <React.Fragment key={s.title}>
+                <div className="lp-stage" role="listitem">
+                  <button
+                    type="button"
+                    onClick={() => onSelectDeskStage(s.deskStage)}
+                    className={`lp-stage-card lp-stage-card-btn${isSelected ? ' is-active-stage' : ''}`}
+                  >
+                    <span className="lp-stage-number">{s.n}</span>
+                    <div className="lp-stage-icon" aria-hidden="true">{s.icon}</div>
+                    <h3 className="lp-stage-title">{s.title}</h3>
+                    <p className="lp-stage-desc">{s.desc}</p>
+                    <span className="lp-stage-meta-line">{s.tag}</span>
+                  </button>
+                </div>
+                {i < stages.length - 1 && (
+                  <div className="lp-pipeline-arrow" aria-hidden="true">
+                    <ChevronRight />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   INTERACTIVE 3D EDITORIAL STUDIO & PHILOSOPHY SECTION
+   ============================================================ */
+function AutomationSection({
+  activeDeskStage,
+  onSelectDeskStage,
+}: {
+  activeDeskStage: DeskStage;
+  onSelectDeskStage: (stage: DeskStage) => void;
+}) {
+  const detail = STAGE_DETAILS[activeDeskStage];
+
+  const stageOrder: { id: DeskStage; num: string; name: string; role: string }[] = [
+    { id: 'research', num: '01', name: 'Research', role: 'Sources & Loupe' },
+    { id: 'draft', num: '02', name: 'Draft', role: 'Manuscript & Pen' },
+    { id: 'review', num: '03', name: 'Review', role: 'Telemetry & Seal' },
+    { id: 'publish', num: '04', name: 'Publish', role: 'Hardcover Folio' },
+  ];
+
+  return (
+    <section id="creators" className="lp-automation" aria-labelledby="automation-heading">
+      <div className="lp-container">
+        {/* Header Row */}
+        <div className="lp-studio-header">
+          <div>
+            <div className="lp-section-label">Interactive 3D Editorial Studio · Philosophy</div>
+            <h2 className="lp-section-heading" id="automation-heading">
+              Automation should move the work forward,{' '}
+              not take the <em>editor</em> out of it.
+            </h2>
+          </div>
+          <div>
+            <p className="lp-section-desc">
+              Interact with the 3D Editorial Desk below — switch between <strong>Research</strong>,{' '}
+              <strong>Draft</strong>, <strong>Review</strong>, and <strong>Publish</strong>, drag to orbit,
+              or slide the layer explosion control to inspect how AI agents and human editors collaborate.
+            </p>
+          </div>
+        </div>
+
+        {/* Interactive Stage Switcher Bar */}
+        <div className="lp-studio-stage-bar" role="tablist" aria-label="3D Desk Workflow Stage">
+          {stageOrder.map((st) => {
+            const active = activeDeskStage === st.id;
+            return (
+              <button
+                key={st.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onSelectDeskStage(st.id)}
+                className={`lp-studio-stage-tab${active ? ' active' : ''}`}
+              >
+                <span className="lp-studio-tab-num">{st.num}.</span>
+                <div className="lp-studio-tab-text">
+                  <span className="lp-studio-tab-name">{st.name}</span>
+                  <span className="lp-studio-tab-role">{st.role}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Main 2-Column Interactive 3D Showcase Grid */}
+        <div className="lp-studio-grid">
+          {/* Left: Upgraded Three.js 3D FloatingEditorialDesk */}
+          <div className="lp-studio-viewport-col">
+            <FloatingEditorialDesk
+              currentStage={activeDeskStage}
+              onStageChange={onSelectDeskStage}
+              interactive={true}
+            />
+          </div>
+
+          {/* Right: Live Stage Inspector & Automation vs. Human Breakdown */}
+          <div className="lp-studio-inspector-col">
+            <div className="lp-inspector-card">
+              <div className="lp-inspector-kicker">
+                <span>STAGE {detail.stepNum} ACTIVE</span>
+                <span aria-hidden="true">·</span>
+                <span>{detail.artifactLabel}</span>
+              </div>
+
+              <h3 className="lp-inspector-title">{detail.title}</h3>
+              <p className="lp-inspector-subtitle">{detail.subtitle}</p>
+
+              {/* Artifact Output Callout */}
+              <div className="lp-inspector-artifact">
+                <div className="lp-inspector-artifact-header">
+                  <Sparkles size={15} />
+                  <span>Live Stage Output</span>
+                </div>
+                <p className="lp-inspector-artifact-body">{detail.artifactPreview}</p>
+                <div className="lp-inspector-deliverables">
+                  {detail.deliverables.map((d, idx) => (
+                    <React.Fragment key={d}>
+                      <span>{d}</span>
+                      {idx < detail.deliverables.length - 1 && <span aria-hidden="true">·</span>}
+                    </React.Fragment>
+                  ))}
                 </div>
               </div>
-              {i < stages.length - 1 && (
-                <div className="lp-pipeline-arrow" aria-hidden="true">
-                  <ChevronRight />
-                  <div className="lp-pipeline-signal" style={{ animationDelay: `${i * 0.8}s` }} />
+
+              {/* Dual-Column Automation vs Human Decisions */}
+              <div className="lp-inspector-split">
+                <div className="lp-inspector-panel lp-inspector-panel-auto">
+                  <div className="lp-inspector-panel-heading">AI Agent Prepares</div>
+                  <ul className="lp-inspector-list">
+                    {detail.automatedTasks.map((task) => (
+                      <li key={task}>
+                        <CheckCircle2 size={14} className="lp-inspector-icon-auto" />
+                        <span>{task}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
-            </React.Fragment>
-          ))}
+
+                <div className="lp-inspector-panel lp-inspector-panel-human">
+                  <div className="lp-inspector-panel-heading">Human Editor Decides</div>
+                  <ul className="lp-inspector-list">
+                    {detail.humanDecisions.map((dec) => (
+                      <li key={dec}>
+                        <ShieldCheck size={14} className="lp-inspector-icon-human" />
+                        <span>{dec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Stage Quick-Advance Footer */}
+              <div className="lp-inspector-footer">
+                <span className="lp-inspector-hint">
+                  Tip: Drag the 3D desk to orbit or press <kbd>H</kbd> to toggle studio HUD
+                </span>
+                <Link href="/generator" className="lp-inspector-cta">
+                  Run this pipeline <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -445,7 +698,7 @@ function FeatureSection() {
     <section id="features" className="lp-features" aria-labelledby="features-heading">
       <div className="lp-container">
         <div className="lp-features-header">
-          <div className="lp-section-label">Thy BlogFlow AI</div>
+          <div className="lp-section-label">Why BlogFlow AI</div>
           <h2 className="lp-section-heading" id="features-heading">
             Built for creators, marketers and teams.
           </h2>
@@ -537,80 +790,11 @@ function FeatureSection() {
 }
 
 /* ============================================================
-   AUTOMATION vs HUMAN SECTION
-   ============================================================ */
-function AutomationSection() {
-  const automated = [
-    'Topic discovery',
-    'Research aggregation',
-    'Draft generation',
-    'Quality checks',
-  ];
-  const human = [
-    'Review draft',
-    'Edit content',
-    'Approve publication',
-    'Choose destination',
-  ];
-
-  return (
-    <section id="creators" className="lp-automation" aria-labelledby="automation-heading">
-      <div className="lp-container">
-        <div style={{ maxWidth: 600, margin: '0 auto 64px' }}>
-          <div className="lp-section-label">Philosophy</div>
-          <h2 className="lp-section-heading" id="automation-heading">
-            Automation should move the work forward,<br />
-            not take the <em>editor</em> out of it.
-          </h2>
-          <p className="lp-section-desc">
-            Let automation handle repetitive steps while you retain control over what gets
-            approved and published.
-          </p>
-        </div>
-
-        <div className="lp-automation-inner">
-          {/* Automated */}
-          <div className="lp-automation-col">
-            <div className="lp-auto-title lp-auto-title-light">Automation</div>
-            <div className="lp-auto-rule lp-auto-rule-light" />
-            {automated.map((item) => (
-              <div className="lp-auto-item lp-auto-item-light" key={item}>
-                <div className="lp-auto-bullet lp-auto-bullet-light" />
-                <span className="lp-auto-text lp-auto-text-light">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="lp-automation-divider" aria-hidden="true">
-            <div className="lp-automation-divider-line" />
-            <span className="lp-automation-divider-label">prepares → decides</span>
-            <div className="lp-automation-divider-line" />
-          </div>
-
-          {/* Human */}
-          <div className="lp-automation-col lp-automation-col-dark">
-            <div className="lp-auto-title lp-auto-title-dark">Human decisions</div>
-            <div className="lp-auto-rule lp-auto-rule-dark" />
-            {human.map((item) => (
-              <div className="lp-auto-item lp-auto-item-dark" key={item}>
-                <div className="lp-auto-bullet lp-auto-bullet-dark" />
-                <span className="lp-auto-text lp-auto-text-dark">{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   EDITORIAL PREVIEW SECTION
+   EDITORIAL PREVIEW SECTION (#product)
    ============================================================ */
 function EditorialPreviewSection() {
   return (
-    <section className="lp-preview-section" aria-labelledby="preview-heading">
+    <section id="product" className="lp-preview-section" aria-labelledby="preview-heading">
       <div className="lp-container">
         <div className="lp-preview-inner">
 
@@ -734,10 +918,10 @@ function CMSSection() {
               <div>
                 <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--lp-text)' }}>WordPress</div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--lp-text-muted)', marginTop: 2 }}>
-                  Direct CMS integration
+                  Direct CMS integration · Encrypted REST API
                 </div>
-                <div className="lp-publish-status">
-                  <span>●</span> Published
+                <div className="lp-publish-status-text">
+                  Draft &amp; Live Publishing Ready
                 </div>
               </div>
             </div>
@@ -788,8 +972,8 @@ function FinalCTA() {
                 Start creating
                 <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </Link>
-              <a href="#workflow" className="lp-btn-cta-secondary">
-                See how it works
+              <a href="#creators" className="lp-btn-cta-secondary">
+                Inspect 3D Studio
               </a>
             </div>
           </div>
@@ -823,6 +1007,7 @@ function LandingFooter() {
               <li><a href="#product">Product</a></li>
               <li><a href="#workflow">Workflow</a></li>
               <li><a href="#features">Features</a></li>
+              <li><a href="#creators">3D Studio</a></li>
             </ul>
           </div>
 
@@ -838,7 +1023,7 @@ function LandingFooter() {
             <div className="lp-footer-col-title">Resources</div>
             <ul className="lp-footer-links">
               <li><Link href="/generator">Generator</Link></li>
-              <li><a href="https://github.com" target="_blank" rel="noreferrer">Documentation</a></li>
+              <li><Link href="/dashboard">Dashboard</Link></li>
             </ul>
           </div>
 
@@ -861,14 +1046,30 @@ function LandingFooter() {
    PAGE ROOT
    ============================================================ */
 export default function LandingPage() {
+  const [activeDeskStage, setActiveDeskStage] = useState<DeskStage>('research');
+
+  const handleSelectStageFromWorkflow = (stage: DeskStage) => {
+    setActiveDeskStage(stage);
+    const el = document.getElementById('creators');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="lp-root">
       <LandingNavbar />
       <main>
         <HeroSection />
-        <WorkflowSection />
+        <WorkflowSection
+          activeDeskStage={activeDeskStage}
+          onSelectDeskStage={handleSelectStageFromWorkflow}
+        />
+        <AutomationSection
+          activeDeskStage={activeDeskStage}
+          onSelectDeskStage={setActiveDeskStage}
+        />
         <FeatureSection />
-        <AutomationSection />
         <EditorialPreviewSection />
         <CMSSection />
         <FinalCTA />
