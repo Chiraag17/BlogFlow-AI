@@ -284,8 +284,153 @@ function LandingNavbar() {
 }
 
 /* ============================================================
-   1. HERO SECTION (Interactive Topic Simulator + 3D Studio Desk)
+   1. HERO SECTION (Synchronized 5-Agent Editorial Ledger + 3D Studio Desk)
    ============================================================ */
+interface LedgerStageSpec {
+  id: DeskStage;
+  num: string;
+  agentName: string;
+  engineLabel: string;
+  headline: string;
+  summary: string;
+  metricBadge: string;
+  artifactTitle: string;
+  artifactExcerpt: string;
+  citations: {
+    ref: string;
+    source: string;
+    domain: string;
+    claim: string;
+    metric: string;
+  }[];
+}
+
+const HERO_LEDGER_STAGES: LedgerStageSpec[] = [
+  {
+    id: 'research',
+    num: '01',
+    agentName: 'Web Research & Citation Dossier',
+    engineLabel: 'Tavily Live Search · 14 Indexed URLs',
+    headline: 'Primary-source extraction before a single sentence is drafted.',
+    summary:
+      'Queries academic benchmarks, technical documentation, and live SERPs to anchor every claim in verifiable citations.',
+    metricBadge: '14 Verified Sources · 0% Hallucination',
+    artifactTitle: 'The Architecture of AI-Native Search Engines',
+    artifactExcerpt:
+      'Hybrid semantic retrieval combines dense vector embeddings [1] with real-time citation grounding [2] to raise enterprise precision by 41% [3].',
+    citations: [
+      {
+        ref: '[1]',
+        source: 'MIT Technology Review',
+        domain: 'technologyreview.com',
+        claim: 'Dense + lexical hybrid indexing outperforms single-vector lookup across complex enterprise queries.',
+        metric: '+41% Precision Lift',
+      },
+      {
+        ref: '[2]',
+        source: 'Stanford HAI Index',
+        domain: 'hai.stanford.edu',
+        claim: 'Inline cryptographic source attribution eliminates ungrounded synthesis in production RAG pipelines.',
+        metric: '2026 RAG Benchmark',
+      },
+      {
+        ref: '[3]',
+        source: 'Nature Machine Intelligence',
+        domain: 'nature.com/natmachintell',
+        claim: 'Grounded multi-step verification reduces factual drift across 1,500+ word technical manuscripts.',
+        metric: '99.2% Fact Alignment',
+      },
+    ],
+  },
+  {
+    id: 'draft',
+    num: '02',
+    agentName: 'Long-Form Manuscript Synthesis',
+    engineLabel: 'Gemini 2.5 Pro · Semantic H2/H3 Tree',
+    headline: 'Structured long-form prose written with embedded footnote proofs.',
+    summary:
+      'Transforms the research dossier into an authoritative 1,840-word manuscript complete with H2/H3 hierarchy and FAQ schema.',
+    metricBadge: '1,840 Words · 6 H2 Sections · 5 FAQs',
+    artifactTitle: '01. Retrieval-Augmented Generation vs. Lexical Matching',
+    artifactExcerpt:
+      'Where legacy keyword engines fail on multi-hop intent [1], autonomous editorial synthesis weaves verified benchmarks directly into structured prose [2].',
+    citations: [
+      {
+        ref: '[1]',
+        source: 'ACM Digital Library',
+        domain: 'dl.acm.org',
+        claim: 'Lexical BM25 matching drops below 54% recall on zero-overlap semantic enterprise queries.',
+        metric: 'Recall Gap Analysis',
+      },
+      {
+        ref: '[2]',
+        source: 'Google Research Publications',
+        domain: 'research.google',
+        claim: ' Long-context synthesis preserves narrative cohesion across multi-thousand-word technical briefs.',
+        metric: 'Cohesion Score 96%',
+      },
+    ],
+  },
+  {
+    id: 'review',
+    num: '03',
+    agentName: 'Quality Gate & Editorial Sign-Off',
+    engineLabel: 'Automated Audit · Human Checkpoint',
+    headline: 'Scored for SEO, readability, and factual alignment prior to approval.',
+    summary:
+      'Evaluates keyword density, Flesch-Kincaid grade level, and citation integrity before pausing for 1-click human sign-off.',
+    metricBadge: 'SEO 94/100 · Grade 8.4 · Approved',
+    artifactTitle: 'Executive Quality Scorecard · Ready for Sign-Off',
+    artifactExcerpt:
+      'All 14 inline claims verified against primary Tavily sources [1]. Heading hierarchy, meta description, and Schema.org FAQ blocks validated [2].',
+    citations: [
+      {
+        ref: '[1]',
+        source: 'Quality Gatekeeper Audit',
+        domain: 'Internal Verification',
+        claim: 'Zero unverified assertions detected across 6 H2 sections; keyword density optimal at 1.6%.',
+        metric: 'SEO 94/100 Optimal',
+      },
+      {
+        ref: '[2]',
+        source: 'Editorial Governance Log',
+        domain: 'Human-in-the-Loop',
+        claim: 'Signed off by Senior Managing Editor with zero manual formatting corrections required.',
+        metric: 'Readability 91/100',
+      },
+    ],
+  },
+  {
+    id: 'publish',
+    num: '04',
+    agentName: 'Encrypted WordPress CMS Dispatch',
+    engineLabel: 'AES-256-GCM · REST API v2 Sync',
+    headline: 'Formatted Gutenberg blocks pushed directly to your WordPress staging queue.',
+    summary:
+      'Maps categories, tags, slug, and SEO meta fields automatically via encrypted Application Passwords in 1.2 seconds.',
+    metricBadge: 'WP Post #4892 · Draft Synced (1.2s)',
+    artifactTitle: 'POST /wp-json/wp/v2/posts · 201 Created',
+    artifactExcerpt:
+      'Dispatched to WordPress with mapped taxonomy IDs [1], Yoast/RankMath metadata payload [2], and safe Draft-first publication status.',
+    citations: [
+      {
+        ref: '[1]',
+        source: 'WordPress REST API v2',
+        domain: '/wp-json/wp/v2/posts',
+        claim: 'Authenticated via server-side AES-256-GCM decrypted Application Password; zero client key exposure.',
+        metric: 'HTTP 201 Created',
+      },
+      {
+        ref: '[2]',
+        source: 'Schema & Taxonomy Mapper',
+        domain: 'Meta & Gutenberg Sync',
+        claim: 'Auto-assigned Category #14 (AI Engineering), 5 semantic tags, and canonical slug.',
+        metric: '1.2s Dispatch Latency',
+      },
+    ],
+  },
+];
+
 function HeroSection({
   activeDeskStage,
   onSelectDeskStage,
@@ -293,93 +438,17 @@ function HeroSection({
   activeDeskStage: DeskStage;
   onSelectDeskStage: (stage: DeskStage) => void;
 }) {
-  const [selectedPresetId, setSelectedPresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
-  const [customTopicInput, setCustomTopicInput] = useState<string>('');
-  const [customSynthesized, setCustomSynthesized] = useState<HeroTopicPreset | null>(null);
-  const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
-  const [streamedChars, setStreamedChars] = useState<number>(999);
-  const [seoCount, setSeoCount] = useState<number>(HERO_TOPIC_PRESETS[0].seoScore);
+  const [selectedCitationIdx, setSelectedCitationIdx] = useState<number>(0);
 
-  const activeData: HeroTopicPreset =
-    customSynthesized ||
-    HERO_TOPIC_PRESETS.find((p) => p.id === selectedPresetId) ||
-    HERO_TOPIC_PRESETS[0];
-
-  const fullParagraphText = `${activeData.excerptParagraphs[0]} ${activeData.excerptParagraphs[1]}`;
+  const activeLedger =
+    HERO_LEDGER_STAGES.find((s) => s.id === activeDeskStage) || HERO_LEDGER_STAGES[0];
 
   useEffect(() => {
-    setIsSynthesizing(true);
-    setStreamedChars(0);
-    setSeoCount(52);
+    setSelectedCitationIdx(0);
+  }, [activeDeskStage]);
 
-    // Sequence 3D desk stages as the topic synthesizes
-    onSelectDeskStage('research');
-    const stageTimer1 = setTimeout(() => onSelectDeskStage('draft'), 450);
-    const stageTimer2 = setTimeout(() => {
-      onSelectDeskStage('review');
-      setIsSynthesizing(false);
-    }, 1050);
-
-    // Animate SEO score counter
-    let currentSeo = 52;
-    const seoInterval = setInterval(() => {
-      currentSeo = Math.min(currentSeo + 3, activeData.seoScore);
-      setSeoCount(currentSeo);
-      if (currentSeo >= activeData.seoScore) clearInterval(seoInterval);
-    }, 28);
-
-    // Stream characters into live manuscript preview strip
-    let chars = 0;
-    const streamInterval = setInterval(() => {
-      chars += 10;
-      setStreamedChars(chars);
-      if (chars >= 360) clearInterval(streamInterval);
-    }, 20);
-
-    return () => {
-      clearTimeout(stageTimer1);
-      clearTimeout(stageTimer2);
-      clearInterval(seoInterval);
-      clearInterval(streamInterval);
-    };
-  }, [selectedPresetId, customSynthesized]);
-
-  const handleSelectPreset = (id: string) => {
-    setCustomSynthesized(null);
-    setSelectedPresetId(id);
-  };
-
-  const handleCustomTopicSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = customTopicInput.trim();
-    if (!trimmed) return;
-
-    const cleanTopic = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    const customPreset: HeroTopicPreset = {
-      id: 'custom',
-      shortLabel: cleanTopic.slice(0, 26),
-      topicPrompt: cleanTopic,
-      category: 'Custom Editorial Brief',
-      articleTitle: `${cleanTopic}: Executive Analysis`,
-      wordCount: '1,790 words',
-      readTime: '7 min read',
-      seoScore: 93,
-      seoRating: 'Optimal',
-      h2Heading: `01. Core Mechanisms of ${cleanTopic.slice(0, 32)}`,
-      excerptParagraphs: [
-        `Synthesizing live multi-source research reveals how ${cleanTopic.toLowerCase()} is reshaping modern operational benchmarks with measurable ROI [1].`,
-        `Teams pairing structured domain citations with editorial verification outperform generic ungrounded content across organic SERP rankings [2].`,
-      ],
-      sources: [
-        { label: 'MIT Technology Review', color: '#991b1b', initial: 'M', stat: 'Primary benchmark' },
-        { label: 'Gartner Research Brief', color: '#163F32', initial: 'G', stat: '2026 Market Guide' },
-        { label: 'Harvard Business Review', color: '#1e40af', initial: 'H', stat: 'Executive framework' },
-      ],
-    };
-    setCustomSynthesized(customPreset);
-  };
-
-  const visibleProse = fullParagraphText.slice(0, streamedChars);
+  const activeCitation =
+    activeLedger.citations[selectedCitationIdx] || activeLedger.citations[0];
 
   return (
     <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
@@ -387,7 +456,7 @@ function HeroSection({
       <div className="lp-container">
         <div className="lp-hero-inner">
 
-          {/* Left: Copy + Interactive Topic-to-Article Simulator */}
+          {/* Left: Copy + Synchronized 5-Agent Editorial Ledger */}
           <div className="lp-hero-left">
             <div className="lp-hero-kicker">
               AI-Powered Editorial Automation · Interactive 3D Studio
@@ -406,84 +475,90 @@ function HeroSection({
             </h1>
 
             <p className="lp-hero-desc">
-              BlogFlow AI transforms any website, topic or idea into well-researched,
-              SEO-optimised articles — pick a prompt below and watch the 3D Editorial Desk
-              orchestrate research, drafting, and quality verification live.
+              BlogFlow AI orchestrates live web research, citation-grounded drafting, quality
+              verification, and WordPress publishing — select any pipeline stage below to inspect
+              the live editorial artifact and 3D studio desk.
             </p>
 
-            {/* Interactive Topic-to-Article Controller + Live Stream Output (Zero Overlap) */}
-            <div className="lp-hero-playground" aria-label="Interactive Topic-to-Article Studio">
-              <div className="lp-playground-header">
-                <span className="lp-playground-label">
-                  <Sparkles size={13} /> Live Topic-to-Article Simulator
+            {/* Synchronized 5-Agent Editorial Ledger */}
+            <div className="lp-hero-ledger" aria-label="Synchronized 5-Agent Editorial Ledger">
+              <div className="lp-ledger-header">
+                <span className="lp-ledger-kicker">
+                  Synchronized Pipeline Ledger
                 </span>
-                <span className="lp-playground-status">
-                  {isSynthesizing ? 'Animating 3D Studio pipeline…' : `SEO ${seoCount}/100 · ${activeData.wordCount}`}
+                <span className="lp-ledger-telemetry tabular-nums">
+                  {activeLedger.metricBadge}
                 </span>
               </div>
 
-              {/* 3 Curated Editorial Prompts */}
-              <div className="lp-playground-presets" role="tablist" aria-label="Curated editorial prompts">
-                {HERO_TOPIC_PRESETS.map((preset) => {
-                  const isActive = !customSynthesized && selectedPresetId === preset.id;
+              {/* 4 Architectural Stage Rows */}
+              <div className="lp-ledger-rows" role="tablist" aria-label="Editorial pipeline stages">
+                {HERO_LEDGER_STAGES.map((stage) => {
+                  const isSelected = stage.id === activeDeskStage;
                   return (
                     <button
-                      key={preset.id}
+                      key={stage.id}
                       type="button"
                       role="tab"
-                      aria-selected={isActive}
-                      onClick={() => handleSelectPreset(preset.id)}
-                      className={`lp-preset-btn${isActive ? ' active' : ''}`}
+                      aria-selected={isSelected}
+                      onClick={() => onSelectDeskStage(stage.id)}
+                      className={`lp-ledger-row${isSelected ? ' active' : ''}`}
                     >
-                      {preset.shortLabel}
+                      <span className="lp-ledger-step tabular-nums">{stage.num}</span>
+                      <div className="lp-ledger-row-main">
+                        <span className="lp-ledger-row-title">{stage.agentName}</span>
+                        <span className="lp-ledger-row-engine">{stage.engineLabel}</span>
+                      </div>
+                      <span className="lp-ledger-row-state">
+                        {isSelected ? 'Inspecting 3D' : 'Select'}
+                      </span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Custom Topic Input Form */}
-              <form onSubmit={handleCustomTopicSubmit} className="lp-playground-form">
-                <input
-                  type="text"
-                  value={customTopicInput}
-                  onChange={(e) => setCustomTopicInput(e.target.value)}
-                  placeholder="Or type any topic (e.g., Sustainable Aviation Fuels in 2026)…"
-                  className="lp-playground-input"
-                  aria-label="Custom article topic"
-                />
-                <button type="submit" className="lp-playground-submit">
-                  Synthesize
-                </button>
-              </form>
+              {/* Citation X-Ray & Stage Proof Inspector */}
+              <div className="lp-ledger-proof">
+                <div className="lp-ledger-proof-top">
+                  <span className="lp-ledger-proof-title">{activeLedger.artifactTitle}</span>
+                  <div className="lp-ledger-citation-tabs" aria-label="Inspect verified citations">
+                    {activeLedger.citations.map((cit, idx) => (
+                      <button
+                        key={cit.ref}
+                        type="button"
+                        onClick={() => setSelectedCitationIdx(idx)}
+                        className={`lp-ledger-cit-btn${selectedCitationIdx === idx ? ' active' : ''}`}
+                      >
+                        {cit.ref} {cit.source}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              {/* Clean Unobstructed Live Output Preview Strip */}
-              <div className="lp-playground-live-card">
-                <div className="lp-playground-live-top">
-                  <span className="lp-playground-live-title">{activeData.articleTitle}</span>
-                  <span className="lp-playground-live-seo tabular-nums">
-                    SEO {seoCount} · {activeData.seoRating}
-                  </span>
-                </div>
-                <p className="lp-playground-live-prose">
-                  {visibleProse}
-                  {streamedChars < fullParagraphText.length && (
-                    <span className="lp-typing-caret" aria-hidden="true">|</span>
-                  )}
+                <p className="lp-ledger-proof-excerpt">
+                  {activeLedger.artifactExcerpt}
                 </p>
-                <div className="lp-playground-live-citations">
-                  {activeData.sources.map((s, idx) => (
-                    <React.Fragment key={s.label}>
-                      <span>[{idx + 1}] {s.label} ({s.stat})</span>
-                      {idx < activeData.sources.length - 1 && <span aria-hidden="true">·</span>}
-                    </React.Fragment>
-                  ))}
-                </div>
+
+                {activeCitation && (
+                  <div className="lp-ledger-dossier-bar">
+                    <div className="lp-ledger-dossier-meta">
+                      <span className="lp-ledger-dossier-ref">{activeCitation.ref} Verified Source</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="lp-ledger-dossier-domain">{activeCitation.domain}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="lp-ledger-dossier-metric tabular-nums">{activeCitation.metric}</span>
+                    </div>
+                    <p className="lp-ledger-dossier-claim">
+                      “{activeCitation.claim}”
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="lp-hero-ctas">
               <Link
-                href={`/generator?topic=${encodeURIComponent(activeData.topicPrompt)}`}
+                href="/generator?topic=The%20Architecture%20of%20AI-Native%20Search%20Engines"
                 className="lp-btn-primary"
                 id="hero-cta-primary"
               >
@@ -520,8 +595,8 @@ function HeroSection({
               currentStage={activeDeskStage}
               onStageChange={onSelectDeskStage}
               interactive={true}
-              activeTopicTitle={activeData.shortLabel}
-              activeTopicMetric={`SEO ${seoCount}/100 · ${activeData.wordCount} · ${activeData.sources.length} Citations`}
+              activeTopicTitle={`${activeLedger.num}. ${activeLedger.agentName}`}
+              activeTopicMetric={activeLedger.metricBadge}
             />
           </div>
         </div>
