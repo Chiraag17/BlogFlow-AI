@@ -40,7 +40,17 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [activeStageIdx, setActiveStageIdx] = useState(0);
 
-  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
+  const rawCallbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
+  const callbackUrl = rawCallbackUrl.startsWith('/')
+    ? rawCallbackUrl
+    : (() => {
+        try {
+          const parsed = new URL(rawCallbackUrl);
+          return (parsed.pathname || '/dashboard') + parsed.search;
+        } catch {
+          return '/dashboard';
+        }
+      })();
 
   // Redirect if already logged in
   useEffect(() => {

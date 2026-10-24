@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import {
@@ -30,6 +30,7 @@ interface TopBarProps {
 
 export default function TopBar({ onMenuClick }: TopBarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [searchOpen, setSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -48,7 +49,12 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const handleSignOut = async () => {
     setSigningOut(true);
     setProfileOpen(false);
-    await signOut({ callbackUrl: '/login' });
+    try {
+      await signOut({ redirect: false });
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
   };
 
   return (

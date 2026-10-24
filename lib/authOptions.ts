@@ -39,6 +39,16 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      try {
+        const parsed = new URL(url);
+        if (parsed.origin === baseUrl) return url;
+        return `${baseUrl}${parsed.pathname}${parsed.search}`;
+      } catch {
+        return baseUrl;
+      }
+    },
   },
   pages: {
     signIn: "/login",
