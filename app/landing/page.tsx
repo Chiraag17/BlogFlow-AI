@@ -222,69 +222,234 @@ const STAGE_DETAILS: Record<
 };
 
 /* ============================================================
-   NAVBAR
+   NAVBAR — Calibrated Brass Vernier Masthead & Archival Index Cards
    ============================================================ */
+interface NavIndexSpec {
+  id: string;
+  code: string;
+  label: string;
+  href: string;
+  folioTitle: string;
+  abstract: string;
+  telemetry: string;
+  deliverable: string;
+}
+
+const NAV_INDEX_SPECS: NavIndexSpec[] = [
+  {
+    id: 'product',
+    code: 'SEC 01 · STUDIO',
+    label: 'Product',
+    href: '#product',
+    folioTitle: 'Interactive 3D Editorial Desk & Galley Proofing',
+    abstract: 'Inspect citation-grounded manuscripts, semantic H2 structures, and live SEO telemetry before a single word hits production.',
+    telemetry: '3D Spatial Studio · Live Citation Grounding',
+    deliverable: 'Dossier #01 — Architecture & Proofing',
+  },
+  {
+    id: 'workflow',
+    code: 'SEC 02 · PIPELINE',
+    label: 'Workflow',
+    href: '#workflow',
+    folioTitle: '5-Stage Autonomous Editorial Pipeline',
+    abstract: 'From Tavily live web discovery and outline synthesis to human-in-the-loop quality sign-off and WordPress REST dispatch.',
+    telemetry: '5 Specialized Agents · 0% Unverified Claims',
+    deliverable: 'Dossier #02 — Multi-Agent Choreography',
+  },
+  {
+    id: 'features',
+    code: 'SEC 03 · CAPABILITIES',
+    label: 'Features',
+    href: '#features',
+    folioTitle: 'Archival Precision & Encrypted CMS Sync',
+    abstract: 'Automated internal linking, schema.org FAQ blocks, readability grading, and AES-256-GCM authenticated WordPress publishing.',
+    telemetry: 'SEO 94+ Benchmark · AES-256-GCM Vault',
+    deliverable: 'Dossier #03 — System Specifications',
+  },
+  {
+    id: 'creators',
+    code: 'SEC 04 · PHILOSOPHY',
+    label: 'Philosophy',
+    href: '#creators',
+    folioTitle: 'Human Editorial Sovereignty Over AI Slop',
+    abstract: 'Why high-trust engineering and growth teams pair autonomous research engines with mandatory human editorial approval.',
+    telemetry: '2,400+ Editorial Teams · 4.9/5 Rating',
+    deliverable: 'Dossier #04 — The Editorial Manifesto',
+  },
+];
+
 function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [scrollPct, setScrollPct] = useState(0);
+  const [activeSectionCode, setActiveSectionCode] = useState('SEC 01 · STUDIO');
+  const [hoveredNav, setHoveredNav] = useState<NavIndexSpec | null>(null);
   const { isDark, toggleTheme, mounted } = useTheme();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 32);
+
+      const docHeight = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1
+      );
+      const pct = Math.min(100, Math.max(0, Math.round((y / docHeight) * 100)));
+      setScrollPct(pct);
+
+      if (pct < 22) {
+        setActiveSectionCode('SEC 01 · STUDIO');
+      } else if (pct < 50) {
+        setActiveSectionCode('SEC 02 · PIPELINE');
+      } else if (pct < 78) {
+        setActiveSectionCode('SEC 03 · CAPABILITIES');
+      } else {
+        setActiveSectionCode('SEC 04 · PHILOSOPHY');
+      }
+    };
+
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
-    <nav id="lp-navbar" className={`lp-nav${scrolled ? ' scrolled' : ''}`} role="navigation" aria-label="Main navigation">
-      <Link href="/" className="lp-nav-logo">
-        <span className="lp-nav-logo-icon" aria-hidden="true">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 2h7l3 3v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-            <path d="M10 2v3h3" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-            <line x1="5.5" y1="7" x2="10.5" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            <line x1="5.5" y1="12" x2="8.5" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
-        </span>
-        BlogFlow AI
-      </Link>
-
-      <ul className="lp-nav-links">
-        <li><a href="#product">Product</a></li>
-        <li><a href="#workflow">Workflow</a></li>
-        <li><a href="#features">Features</a></li>
-        <li><a href="#creators">Philosophy</a></li>
-      </ul>
-
-      <div className="lp-nav-actions">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="lp-theme-toggle"
-          aria-label={mounted && isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={mounted && isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          id="theme-toggle-btn"
-        >
-          <span className="lp-theme-toggle-icon" aria-hidden="true">
-            {mounted && isDark ? <Moon size={16} /> : <Sun size={16} />}
+    <header
+      id="lp-navbar"
+      className={`lp-nav${scrolled ? ' scrolled' : ''}`}
+      role="navigation"
+      aria-label="Main navigation"
+      onMouseLeave={() => setHoveredNav(null)}
+    >
+      <div className="lp-nav-main-row">
+        <div className="lp-nav-brand-cluster">
+          <Link href="/" className="lp-nav-logo">
+            <span className="lp-nav-logo-icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 2h7l3 3v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M10 2v3h3" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <line x1="5.5" y1="7" x2="10.5" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="5.5" y1="12" x2="8.5" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </span>
+            BlogFlow AI
+          </Link>
+          <span className="lp-nav-edition-tag" aria-hidden="true">
+            VOL. IV · ARCHIVAL STUDIO
           </span>
-          <span className="lp-theme-toggle-label">
-            {mounted && isDark ? 'Dark' : 'Light'}
-          </span>
-        </button>
+        </div>
 
-        <Link href="/login" className="lp-nav-signin">Sign in</Link>
-        <Link href="/generator" className="lp-btn-primary" id="nav-cta">
-          Start creating
-          <span className="btn-arrow" aria-hidden="true"><ArrowRight size={14} /></span>
-        </Link>
+        <ul className="lp-nav-links">
+          {NAV_INDEX_SPECS.map((item) => {
+            const isActive = activeSectionCode === item.code;
+            const isHovered = hoveredNav?.id === item.id;
+            return (
+              <li key={item.id}>
+                <a
+                  href={item.href}
+                  className={isActive || isHovered ? 'active' : ''}
+                  onMouseEnter={() => setHoveredNav(item)}
+                  onFocus={() => setHoveredNav(item)}
+                >
+                  <span className="lp-nav-link-code">{item.code.split(' · ')[0]}</span>
+                  <span>{item.label}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="lp-nav-actions">
+          <div className="lp-nav-telemetry-readout" aria-live="polite">
+            <span className="lp-nav-telemetry-dot" aria-hidden="true" />
+            <span className="lp-nav-telemetry-sec">{activeSectionCode}</span>
+            <span className="lp-nav-telemetry-pct">
+              {String(scrollPct).padStart(2, '0')}%
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="lp-theme-toggle"
+            aria-label={mounted && isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={mounted && isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            id="theme-toggle-btn"
+          >
+            <span className="lp-theme-toggle-icon" aria-hidden="true">
+              {mounted && isDark ? <Moon size={15} /> : <Sun size={15} />}
+            </span>
+            <span className="lp-theme-toggle-label">
+              {mounted && isDark ? 'Dark' : 'Light'}
+            </span>
+          </button>
+
+          <Link href="/login" className="lp-nav-signin">Sign in</Link>
+          <Link href="/generator" className="lp-btn-primary" id="nav-cta">
+            Start creating
+            <span className="btn-arrow" aria-hidden="true"><ArrowRight size={14} /></span>
+          </Link>
+        </div>
       </div>
-    </nav>
+
+      {/* Archival Index Hover Card Drawer */}
+      <AnimatePresence>
+        {hoveredNav && (
+          <motion.div
+            key={hoveredNav.id}
+            initial={{ opacity: 0, y: -6, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -6, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="lp-nav-index-drawer"
+          >
+            <div className="lp-nav-index-card">
+              <div className="lp-nav-index-left">
+                <span className="lp-nav-index-kicker">{hoveredNav.code}</span>
+                <span className="lp-nav-index-deliverable">{hoveredNav.deliverable}</span>
+              </div>
+              <div className="lp-nav-index-center">
+                <h4 className="lp-nav-index-title">{hoveredNav.folioTitle}</h4>
+                <p className="lp-nav-index-desc">{hoveredNav.abstract}</p>
+              </div>
+              <div className="lp-nav-index-right">
+                <span className="lp-nav-index-metric">{hoveredNav.telemetry}</span>
+                <a
+                  href={hoveredNav.href}
+                  onClick={() => setHoveredNav(null)}
+                  className="lp-nav-index-jump"
+                >
+                  Inspect Section <ArrowRight size={12} />
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Calibrated Brass Vernier Rule */}
+      <div className="lp-nav-vernier-track" aria-hidden="true">
+        <div
+          className="lp-nav-vernier-fill"
+          style={{ width: `${scrollPct}%` }}
+        />
+        <div
+          className="lp-nav-vernier-needle"
+          style={{ left: `clamp(24px, ${scrollPct}%, calc(100% - 24px))` }}
+        >
+          <span className="lp-nav-vernier-diamond" />
+          <span className="lp-nav-vernier-tag">
+            {String(scrollPct).padStart(2, '0')}%
+          </span>
+        </div>
+      </div>
+    </header>
   );
 }
 
 /* ============================================================
-   1. HERO SECTION (Hairline Chapter Index + 3D Studio Desk)
+   1. HERO SECTION (Hairline Chapter Index + X-Ray Optical Loupe + 3D Studio Desk)
    ============================================================ */
 interface ChapterStageSpec {
   id: DeskStage;
@@ -343,6 +508,13 @@ function HeroSection({
   // 'center' (0.0s -> 0.85s): Giant centered keynote stage
   // 'split'  (0.85s+): Smoothly morphs into the left column while 3D Desk & Chapter Index glide in
   const [heroStage, setHeroStage] = useState<'center' | 'split'>('center');
+  const [activePresetId, setActivePresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
+  const [loupeState, setLoupeState] = useState<{ x: number; y: number; active: boolean }>({
+    x: 210,
+    y: 96,
+    active: false,
+  });
+  const [xrayPinned, setXrayPinned] = useState(false);
 
   useEffect(() => {
     const prefersReduced =
@@ -364,6 +536,23 @@ function HeroSection({
   const isSplit = heroStage === 'split';
   const activeChapter =
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
+  const activePreset =
+    HERO_TOPIC_PRESETS.find((p) => p.id === activePresetId) || HERO_TOPIC_PRESETS[0];
+
+  const handleProofMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setLoupeState({
+      x: Math.round(e.clientX - rect.left),
+      y: Math.round(e.clientY - rect.top),
+      active: true,
+    });
+  };
+
+  const handleProofMouseLeave = () => {
+    setLoupeState((prev) => ({ ...prev, active: false }));
+  };
+
+  const showXrayLens = loupeState.active || xrayPinned;
 
   return (
     <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
@@ -444,7 +633,7 @@ function HeroSection({
       <div className="lp-container">
         <div className="lp-hero-inner">
 
-          {/* Left: Editorial Copy + Minimalist Hairline Chapter Index */}
+          {/* Left: Editorial Copy + Chapter Index + Interactive X-Ray Loupe & Brief Switcher */}
           <div className="lp-hero-left">
             {isSplit ? (
               <motion.div
@@ -502,7 +691,7 @@ function HeroSection({
               sign-off, and WordPress publishing in one quiet studio.
             </motion.p>
 
-            {/* Option 1: The Hairline Chapter Index with Left-to-Right Hairline Draw */}
+            {/* The Hairline Chapter Index with Left-to-Right Hairline Draw */}
             <div className="lp-chapter-index" aria-label="Editorial studio stage index">
               <div className="lp-chapter-tabs" role="tablist" aria-label="3D Studio Chapters">
                 {HERO_CHAPTER_INDEX.map((chapter, idx) => {
@@ -573,19 +762,131 @@ function HeroSection({
               </motion.div>
             </div>
 
+            {/* INTERACTIVE X-RAY OPTICAL LOUPE & 3-BRIEF SWITCHER */}
+            <motion.div
+              className="lp-xray-workbench"
+              initial={false}
+              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.48 : 0, ease: HERO_REVEAL_EASE }}
+            >
+              <div className="lp-xray-header">
+                <div className="lp-xray-title-cluster">
+                  <span className="lp-xray-kicker">LIVE GALLEY PROOF · X-RAY LOUPE</span>
+                  <button
+                    type="button"
+                    onClick={() => setXrayPinned((v) => !v)}
+                    className={`lp-xray-pin-btn${xrayPinned ? ' active' : ''}`}
+                  >
+                    <Search size={11} />
+                    {xrayPinned ? 'X-Ray Locked On' : 'Hover Proof or Click to Lock X-Ray'}
+                  </button>
+                </div>
+
+                {/* 3 Clickable Topic Briefs */}
+                <div className="lp-brief-switcher" role="tablist" aria-label="Sample Editorial Briefs">
+                  {HERO_TOPIC_PRESETS.map((preset, idx) => {
+                    const isSelected = preset.id === activePreset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isSelected}
+                        onClick={() => setActivePresetId(preset.id)}
+                        className={`lp-brief-tab${isSelected ? ' active' : ''}`}
+                      >
+                        <span className="lp-brief-idx">0{idx + 1}</span>
+                        <span>{preset.shortLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Galley Proof Surface with Interactive X-Ray Optical Loupe */}
+              <div
+                className={`lp-xray-proof-card${showXrayLens ? ' loupe-engaged' : ''}`}
+                onMouseMove={handleProofMouseMove}
+                onMouseLeave={handleProofMouseLeave}
+              >
+                {/* Layer A: Finished Editorial Galley Prose */}
+                <div className="lp-xray-layer-prose">
+                  <div className="lp-xray-proof-meta-row">
+                    <span className="lp-xray-proof-cat">{activePreset.category}</span>
+                    <span className="lp-xray-proof-stats">
+                      {activePreset.wordCount} · {activePreset.readTime} · SEO {activePreset.seoScore}/100 ({activePreset.seoRating})
+                    </span>
+                  </div>
+                  <h3 className="lp-xray-proof-title">{activePreset.articleTitle}</h3>
+                  <div className="lp-xray-proof-h2">{activePreset.h2Heading}</div>
+                  <p className="lp-xray-proof-p">{activePreset.excerptParagraphs[0]}</p>
+                  <p className="lp-xray-proof-p">{activePreset.excerptParagraphs[1]}</p>
+                </div>
+
+                {/* Layer B: Sub-Surface X-Ray Citation & Telemetry Blueprint (Clipped by Optical Loupe) */}
+                <div
+                  className="lp-xray-layer-blueprint"
+                  style={{
+                    clipPath: xrayPinned
+                      ? 'circle(140% at 50% 50%)'
+                      : loupeState.active
+                        ? `circle(96px at ${loupeState.x}px ${loupeState.y}px)`
+                        : 'circle(0px at 50% 50%)',
+                  }}
+                  aria-hidden={!showXrayLens}
+                >
+                  <div className="lp-xray-blueprint-top">
+                    <span className="lp-xray-blueprint-badge">
+                      X-RAY TELEMETRY · VERIFIED SOURCE GROUNDING
+                    </span>
+                    <span className="lp-xray-blueprint-score">
+                      SEMANTIC SCORE {activePreset.seoScore}/100 · 0 HALLUCINATIONS
+                    </span>
+                  </div>
+                  <div className="lp-xray-blueprint-prompt">
+                    PROMPT BRIEF: &ldquo;{activePreset.topicPrompt}&rdquo;
+                  </div>
+                  <div className="lp-xray-sources-grid">
+                    {activePreset.sources.map((src, sIdx) => (
+                      <div key={src.label} className="lp-xray-source-chip">
+                        <span className="lp-xray-source-cite">[{sIdx + 1}]</span>
+                        <div className="lp-xray-source-body">
+                          <span className="lp-xray-source-name">{src.label}</span>
+                          <span className="lp-xray-source-stat">{src.stat}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Brass Optical Loupe Ring */}
+                {loupeState.active && !xrayPinned && (
+                  <div
+                    className="lp-xray-loupe-ring"
+                    style={{
+                      transform: `translate(${loupeState.x - 96}px, ${loupeState.y - 96}px)`,
+                    }}
+                    aria-hidden="true"
+                  >
+                    <span className="lp-xray-loupe-label">OPTICAL LOUPE · 2.4×</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
             {/* CTAs Reveal */}
             <motion.div
               className="lp-hero-ctas"
               initial={false}
               animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.5 : 0, ease: HERO_REVEAL_EASE }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.54 : 0, ease: HERO_REVEAL_EASE }}
             >
               <Link
-                href="/generator?topic=The%20Architecture%20of%20AI-Native%20Search%20Engines"
+                href={`/generator?topic=${encodeURIComponent(activePreset.articleTitle)}`}
                 className="lp-btn-primary"
                 id="hero-cta-primary"
               >
-                Open in Full Generator
+                Generate &ldquo;{activePreset.shortLabel}&rdquo;
                 <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </Link>
               <a href="#workflow" className="lp-btn-secondary" id="hero-cta-secondary">
@@ -599,7 +900,7 @@ function HeroSection({
               className="lp-hero-social"
               initial={false}
               animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.58 : 0, ease: HERO_REVEAL_EASE }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.6 : 0, ease: HERO_REVEAL_EASE }}
             >
               <AvatarCircles
                 avatarUrls={CREATOR_AVATARS}
@@ -633,8 +934,8 @@ function HeroSection({
               currentStage={activeDeskStage}
               onStageChange={onSelectDeskStage}
               interactive={true}
-              activeTopicTitle={`${activeChapter.num}. ${activeChapter.label}`}
-              activeTopicMetric={activeChapter.hudMetric}
+              activeTopicTitle={`${activeChapter.num}. ${activePreset.shortLabel}`}
+              activeTopicMetric={`${activePreset.wordCount} · SEO ${activePreset.seoScore}/100 · ${activeChapter.label}`}
             />
           </motion.div>
         </div>

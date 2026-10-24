@@ -17,15 +17,9 @@ import {
   Moon,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
+import EditorialPressPass3D from '@/components/auth/EditorialPressPass3D';
 
 const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-const EDITORIAL_STAGES = [
-  { num: '01', label: 'Research', desc: 'Live Tavily primary-source indexing' },
-  { num: '02', label: 'Draft', desc: 'Gemini long-form H2/H3 manuscript synthesis' },
-  { num: '03', label: 'Review', desc: 'SEO, readability & human editorial gate' },
-  { num: '04', label: 'Publish', desc: 'AES-256 encrypted WordPress REST sync' },
-];
 
 interface FormState {
   name: string;
@@ -55,9 +49,11 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [activeStageIdx, setActiveStageIdx] = useState(1);
+  const [doorsOpening, setDoorsOpening] = useState(false);
+  const [activeStageIdx, setActiveStageIdx] = useState(0);
 
   const validate = (): boolean => {
     const e: Errors = {};
@@ -112,8 +108,11 @@ export default function RegisterPage() {
 
       setSuccess(true);
       setTimeout(() => {
+        setDoorsOpening(true);
+      }, 650);
+      setTimeout(() => {
         router.push('/login?registered=1');
-      }, 1500);
+      }, 1200);
     } catch {
       setErrors({ general: 'Network error. Please check your connection and try again.' });
     } finally {
@@ -129,11 +128,19 @@ export default function RegisterPage() {
   });
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#F7F4EC] dark:bg-[#101714] text-[#18211D] dark:text-[#F3F0E8] transition-colors duration-300">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#F7F4EC] dark:bg-[#101714] text-[#18211D] dark:text-[#F3F0E8] transition-colors duration-300 overflow-hidden">
       {/* ============================================================
           LEFT COLUMN: WARM ARCHIVAL PAPER FORM CANVAS (7 cols on lg)
           ============================================================ */}
-      <div className="lg:col-span-7 flex flex-col justify-between px-6 sm:px-12 lg:px-16 xl:px-24 py-8 sm:py-10">
+      <motion.div
+        animate={
+          doorsOpening
+            ? { x: '-105%', opacity: 0 }
+            : { x: '0%', opacity: 1 }
+        }
+        transition={{ duration: 0.52, ease: EASE_OUT }}
+        className="lg:col-span-7 flex flex-col justify-between px-6 sm:px-12 lg:px-16 xl:px-24 py-8 sm:py-10"
+      >
         {/* Top Bar */}
         <header className="flex items-center justify-between gap-4">
           <Link
@@ -147,7 +154,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-xs font-medium text-[#18211D] dark:text-[#F3F0E8] hover:border-[#163F32] dark:hover:border-[#B8D5C5] transition-colors whitespace-nowrap cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-xs font-medium text-[#18211D] dark:text-[#F3F0E8] hover:border-[#163F32] dark:hover:border-[#B8D5C5] transition-colors whitespace-nowrap cursor-pointer"
             aria-label="Toggle color theme"
           >
             <span className="text-[#C8A15A] dark:text-[#D4AF67]">
@@ -162,12 +169,12 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE_OUT }}
-          className="w-full max-w-[420px] mx-auto my-8"
+          className="w-full max-w-[420px] mx-auto my-6"
         >
           {/* Editorial Wordmark Lockup */}
           <Link
             href="/landing"
-            className="inline-flex items-center gap-2.5 text-[#18211D] dark:text-[#F3F0E8] mb-6"
+            className="inline-flex items-center gap-2.5 text-[#18211D] dark:text-[#F3F0E8] mb-5"
           >
             <span className="w-7 h-7 rounded-lg bg-[#163F32] dark:bg-[#B8D5C5]/15 dark:border dark:border-[#B8D5C5]/35 text-[#F7F4EC] dark:text-[#B8D5C5] flex items-center justify-center">
               <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
@@ -220,9 +227,9 @@ export default function RegisterPage() {
             </span>
           </Link>
 
-          <div className="mb-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#C8A15A] dark:text-[#D4AF67] mb-2">
-              New Editorial Workspace
+          <div className="mb-5">
+            <p className="text-xs font-medium text-[#C8A15A] dark:text-[#D4AF67] mb-1.5">
+              New Editorial Workspace · Live 3D Credential Minting
             </p>
             <h1
               className="text-4xl sm:text-[42px] leading-[1.08] tracking-tight text-[#18211D] dark:text-[#F3F0E8] font-normal"
@@ -231,7 +238,7 @@ export default function RegisterPage() {
               Create your <em className="italic text-[#163F32] dark:text-[#B8D5C5]">studio.</em>
             </h1>
             <p className="text-sm text-[#68736D] dark:text-[#8E9E95] mt-2 leading-relaxed">
-              Set up your editorial account to start researching, drafting, and publishing verified articles.
+              Watch your 3D Press Pass engrave your identity as you type, then flip 180° when setting your password.
             </p>
           </div>
 
@@ -245,7 +252,7 @@ export default function RegisterPage() {
           {success && (
             <div className="flex items-center gap-2.5 p-3.5 mb-5 bg-[#E5EFE5] dark:bg-emerald-950/40 border border-[#163F32]/20 dark:border-emerald-800/40 rounded-lg text-[#163F32] dark:text-[#B8D5C5] text-xs font-medium">
               <CheckCircle2 size={15} className="shrink-0" />
-              <span>Studio account created! Redirecting to sign in…</span>
+              <span>3D Press Pass issued! Opening studio doors…</span>
             </div>
           )}
 
@@ -262,7 +269,10 @@ export default function RegisterPage() {
                 type="text"
                 autoComplete="name"
                 placeholder="Alex Rivera"
-                onFocus={() => setActiveStageIdx(0)}
+                onFocus={() => {
+                  setIsPasswordFocused(false);
+                  setActiveStageIdx(0);
+                }}
                 {...field('name')}
                 className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
               />
@@ -283,7 +293,10 @@ export default function RegisterPage() {
                 type="email"
                 autoComplete="email"
                 placeholder="editor@publication.com"
-                onFocus={() => setActiveStageIdx(1)}
+                onFocus={() => {
+                  setIsPasswordFocused(false);
+                  setActiveStageIdx(1);
+                }}
                 {...field('email')}
                 className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
               />
@@ -293,19 +306,28 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="register-password"
-                className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8] mb-1.5"
-              >
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="register-password"
+                  className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8]"
+                >
+                  Password
+                </label>
+                <span className="text-[11px] font-mono text-[#C8A15A] dark:text-[#D4AF67]">
+                  {isPasswordFocused ? '180° Tumbler Active' : 'Flips Pass 180°'}
+                </span>
+              </div>
               <div className="relative">
                 <input
                   id="register-password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   placeholder="At least 8 characters"
-                  onFocus={() => setActiveStageIdx(2)}
+                  onFocus={() => {
+                    setIsPasswordFocused(true);
+                    setActiveStageIdx(2);
+                  }}
+                  onBlur={() => setIsPasswordFocused(false)}
                   {...field('password')}
                   className="w-full px-4 py-2.5 pr-11 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
                 />
@@ -336,7 +358,11 @@ export default function RegisterPage() {
                   type={showConfirm ? 'text' : 'password'}
                   autoComplete="new-password"
                   placeholder="Re-enter your password"
-                  onFocus={() => setActiveStageIdx(3)}
+                  onFocus={() => {
+                    setIsPasswordFocused(true);
+                    setActiveStageIdx(3);
+                  }}
+                  onBlur={() => setIsPasswordFocused(false)}
                   {...field('confirmPassword')}
                   className="w-full px-4 py-2.5 pr-11 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
                 />
@@ -365,7 +391,7 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Creating studio account…
+                  Minting Studio Credential…
                 </>
               ) : (
                 <>
@@ -376,7 +402,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-[#163F32]/12 dark:border-[#F3F0E8]/12 flex items-center justify-between text-xs text-[#68736D] dark:text-[#8E9E95]">
+          <div className="mt-5 pt-4 border-t border-[#163F32]/12 dark:border-[#F3F0E8]/12 flex items-center justify-between text-xs text-[#68736D] dark:text-[#8E9E95]">
             <span>Already have an account?</span>
             <Link
               href="/login"
@@ -393,94 +419,35 @@ export default function RegisterPage() {
           <span>BlogFlow AI · Autonomous Editorial Studio</span>
           <span>Research · Think · Publish</span>
         </footer>
-      </div>
+      </motion.div>
 
       {/* ============================================================
-          RIGHT COLUMN: MIDNIGHT FOREST MONOGRAPH SHOWCASE (5 cols on lg)
+          RIGHT COLUMN: 3D LIVE-ENGRAVED PRESS PASS STAGE (5 cols on lg)
           ============================================================ */}
-      <aside className="hidden lg:flex lg:col-span-5 p-4">
-        <div className="w-full h-full rounded-2xl bg-[#163F32] dark:bg-[#0C1210] border border-[#C8A15A]/25 dark:border-[#F3F0E8]/12 text-[#F7F4EC] p-10 xl:p-12 flex flex-col justify-between relative overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-20"
-            style={{
-              background: 'radial-gradient(circle, rgba(200,161,90,0.45) 0%, transparent 70%)',
-            }}
+      <motion.aside
+        animate={
+          doorsOpening
+            ? { x: '105%', opacity: 0 }
+            : { x: '0%', opacity: 1 }
+        }
+        transition={{ duration: 0.52, ease: EASE_OUT }}
+        className="hidden lg:flex lg:col-span-5 p-4"
+      >
+        <div className="w-full h-full rounded-2xl bg-[#163F32] dark:bg-[#0C1210] border border-[#C8A15A]/25 dark:border-[#F3F0E8]/12 text-[#F7F4EC] p-8 xl:p-10 flex flex-col justify-between relative overflow-hidden">
+          <EditorialPressPass3D
+            mode="register"
+            name={form.name}
+            email={form.email}
+            password={form.password}
+            confirmPassword={form.confirmPassword}
+            isPasswordFocused={isPasswordFocused}
+            activeStageIdx={activeStageIdx}
+            onSelectStage={setActiveStageIdx}
+            isSubmitting={loading}
+            isVerified={success}
           />
-
-          <div className="relative z-10 flex items-center justify-between text-xs text-[#F7F4EC]/70 border-b border-[#F7F4EC]/12 pb-5">
-            <span className="font-mono tracking-wider uppercase text-[11px] text-[#C8A15A]">
-              Monograph · Issue 01
-            </span>
-            <span>5-Agent LangGraph Architecture</span>
-          </div>
-
-          <div className="relative z-10 my-auto py-10 space-y-8">
-            <blockquote
-              className="text-3xl xl:text-[38px] leading-[1.16] tracking-tight font-normal text-[#F7F4EC]"
-              style={{ fontFamily: "'Instrument Serif', 'Newsreader', Georgia, serif" }}
-            >
-              “Research before writing. Structure before polish. Review before{' '}
-              <em className="italic text-[#C8A15A]">publishing.</em>”
-            </blockquote>
-
-            <p className="text-sm text-[#F7F4EC]/75 leading-relaxed max-w-md">
-              Connect your domain, discover high-intent content gaps, and let five specialized
-              agents draft citation-backed articles ready for your final approval.
-            </p>
-
-            {/* Interactive 01–04 Hairline Chapter Index */}
-            <div className="pt-4">
-              <div className="grid grid-cols-4 border-b border-[#F7F4EC]/15">
-                {EDITORIAL_STAGES.map((stage, idx) => {
-                  const isActive = idx === activeStageIdx;
-                  return (
-                    <button
-                      key={stage.num}
-                      type="button"
-                      onClick={() => setActiveStageIdx(idx)}
-                      className={`relative text-left py-2.5 pr-2 transition-colors cursor-pointer ${
-                        isActive ? 'text-[#F7F4EC]' : 'text-[#F7F4EC]/50 hover:text-[#F7F4EC]/80'
-                      }`}
-                    >
-                      <span
-                        className={`italic mr-1.5 text-sm ${
-                          isActive ? 'text-[#C8A15A] font-semibold' : ''
-                        }`}
-                        style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
-                      >
-                        {stage.num}
-                      </span>
-                      <span className="text-xs font-semibold">{stage.label}</span>
-                      {isActive && (
-                        <motion.span
-                          layoutId="register-stage-brass-bar"
-                          className="absolute left-0 right-3 -bottom-[1px] h-[2px] bg-[#C8A15A]"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-[#F7F4EC]/70 mt-3 font-mono">
-                {EDITORIAL_STAGES[activeStageIdx].num}. {EDITORIAL_STAGES[activeStageIdx].desc}
-              </p>
-            </div>
-          </div>
-
-          <div className="relative z-10 pt-6 border-t border-[#F7F4EC]/12 flex items-center justify-between gap-4 text-xs">
-            <div>
-              <div className="font-semibold text-[#F7F4EC]">Alex Rivera · TechPulse AI</div>
-              <div className="text-[#F7F4EC]/60 mt-0.5">
-                2,400+ editorial teams · AES-256 WordPress Sync
-              </div>
-            </div>
-            <span className="font-mono text-[11px] text-[#C8A15A] shrink-0">
-              0% Hallucinated Citations
-            </span>
-          </div>
         </div>
-      </aside>
+      </motion.aside>
     </div>
   );
 }

@@ -1,61 +1,63 @@
-# 3D Editorial Orrery & Archival Folio Physics for BlogFlow AI Dashboard
+# Editorial Vernier Navigation, Hero X-Ray Loupe & 3D Press-Pass Auth Suite
 
-This upgrade introduces two bespoke, tactile 3D experiences to the BlogFlow AI Overview dashboard: a compact **Three.js 3D Brass Editorial Orrery & Press** centerpiece inside the Command Desk, and **3D Archival Folio Stack & Unfolding Manuscript Physics** across the 4-Stage Pipeline Board, KPI Ledger, and Inspector Modal. Both systems react dynamically to user typing, stage switching, manuscript approvals, and cursor perspective without cluttering the daily editorial workflow.
+This plan upgrades BlogFlow AI’s core entry and navigation touchpoints—the **Navigation Bar**, **Landing Hero Section**, and **Login / Signup Pages**—with bespoke horological and archival publishing mechanics: a **Calibrated Brass Vernier Scroll Rule & Archival Index Hover Drawer**, an **Interactive X-Ray Editor’s Loupe & 3-Brief Switcher** in the Hero, and a **3D Live-Engraved Editorial Press Pass** that flips `180°` on password focus and parts the screen like sliding studio doors on sign-in.
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following architectural and interaction choices have been confirmed from your answers and will guide the implementation:
+> The following design and interaction specifications have been confirmed from your answers:
 
-- **Confirmed Decision 1 — Dual 3D System (Idea 1 + Idea 2)**: Combine the **3D Brass Editorial Orrery & Press** (compact WebGL/Three.js instrument) with **3D Archival Folio Stack & Unfolding Manuscript Cards** (hardware-accelerated 3D CSS perspective transforms with physical paper depth).
-- **Confirmed Decision 2 — Action-Reactive Kinematics**: All 3D motion responds directly to workflow events—typing a brief in the Quick-Dispatch bar spins and locks the outer research ring, clicking a pipeline stage (`01 Research` through `04 Publish`) rotates the 3D brass press to that chapter angle, and approving or publishing a manuscript animates a 3D folio stamp-and-glide transition.
-- **Confirmed Decision 3 — Compact Focal Centerpiece + 3D CSS Cards**: The WebGL 3D Orrery lives in a dedicated, framed studio stage inside the Executive Command Desk alongside the Quick-Dispatch Launcher, while the KPI Ledger cards, Pipeline Folio Stack, and Unfolding Manuscript Inspector use zero-overhead 3D CSS (`perspective: 1400px`, `transform-style: preserve-3d`, and cursor-tracked specular lighting).
+- **Confirmed Decision 1 — Calibrated Brass Vernier Navbar & Archival Hover Cards**: Replace the rounded floating glass pill navbar with a crisp, full-span **Architectural Editorial Masthead** featuring a live millimeter-calibrated **Brass Vernier Scroll Caliper** along the bottom rule (`00%`–`100%` reading progress + active chapter indicator) and **Archival Index Cards** that slide down from the hairline rule when hovering navigation links.
+- **Confirmed Decision 2 — Hero Interactive X-Ray Optical Loupe + 3 Clickable Topic Briefs**: Add a **Rotary Brief Switcher** (`AI Search Architecture`, `Hybrid SaaS Pricing`, `Zero-Trust Security`) and an interactive **X-Ray Editor’s Loupe** manuscript card in the Hero where moving the cursor across the live draft reveals the hidden citation provenance, H2 semantic score, and keyword weight inside a brushed-brass magnifying lens.
+- **Confirmed Decision 3 — Login & Signup 3D Live-Engraved Press Pass with 180° Password Flip**: Transform the right-hand auth showcase into a **3D Embossed Editorial Press Credential** (`perspective: 1400px`, `preserve-3d`) that dynamically engraves the user’s name/email as they type, physically flips `180°` to its cryptographic reverse side when focusing the password input, and parts the split-screen columns like **Sliding Studio Doors** upon successful authentication.
 
 ---
 
 ### 1. Overview & Core Concept
 
-- **What It Does**: Elevates the dashboard from a flat 2D admin screen into a tactile **Spatial Editorial Studio** where the multi-agent pipeline (`01 Research · 02 Draft · 03 Review · 04 Publish`) is represented as a physical 3D brass-and-forest mechanical instrument and manuscripts behave like stacked archival broadsheets with real depth, thickness, and unfolding choreography.
-- **Target Audience / Persona**: Editorial directors, content engineers, and publications managers who want executive-grade spatial feedback as they dispatch topics, inspect SEO quality, and approve manuscripts.
-- **Key Value**: Provides immediate, tangible visual confirmation of pipeline state transitions—every keystroke, stage filter, approval, and publication triggers coordinated 3D mechanical alignment and paper-stack physics.
+- **What It Does**: Replaces conventional web navigation, static hero copy, and passive auth forms with tactile, domain-native instruments inspired by *Stripe Press*, *Monocle*, and horological calipers.
+- **Target Audience / Persona**: Visitors, editors, and publication leads evaluating or signing into BlogFlow AI who expect every surface to feel intentionally crafted rather than assembled from off-the-shelf UI templates.
+- **Key Value**: Creates a continuous narrative thread from the first scroll on the Landing Page (`Vernier Navbar` + `X-Ray Hero Loupe`) through credential verification (`3D Flipping Press Pass`) into the `3D Editorial Orrery` dashboard.
 
 ---
 
 ### 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Typing & Dispatching in the Command Desk**:
-     - As the user types a topic into the Quick-Dispatch input or selects a suggested brief, the **3D Brass Editorial Orrery** accelerates its outer calibrated brass ring (`01 Research`), elevates the central 3D archival manuscript platen, and angles its indicator arm toward the selected publication.
-     - Clicking a stage button (`01 Research`, `02 Draft`, `03 Review`, `04 Publish`) on the Orrery HUD or the Pipeline Chapter Index smoothly rotates the 3D concentric rings to lock that chapter into the foreground focal plane while filtering the manuscript stack below.
-  2. **3D Perspective KPI Ledger**:
-     - Moving the cursor across any of the 4 KPI Ledger cards tilts the block in 3D space (`rotateX` / `rotateY` within `±6°`) with a dynamic warm-brass specular highlight (`radial-gradient` tracking pointer coordinates) and elevated Z-translated numerical counters.
-  3. **3D Archival Folio Stack & Inline Approval Choreography**:
-     - The 4-Stage Pipeline Board renders manuscripts as layered 3D folio cards with visible multi-sheet paper edge thickness and depth-graded shadows.
-     - Hovering a manuscript lifts it along the Z-axis (`translateZ(18px) rotateX(1.5deg)`) while subtle adjacent rows recede.
-     - Clicking **Approve** or **Publish** triggers a **3D Brass Seal & Tray Glide** animation—tilting the folio, stamping its status, and smoothly sliding it in 3D space toward the target stage while pulsing the 3D Orrery centerpiece.
-  4. **3D Unfolding Broadsheet Inspector**:
-     - Clicking **Inspect** on any manuscript opens the Inspector Modal using a **3D Book/Folio Unfold** choreography (`rotateX(-22deg) rotateY(14deg) translateZ(-120px)` unfolding to `0deg`) with a 3D layered SEO & Readability telemetry header.
+  1. **Calibrated Brass Vernier Navbar (`LandingNavbar`)**:
+     - Sits as a sharp, full-width architectural masthead (`border-b`) in Warm Archival Paper (`#F7F4EC`) / Midnight Studio (`#101714`)—eliminating the generic rounded floating glass pill.
+     - **Vernier Caliper Bottom Rule**: A 6px-tall precision ruler along the bottom edge with millimeter tick marks and a sliding **Brushed-Brass Vernier Needle** that tracks scroll percentage (`00%` to `100%`) and displays the active section code (`SEC 01 · STUDIO`, `SEC 02 · PIPELINE`, `SEC 03 · CAPABILITIES`, `SEC 04 · PHILOSOPHY`).
+     - **Archival Index Hover Drawer**: Hovering `Product`, `Workflow`, `Features`, or `Philosophy` unfolds a structured **Archival Catalog Card** directly beneath the link—showing its catalogue number (`CAT. 01`), chapter thesis, and primary verified metric (`14 Primary Sources · 0% Hallucination`).
+  2. **Hero Section: Rotary Brief Switcher & X-Ray Editor’s Loupe (`HeroSection`)**:
+     - **3-Brief Rotary Switcher**: Visitors can click between `01. AI Search Architecture`, `02. Usage-Based SaaS Pricing`, and `03. Zero-Trust Cloud Security`. Switching a brief updates the CTA target query, animates the 3D Desk HUD, and loads that brief’s live manuscript excerpt into the **X-Ray Proof Sheet**.
+     - **Interactive X-Ray Optical Loupe**: Hovering or dragging across the Hero’s **Live Galley Proof Sheet** tracks pointer `(x, y)` coordinates to position a circular **Brushed-Brass Magnifying Loupe** (`170px` diameter, `clip-path` / radial mask). Inside the lens, the surface prose transforms into the **X-Ray Provenance Layer**—revealing verified Tavily citation sources (`MIT Tech Review`, `NIST SP 800-207`), H2 keyword density, and SEO score (`94/100`).
+  3. **Login & Signup: 3D Live-Engraved Press Pass & 180° Password Flip**:
+     - **Front Face (Identity & Accession Engraving)**: As the user types their Name or Email, the 3D Press Pass in the right column live-engraves their name in `Fraunces` serif, derives their publication handle (`@domain`), and stamps a monospaced credential code (`ACC. 2026 // PRESS-04`). Moving the cursor tilts the 3D pass with a brushed-brass foil reflection.
+     - **Back Face (180° Flip on Password Focus)**: Focusing the `Password` or `Confirm Password` field smoothly rotates the 3D Press Pass `180deg` along the Y-axis (`rotateY(180deg)`, `backface-visibility: hidden`) to reveal the **Cryptographic Security Ledger**—showing live password entropy bars, AES-256-GCM token status, and an interactive brass lock ring that rotates as characters are typed.
+     - **Sliding Studio Doors Submit Choreography**: When credentials are verified, the brass lock clicks shut and the left and right columns part horizontally to reveal entry into the Editorial Studio.
 
 - **Visual Identity & Theme**:
-  - *Aesthetic Direction*: Tactile Horological & Archival Publishing Studio (inspired by precision brass astrolabes, Monocle editorial folios, and Teenage Engineering mechanical instruments).
+  - *Aesthetic Direction*: Precision Archival Monograph & Horological Press Studio (zero generic glassmorphism, zero neon gradients, zero pill badge clutter).
   - *Color Palette & Mood*:
-    - Light Paper Mode: Warm Archival Paper (`#F6F3EC`), Crisp Folio White (`#FFFFFF`), Deep Forest Anodized Metal (`#163F32`), Brushed Brass (`#C8A15A`), Soft Sage (`#DCE8DC`).
-    - Dark Studio Mode: Midnight Forest Studio (`#101714`), Elevated Slate-Pine (`#151E1A`), Muted Sage (`#B8D5C5`), Warm Gold Brass (`#D4AF67`).
-  - *Typography & Hierarchy*: `Fraunces` for editorial titles, `Plus Jakarta Sans` for workspace controls, and `JetBrains Mono` (`tabular-nums`) for calibrated ring indices and telemetry readouts.
-  - *Interactive Feedback & Motion*: Exponential damping (`THREE.MathUtils.damp`) in the 3D WebGL scene and spring physics (`cubic-bezier(0.16, 1, 0.3, 1)`) on 3D CSS perspective cards.
+    - Light Mode: Warm Archival Paper (`#F7F4EC`), Crisp Folio Surface (`#FFFFFF`), Deep Forest Ink (`#163F32`), Brushed Brass (`#C8A15A`).
+    - Dark Mode: Midnight Forest (`#101714`), Elevated Studio Slate (`#17211D`), Soft Sage (`#B8D5C5`), Warm Gold Brass (`#D4AF67`).
+  - *Typography & Hierarchy*: `Fraunces` / `Instrument Serif` for display headlines and press-pass engraving, `Plus Jakarta Sans` / `Manrope` for UI controls, and `JetBrains Mono` (`tabular-nums`) for vernier ruler ticks, SERP pixel meters, and credential codes.
 
 ---
 
 ### 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Hybrid WebGL Centerpiece + 3D CSS Perspective Architecture**
-  - *Chosen Approach*: Use a single, self-contained Three.js WebGL canvas (`RoomEnvironment` PBR lighting, brushed brass & forest anodized materials, software-WebGL guard) for the **3D Brass Editorial Orrery & Press** in the Command Desk, paired with hardware-accelerated CSS 3D transforms (`perspective`, `preserve-3d`, Framer Motion 3D springs) for the KPI cards, Folio Stack, and Unfolding Inspector.
-  - *Why*: A single WebGL context guarantees 60fps performance and instant page responsiveness without hitting browser WebGL context limits, while CSS 3D transforms give crisp, sub-pixel typography on every manuscript card and modal.
-  - *Alternatives Considered*: Rendering all cards inside a full-page WebGL canvas (rejected because DOM text accessibility, searchability, and crispness degrade when text is rasterized into textures).
+- **Decision 1: Full-Width Architectural Masthead Over Floating Glass Pill Navbar**
+  - *Chosen Approach*: Replace the `border-radius: 16px; backdrop-filter: blur(20px)` floating navbar with a crisp, edge-to-edge architectural masthead anchored by a calibrated vernier ruler track along its bottom hairline.
+  - *Why*: Directly fulfills the requirement to eliminate generic glassmorphic UI components while giving the navigation bar a functional, tactile reading-depth instrument.
 
-- **Decision 2: Shared Reactive Pipeline State Between 3D Orrery and 2D/3D Workspace**
-  - *Chosen Approach*: Bind the 3D Orrery directly to the dashboard's active `statusFilter`, `quickTopic` typing energy, and recent `Approve`/`Publish` actions via React refs so state changes drive smooth mechanical transitions without remounting the WebGL canvas.
-  - *Why*: Ensures the 3D instrument is a functional, living reflection of the user's editorial workflow rather than a disconnected decorative loop.
+- **Decision 2: CSS `clip-path: circle()` Dual-Layer X-Ray Loupe in the Hero**
+  - *Chosen Approach*: Render two perfectly aligned DOM layers inside the Hero Proof Sheet—Layer A (Editorial Prose) and Layer B (X-Ray Citation & SEO Telemetry Layer clipped to `circle(88px at var(--loupe-x) var(--loupe-y))`)—framed by a custom SVG brushed-brass magnifying bezel that tracks the pointer at 60fps.
+  - *Why*: Keeps all text 100% sharp, selectable, and responsive while delivering a striking optical "X-Ray" inspection interaction without heavy shaders.
+
+- **Decision 3: Two-Sided `preserve-3d` Press Pass Card Bound to Form Focus & Input State**
+  - *Chosen Approach*: Use a hardware-accelerated 3D scene (`perspective: 1400px`, `transform-style: preserve-3d`) with two `backface-visibility: hidden` faces (`0deg` Front Identity Face and `180deg` Rear Cryptographic Seal Face) driven by `isPasswordFocused`, `email`/`name` state, and password strength metrics.
+  - *Why*: Turns filling out a login or registration form into an immediate, rewarding tactile interaction where every keystroke and field focus visibly operates a 3D physical object.
 
 ---
 
@@ -65,43 +67,41 @@ This upgrade introduces two bespoke, tactile 3D experiences to the BlogFlow AI O
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                        DASHBOARD OVERVIEW WORKSPACE                        │
+│                     PUBLIC & AUTH EDITORIAL SURFACES                       │
 │                                                                            │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │               EXECUTIVE COMMAND DESK (2-COLUMN SPLIT)                │  │
-│  │                                                                      │  │
+│  │        1. CALIBRATED BRASS VERNIER NAVBAR & HOVER INDEX CARDS        │  │
+│  │  • 3-Zone Architectural Masthead (Wordmark | Nav Links | Primary CTA)│  │
+│  │  • Hover Index Drawer (CAT. 01–04 thesis + verified proof metric)    │  │
+│  │  • Bottom Vernier Caliper Track (scroll % needle + active chapter)   │  │
+│  └──────────────────────────────────┬───────────────────────────────────┘  │
+│                                     │                                      │
+│                                     ▼                                      │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │         2. HERO SECTION: X-RAY OPTICAL LOUPE & BRIEF SWITCHER        │  │
 │  │  ┌────────────────────────────────┐  ┌────────────────────────────┐  │  │
-│  │  │ Quick-Dispatch Brief Launcher  │  │ 3D Brass Editorial Orrery  │  │  │
-│  │  │ • Topic Input (Typing Energy) ─┼─►│ & Multi-Agent Press Stage  │  │  │
-│  │  │ • Publication & Length Select  │  │ • 4 Concentric Brass Rings │  │  │
-│  │  │ • Suggested Briefs Radar       │  │ • Central 3D Folio Platen  │  │  │
-│  │  └────────────────────────────────┘  │ • Interactive Stage Dock   │  │  │
-│  │                                      └─────────────┬──────────────┘  │  │
-│  └────────────────────────────────────────────────────┼─────────────────┘  │
-│                                                       │                    │
-│                                      Shared Stage & Action Pulse           │
-│                                                       ▼                    │
+│  │  │ Left: Editorial Copy +         │  │ Right: 3D Editorial Desk   │  │  │
+│  │  │ • 3-Brief Rotary Switcher      │  │ • Synced to Active Chapter │  │  │
+│  │  │ • X-Ray Galley Proof Card      │◄─┼─► & Selected Topic Brief   │  │  │
+│  │  │   - Base Prose Layer           │  └────────────────────────────┘  │  │
+│  │  │   - Clipped X-Ray Loupe Layer  │                                  │  │
+│  │  └────────────────────────────────┘                                  │  │
+│  └──────────────────────────────────┬───────────────────────────────────┘  │
+│                                     │                                      │
+│                                     ▼                                      │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │            3D PERSPECTIVE KPI LEDGER (4-COLUMN TILT BLOCKS)          │  │
-│  │  • Cursor-tracked rotateX/rotateY + specular brass light reflection  │  │
-│  │  • Z-elevated tabular counters & 1-click stage filter binding        │  │
-│  └────────────────────────────────────────────────────┬─────────────────┘  │
-│                                                       │                    │
-│                                                       ▼                    │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │          3D ARCHIVAL FOLIO STACK & UNFOLDING INSPECTOR               │  │
-│  │  • 3D Stacked Paper Edges & Depth-Fanned Stage Transitions           │  │
-│  │  • Inline Approve / Publish 3D Stamp-and-Glide Choreography          │  │
-│  │  • 3D Unfolding Broadsheet Modal (preserve-3d book-open physics)     │  │
+│  │       3. LOGIN & SIGNUP: 3D LIVE-ENGRAVED PRESS PASS & DOORS         │  │
+│  │  ┌────────────────────────────────┐  ┌────────────────────────────┐  │  │
+│  │  │ Left: Archival Paper Form      │  │ Right: 3D Press Pass Stage │  │  │
+│  │  │ • Name / Email Input ──────────┼─►│ • Front: Live Name/ID Foil │  │  │
+│  │  │ • Password Focus / Strength ───┼─►│ • Back: 180° Flip Seal     │  │  │
+│  │  │ • Submit Verified ─────────────┼─►│ • Sliding Studio Door Exit │  │  │
+│  │  └────────────────────────────────┘  └────────────────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Data Model & State**:
-  - **Orrery Telemetry State**: Tracks `activeStageIndex` (`0` = Research, `1` = Drafts/Pending, `2` = Approved, `3` = Published), `typingImpulse` (boosted on keystrokes in the Quick-Dispatch input and decaying smoothly via exponential damping), and `sealPulse` (triggered when an article is approved or published).
-  - **3D Card Pointer State**: Tracks normalized pointer coordinates `(x, y)` per card to compute real-time 3D tilt (`rotateX`, `rotateY`) and specular highlight offsets without triggering global React re-renders.
-
-- **Interactive Component & State Mapping**:
-  - **3D Brass Orrery Stage**: Composite 10-part procedural `THREE.Group` (stepped forest base plinth, 4 calibrated concentric brass/sage chapter rings with tick marks, 4 orbital stage nodes, gimbaled press arch, and central floating archival folio sheets with engraved lines). Clicking the stage pills (`01`–`04`) or dragging the viewport orbits/rotates the rings and updates `statusFilter` in the Pipeline Board.
-  - **3D Archival Folio Rows**: Each manuscript row sits inside a `perspective: 1400px` stage container. Switching filter tabs animates a 3D Z-axis fan-in cascade; hovering elevates the folio with layered paper-edge borders; clicking **Approve** or **Publish** plays a 3D stamp-and-glide keyframe before committing the status update to the store.
-  - **3D Unfolding Inspector Modal**: Opens with a 3D perspective hinge unfold (`rotateX` + `rotateY` + `translateZ`) and renders 3D extruded metric blocks for Word Count, SEO Score, and Readability.
+  - **Vernier Navbar State**: Tracks `scrollPct` (`0`–`100`), `activeSectionCode` (`01 STUDIO` through `04 PHILOSOPHY`), and `hoveredNavIndex` (`null` or `0`–`3` for the Archival Index Card drawer).
+  - **Hero X-Ray & Brief State**: Tracks `activeBriefIndex` (`0`–`2` mapping to `HERO_TOPIC_PRESETS`), `loupePos` (`{ x, y, active }`), and synchronizes both the CTA `href` (`/generator?topic=...`) and the 3D Desk HUD readout.
+  - **3D Press Pass Auth State**: Tracks `isPasswordFocused` (triggers `rotateY(180deg)`), `pointerTilt` (`{ rx, ry }`), derived `pressAccessionId` (deterministic hash from user email/name), `passwordEntropyScore` (`0`–`4` segments lighting up the rear brass lock cylinder), and `doorsOpening` (`true` on auth success before route push).
