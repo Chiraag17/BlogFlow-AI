@@ -284,152 +284,53 @@ function LandingNavbar() {
 }
 
 /* ============================================================
-   1. HERO SECTION (Synchronized 5-Agent Editorial Ledger + 3D Studio Desk)
+   1. HERO SECTION (Hairline Chapter Index + 3D Studio Desk)
    ============================================================ */
-interface LedgerStageSpec {
+interface ChapterStageSpec {
   id: DeskStage;
   num: string;
-  agentName: string;
-  engineLabel: string;
-  headline: string;
-  summary: string;
-  metricBadge: string;
-  artifactTitle: string;
-  artifactExcerpt: string;
-  citations: {
-    ref: string;
-    source: string;
-    domain: string;
-    claim: string;
-    metric: string;
-  }[];
+  label: string;
+  caption: string;
+  detail: string;
+  hudMetric: string;
 }
 
-const HERO_LEDGER_STAGES: LedgerStageSpec[] = [
+const HERO_CHAPTER_INDEX: ChapterStageSpec[] = [
   {
     id: 'research',
     num: '01',
-    agentName: 'Web Research & Citation Dossier',
-    engineLabel: 'Tavily Live Search · 14 Indexed URLs',
-    headline: 'Primary-source extraction before a single sentence is drafted.',
-    summary:
-      'Queries academic benchmarks, technical documentation, and live SERPs to anchor every claim in verifiable citations.',
-    metricBadge: '14 Verified Sources · 0% Hallucination',
-    artifactTitle: 'The Architecture of AI-Native Search Engines',
-    artifactExcerpt:
-      'Hybrid semantic retrieval combines dense vector embeddings [1] with real-time citation grounding [2] to raise enterprise precision by 41% [3].',
-    citations: [
-      {
-        ref: '[1]',
-        source: 'MIT Technology Review',
-        domain: 'technologyreview.com',
-        claim: 'Dense + lexical hybrid indexing outperforms single-vector lookup across complex enterprise queries.',
-        metric: '+41% Precision Lift',
-      },
-      {
-        ref: '[2]',
-        source: 'Stanford HAI Index',
-        domain: 'hai.stanford.edu',
-        claim: 'Inline cryptographic source attribution eliminates ungrounded synthesis in production RAG pipelines.',
-        metric: '2026 RAG Benchmark',
-      },
-      {
-        ref: '[3]',
-        source: 'Nature Machine Intelligence',
-        domain: 'nature.com/natmachintell',
-        claim: 'Grounded multi-step verification reduces factual drift across 1,500+ word technical manuscripts.',
-        metric: '99.2% Fact Alignment',
-      },
-    ],
+    label: 'Research',
+    caption: 'Queries live academic & industry sources via Tavily before a single sentence is drafted.',
+    detail: '14 verified sources indexed · MIT Tech Review, Stanford HAI, Nature',
+    hudMetric: '14 Verified Sources · 0% Hallucination',
   },
   {
     id: 'draft',
     num: '02',
-    agentName: 'Long-Form Manuscript Synthesis',
-    engineLabel: 'Gemini 2.5 Pro · Semantic H2/H3 Tree',
-    headline: 'Structured long-form prose written with embedded footnote proofs.',
-    summary:
-      'Transforms the research dossier into an authoritative 1,840-word manuscript complete with H2/H3 hierarchy and FAQ schema.',
-    metricBadge: '1,840 Words · 6 H2 Sections · 5 FAQs',
-    artifactTitle: '01. Retrieval-Augmented Generation vs. Lexical Matching',
-    artifactExcerpt:
-      'Where legacy keyword engines fail on multi-hop intent [1], autonomous editorial synthesis weaves verified benchmarks directly into structured prose [2].',
-    citations: [
-      {
-        ref: '[1]',
-        source: 'ACM Digital Library',
-        domain: 'dl.acm.org',
-        claim: 'Lexical BM25 matching drops below 54% recall on zero-overlap semantic enterprise queries.',
-        metric: 'Recall Gap Analysis',
-      },
-      {
-        ref: '[2]',
-        source: 'Google Research Publications',
-        domain: 'research.google',
-        claim: ' Long-context synthesis preserves narrative cohesion across multi-thousand-word technical briefs.',
-        metric: 'Cohesion Score 96%',
-      },
-    ],
+    label: 'Draft',
+    caption: 'Synthesizes structured H2/H3 long-form prose with inline footnote attributions.',
+    detail: '1,840 words · Semantic heading hierarchy & FAQ schema',
+    hudMetric: '1,840 Words · 6 H2 Sections · 5 FAQs',
   },
   {
     id: 'review',
     num: '03',
-    agentName: 'Quality Gate & Editorial Sign-Off',
-    engineLabel: 'Automated Audit · Human Checkpoint',
-    headline: 'Scored for SEO, readability, and factual alignment prior to approval.',
-    summary:
-      'Evaluates keyword density, Flesch-Kincaid grade level, and citation integrity before pausing for 1-click human sign-off.',
-    metricBadge: 'SEO 94/100 · Grade 8.4 · Approved',
-    artifactTitle: 'Executive Quality Scorecard · Ready for Sign-Off',
-    artifactExcerpt:
-      'All 14 inline claims verified against primary Tavily sources [1]. Heading hierarchy, meta description, and Schema.org FAQ blocks validated [2].',
-    citations: [
-      {
-        ref: '[1]',
-        source: 'Quality Gatekeeper Audit',
-        domain: 'Internal Verification',
-        claim: 'Zero unverified assertions detected across 6 H2 sections; keyword density optimal at 1.6%.',
-        metric: 'SEO 94/100 Optimal',
-      },
-      {
-        ref: '[2]',
-        source: 'Editorial Governance Log',
-        domain: 'Human-in-the-Loop',
-        claim: 'Signed off by Senior Managing Editor with zero manual formatting corrections required.',
-        metric: 'Readability 91/100',
-      },
-    ],
+    label: 'Review',
+    caption: 'Audits readability, keyword density, and factual alignment for 1-click editor sign-off.',
+    detail: 'SEO 94/100 · Readability Grade 8.4 · Human-in-the-loop gate',
+    hudMetric: 'SEO 94/100 · Grade 8.4 · Approved',
   },
   {
     id: 'publish',
     num: '04',
-    agentName: 'Encrypted WordPress CMS Dispatch',
-    engineLabel: 'AES-256-GCM · REST API v2 Sync',
-    headline: 'Formatted Gutenberg blocks pushed directly to your WordPress staging queue.',
-    summary:
-      'Maps categories, tags, slug, and SEO meta fields automatically via encrypted Application Passwords in 1.2 seconds.',
-    metricBadge: 'WP Post #4892 · Draft Synced (1.2s)',
-    artifactTitle: 'POST /wp-json/wp/v2/posts · 201 Created',
-    artifactExcerpt:
-      'Dispatched to WordPress with mapped taxonomy IDs [1], Yoast/RankMath metadata payload [2], and safe Draft-first publication status.',
-    citations: [
-      {
-        ref: '[1]',
-        source: 'WordPress REST API v2',
-        domain: '/wp-json/wp/v2/posts',
-        claim: 'Authenticated via server-side AES-256-GCM decrypted Application Password; zero client key exposure.',
-        metric: 'HTTP 201 Created',
-      },
-      {
-        ref: '[2]',
-        source: 'Schema & Taxonomy Mapper',
-        domain: 'Meta & Gutenberg Sync',
-        claim: 'Auto-assigned Category #14 (AI Engineering), 5 semantic tags, and canonical slug.',
-        metric: '1.2s Dispatch Latency',
-      },
-    ],
+    label: 'Publish',
+    caption: 'Dispatches formatted Gutenberg blocks and taxonomy metadata directly to WordPress.',
+    detail: 'AES-256-GCM encrypted REST push · Safe Draft-first policy',
+    hudMetric: 'WP Post #4892 · Draft Synced (1.2s)',
   },
 ];
+
+const HERO_REVEAL_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 function HeroSection({
   activeDeskStage,
@@ -438,17 +339,8 @@ function HeroSection({
   activeDeskStage: DeskStage;
   onSelectDeskStage: (stage: DeskStage) => void;
 }) {
-  const [selectedCitationIdx, setSelectedCitationIdx] = useState<number>(0);
-
-  const activeLedger =
-    HERO_LEDGER_STAGES.find((s) => s.id === activeDeskStage) || HERO_LEDGER_STAGES[0];
-
-  useEffect(() => {
-    setSelectedCitationIdx(0);
-  }, [activeDeskStage]);
-
-  const activeCitation =
-    activeLedger.citations[selectedCitationIdx] || activeLedger.citations[0];
+  const activeChapter =
+    HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
 
   return (
     <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
@@ -456,107 +348,144 @@ function HeroSection({
       <div className="lp-container">
         <div className="lp-hero-inner">
 
-          {/* Left: Copy + Synchronized 5-Agent Editorial Ledger */}
+          {/* Left: Editorial Copy + Minimalist Hairline Chapter Index */}
           <div className="lp-hero-left">
-            <div className="lp-hero-kicker">
+            {/* Kicker Reveal */}
+            <motion.div
+              className="lp-hero-kicker"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.04, ease: HERO_REVEAL_EASE }}
+            >
               AI-Powered Editorial Automation · Interactive 3D Studio
-            </div>
+            </motion.div>
 
+            {/* Editorial Baseline Mask Reveal for "Research. Think. Publish." */}
             <h1 className="lp-hero-headline" id="hero-headline">
-              <span className="block">
-                <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
-                <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
+              <span className="lp-hero-headline-row">
+                <span className="lp-hero-word-mask">
+                  <motion.span
+                    className="lp-hero-word-inner"
+                    initial={{ y: '108%', opacity: 0 }}
+                    animate={{ y: '0%', opacity: 1 }}
+                    transition={{ duration: 0.78, delay: 0.08, ease: HERO_REVEAL_EASE }}
+                  >
+                    <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />
+                  </motion.span>
+                </span>{' '}
+                <span className="lp-hero-word-mask">
+                  <motion.span
+                    className="lp-hero-word-inner"
+                    initial={{ y: '108%', opacity: 0 }}
+                    animate={{ y: '0%', opacity: 1 }}
+                    transition={{ duration: 0.78, delay: 0.17, ease: HERO_REVEAL_EASE }}
+                  >
+                    <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
+                  </motion.span>
+                </span>
               </span>
-              <KineticText
-                text="Publish."
-                as="em"
-                className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
-              />
+              <span className="lp-hero-word-mask">
+                <motion.span
+                  className="lp-hero-word-inner"
+                  initial={{ y: '108%', opacity: 0 }}
+                  animate={{ y: '0%', opacity: 1 }}
+                  transition={{ duration: 0.82, delay: 0.26, ease: HERO_REVEAL_EASE }}
+                >
+                  <KineticText
+                    text="Publish."
+                    as="em"
+                    className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
+                  />
+                </motion.span>
+              </span>
             </h1>
 
-            <p className="lp-hero-desc">
-              BlogFlow AI orchestrates live web research, citation-grounded drafting, quality
-              verification, and WordPress publishing — select any pipeline stage below to inspect
-              the live editorial artifact and 3D studio desk.
-            </p>
+            {/* Subtitle Reveal */}
+            <motion.p
+              className="lp-hero-desc"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.34, ease: HERO_REVEAL_EASE }}
+            >
+              BlogFlow AI transforms any website, topic, or brief into citation-grounded,
+              SEO-optimized articles — orchestrating web research, long-form drafting, editorial
+              sign-off, and WordPress publishing in one quiet studio.
+            </motion.p>
 
-            {/* Synchronized 5-Agent Editorial Ledger */}
-            <div className="lp-hero-ledger" aria-label="Synchronized 5-Agent Editorial Ledger">
-              <div className="lp-ledger-header">
-                <span className="lp-ledger-kicker">
-                  Synchronized Pipeline Ledger
-                </span>
-                <span className="lp-ledger-telemetry tabular-nums">
-                  {activeLedger.metricBadge}
-                </span>
-              </div>
-
-              {/* 4 Architectural Stage Rows */}
-              <div className="lp-ledger-rows" role="tablist" aria-label="Editorial pipeline stages">
-                {HERO_LEDGER_STAGES.map((stage) => {
-                  const isSelected = stage.id === activeDeskStage;
+            {/* Option 1: The Hairline Chapter Index with Left-to-Right Hairline Draw */}
+            <div className="lp-chapter-index" aria-label="Editorial studio stage index">
+              <div className="lp-chapter-tabs" role="tablist" aria-label="3D Studio Chapters">
+                {HERO_CHAPTER_INDEX.map((chapter, idx) => {
+                  const isActive = chapter.id === activeDeskStage;
                   return (
-                    <button
-                      key={stage.id}
+                    <motion.button
+                      key={chapter.id}
                       type="button"
                       role="tab"
-                      aria-selected={isSelected}
-                      onClick={() => onSelectDeskStage(stage.id)}
-                      className={`lp-ledger-row${isSelected ? ' active' : ''}`}
+                      aria-selected={isActive}
+                      onClick={() => onSelectDeskStage(chapter.id)}
+                      className={`lp-chapter-tab${isActive ? ' active' : ''}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.52,
+                        delay: 0.42 + idx * 0.06,
+                        ease: HERO_REVEAL_EASE,
+                      }}
                     >
-                      <span className="lp-ledger-step tabular-nums">{stage.num}</span>
-                      <div className="lp-ledger-row-main">
-                        <span className="lp-ledger-row-title">{stage.agentName}</span>
-                        <span className="lp-ledger-row-engine">{stage.engineLabel}</span>
-                      </div>
-                      <span className="lp-ledger-row-state">
-                        {isSelected ? 'Inspecting 3D' : 'Select'}
-                      </span>
-                    </button>
+                      <span className="lp-chapter-num tabular-nums">{chapter.num}</span>
+                      <span className="lp-chapter-label">{chapter.label}</span>
+                      {isActive && (
+                        <motion.span
+                          layoutId="hero-chapter-brass-line"
+                          className="lp-chapter-active-bar"
+                          transition={{ duration: 0.32, ease: HERO_REVEAL_EASE }}
+                        />
+                      )}
+                    </motion.button>
                   );
                 })}
+
+                {/* Animated 1px Hairline Divider Drawing Left-to-Right */}
+                <motion.span
+                  aria-hidden="true"
+                  className="lp-chapter-hairline-draw"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.85, delay: 0.38, ease: HERO_REVEAL_EASE }}
+                />
               </div>
 
-              {/* Citation X-Ray & Stage Proof Inspector */}
-              <div className="lp-ledger-proof">
-                <div className="lp-ledger-proof-top">
-                  <span className="lp-ledger-proof-title">{activeLedger.artifactTitle}</span>
-                  <div className="lp-ledger-citation-tabs" aria-label="Inspect verified citations">
-                    {activeLedger.citations.map((cit, idx) => (
-                      <button
-                        key={cit.ref}
-                        type="button"
-                        onClick={() => setSelectedCitationIdx(idx)}
-                        className={`lp-ledger-cit-btn${selectedCitationIdx === idx ? ' active' : ''}`}
-                      >
-                        {cit.ref} {cit.source}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <p className="lp-ledger-proof-excerpt">
-                  {activeLedger.artifactExcerpt}
-                </p>
-
-                {activeCitation && (
-                  <div className="lp-ledger-dossier-bar">
-                    <div className="lp-ledger-dossier-meta">
-                      <span className="lp-ledger-dossier-ref">{activeCitation.ref} Verified Source</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="lp-ledger-dossier-domain">{activeCitation.domain}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="lp-ledger-dossier-metric tabular-nums">{activeCitation.metric}</span>
-                    </div>
-                    <p className="lp-ledger-dossier-claim">
-                      “{activeCitation.claim}”
-                    </p>
-                  </div>
-                )}
-              </div>
+              <motion.div
+                className="lp-chapter-caption-wrap"
+                role="tabpanel"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.58, ease: HERO_REVEAL_EASE }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeChapter.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: HERO_REVEAL_EASE }}
+                    className="lp-chapter-caption-inner"
+                  >
+                    <p className="lp-chapter-caption">{activeChapter.caption}</p>
+                    <span className="lp-chapter-meta">{activeChapter.detail}</span>
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
             </div>
 
-            <div className="lp-hero-ctas">
+            {/* CTAs Reveal */}
+            <motion.div
+              className="lp-hero-ctas"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.64, ease: HERO_REVEAL_EASE }}
+            >
               <Link
                 href="/generator?topic=The%20Architecture%20of%20AI-Native%20Search%20Engines"
                 className="lp-btn-primary"
@@ -569,9 +498,15 @@ function HeroSection({
                 <Play size={14} />
                 Inspect 5-Agent Pipeline
               </a>
-            </div>
+            </motion.div>
 
-            <div className="lp-hero-social">
+            {/* Social Proof Reveal */}
+            <motion.div
+              className="lp-hero-social"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.72, ease: HERO_REVEAL_EASE }}
+            >
               <AvatarCircles
                 avatarUrls={CREATOR_AVATARS}
                 numPeople={2400}
@@ -586,24 +521,35 @@ function HeroSection({
                   Loved by <strong>2,400+</strong> creators &amp; editorial teams
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Right: 3D FloatingEditorialDesk Studio Directly in the Hero! */}
-          <div className="lp-hero-right-3d">
+          {/* Right: 3D FloatingEditorialDesk with Optical Focus-Pull Entrance */}
+          <motion.div
+            className="lp-hero-right-3d"
+            initial={{ opacity: 0, scale: 0.965, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            transition={{ duration: 0.95, delay: 0.22, ease: HERO_REVEAL_EASE }}
+          >
             <FloatingEditorialDesk
               currentStage={activeDeskStage}
               onStageChange={onSelectDeskStage}
               interactive={true}
-              activeTopicTitle={`${activeLedger.num}. ${activeLedger.agentName}`}
-              activeTopicMetric={activeLedger.metricBadge}
+              activeTopicTitle={`${activeChapter.num}. ${activeChapter.label}`}
+              activeTopicMetric={activeChapter.hudMetric}
             />
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Trust strip */}
-      <div className="lp-trust" style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+      <motion.div
+        className="lp-trust"
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.7, delay: 0.82, ease: HERO_REVEAL_EASE }}
+      >
         <div className="lp-trust-inner">
           {[
             'Research before writing.',
@@ -617,7 +563,7 @@ function HeroSection({
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
