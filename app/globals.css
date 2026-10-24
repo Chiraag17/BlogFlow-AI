@@ -1,45 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
    BlogFlow AI - Global Styles & Design System
-   Premium editorial light theme redesign
+   Warm Archival Paper & Deep Forest Editorial System
    ============================================================ */
 
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root {
   /* Light theme colors */
   --color-bg: #F6F3EC;               /* Paper background */
-  --color-bg-subtle: #F6F3EC;          /* Subtle background for surfaces */
-  --color-surface: #FFFFFF;           /* White canvas */
-  --color-text: #222620;              /* Main text */
-  --color-text-secondary: #706F67;   /* Secondary text */
-  --color-border: #E4E0D7;           /* Subtle border */
+  --color-bg-subtle: #F6F3EC;        /* Subtle background for surfaces */
+  --color-bg-muted: #EFECE3;         /* Muted hover / inset surface */
+  --color-surface: #FFFFFF;          /* Crisp white card canvas */
+  --color-text: #18211D;             /* Primary forest-ink text */
+  --color-text-secondary: #53605A;   /* Secondary editorial text */
+  --color-text-muted: #76827C;       /* Quiet metadata text */
+  --color-border: #E2DDD2;           /* Hairline border */
+  --color-border-light: #ECE8DF;     /* Subtle table row divider */
 
   /* Primary palette */
-  --color-primary: #244737;          /* Primary forest green */
-  --color-primary-hover: #1e382c;    /* Darker hover */
-  --color-primary-light: #DCE8DC;    /* Light background for primary elements */
+  --color-primary: #163F32;          /* Deep forest green */
+  --color-primary-hover: #102F25;    /* Darker forest hover */
+  --color-primary-light: #DCE8DC;    /* Soft sage highlight */
+  --color-primary-fg: #FFFFFF;       /* Text on primary button */
 
   /* Accent palette */
-  --color-accent: #C49A55;           /* Muted brass accent */
-  --color-accent-light: #FDEED2;     /* Light accent */
+  --color-accent: #C8A15A;           /* Brushed brass accent */
+  --color-accent-light: #F7ECDA;     /* Warm brass tint */
 
   /* Status colors */
-  --color-success: #E5EFE5;          /* Soft success background */
-  --color-warning: #F6EBD5;          /* Soft warning background */
-  --color-error: #F5E4E1;            /* Soft error background */
+  --color-success: #166534;
+  --color-warning: #B45309;
+  --color-error: #DC2626;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
-  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 2px rgba(22, 63, 50, 0.04);
+  --shadow-md: 0 4px 12px rgba(22, 63, 50, 0.06);
+  --shadow-lg: 0 12px 24px rgba(22, 63, 50, 0.08);
+  --shadow-xl: 0 20px 32px rgba(22, 63, 50, 0.12);
 
   /* Radii */
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-lg: 10px;
   --radius-xl: 12px;
 
   /* Layout */
@@ -48,63 +52,31 @@
   --topbar-height: 64px;
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4,0,0.2,1);
-  --transition-base: 200ms cubic-bezier(0.4,0,0.2,1);
-  --transition-slow: 300ms cubic-bezier(0.4,0,0.2,1);
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* Dark mode overrides via .dark class */
 .dark {
   --color-bg: #101714;               /* Deep forest / midnight editorial studio */
-  --color-bg-subtle: #17211D;       /* Elevated dark green surface */
-  --color-surface: #17211D;        /* Dark surface */
-  --color-text: #F3F0E8;           /* Warm soft ivory text */
-  --color-text-secondary: #8E9E95; /* Muted sage secondary text */
-  --color-border: rgba(235, 242, 237, 0.12); /* Subtle light border */
-  --color-primary: #B8D5C5;       /* Muted sage */
-  --color-primary-hover: #CCE5D7; /* Brighter sage */
-  --color-primary-light: rgba(184, 213, 197, 0.15); /* Light sage highlight */
-  --color-accent: #D4AF67;        /* Refined subtle brass / warm gold */
-  --color-accent-light: rgba(212, 175, 103, 0.15); /* Subtle brass highlight */
-  --color-bg-muted: #1D2A24;
-  --color-border-light: rgba(235, 242, 237, 0.08);
+  --color-bg-subtle: #0D1310;        /* Deep studio canvas */
+  --color-bg-muted: #1B2621;         /* Elevated hover surface */
+  --color-surface: #151E1A;          /* Elevated dark card surface */
+  --color-text: #F3F0E8;             /* Warm soft ivory text */
+  --color-text-secondary: #A3B1A9;   /* Muted sage secondary text */
+  --color-text-muted: #76877E;       /* Quiet metadata text */
+  --color-border: rgba(235, 242, 237, 0.11);
+  --color-border-light: rgba(235, 242, 237, 0.06);
+  --color-primary: #B8D5C5;          /* Muted sage */
+  --color-primary-hover: #CCE5D7;    /* Brighter sage */
+  --color-primary-light: rgba(184, 213, 197, 0.14);
+  --color-primary-fg: #101714;       /* Crisp dark ink on sage button */
+  --color-accent: #D4AF67;           /* Refined subtle brass / warm gold */
+  --color-accent-light: rgba(212, 175, 103, 0.15);
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
 }
 
 /* Smooth Theme Transitions */
@@ -121,15 +93,13 @@ html.theme-transition *::after {
   transition-delay: 0s !important;
 }
 
-
-
 /* --- Base Styles --- */
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -139,6 +109,14 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   margin: 0;
+}
+
+.font-editorial {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Scrollbar Styling --- */
@@ -202,7 +180,8 @@ body {
 .sidebar-logo-icon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -250,8 +229,8 @@ body {
 }
 
 .sidebar-nav-item svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
@@ -276,7 +255,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 28px;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -289,8 +268,9 @@ body {
 }
 
 .topbar-title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--color-text);
 }
 
@@ -303,21 +283,53 @@ body {
 /* --- Page Content --- */
 .page-content {
   flex: 1;
-  padding: 24px;
+  padding: 28px;
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
 
 /* --- Card Component --- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
 .quick-action {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
+  padding: 0.75rem 0.875rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text);
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
@@ -336,10 +348,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   border: 1px solid transparent;
@@ -355,25 +367,24 @@ body {
 
 .btn-primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-primary-fg);
   border-color: var(--color-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
 }
 
 .btn-secondary {
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-text);
   border-color: var(--color-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--color-bg-muted);
-  border-color: #cbd5e1;
+  border-color: var(--color-primary);
 }
 
 .btn-ghost {
@@ -446,7 +457,7 @@ body {
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--color-surface);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   font-family: inherit;
 }
@@ -455,7 +466,7 @@ body {
 .form-select:focus,
 .form-textarea:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
   outline: none;
 }
 
@@ -498,19 +509,18 @@ body {
 
 /* --- Stats Card --- */
 .stat-card {
-  background: var(--color-bg);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .stat-card:hover {
-  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
 }
 
@@ -529,6 +539,7 @@ body {
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-label {

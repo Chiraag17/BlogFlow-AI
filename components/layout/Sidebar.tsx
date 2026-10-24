@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Globe, Search, PenTool, BookOpen,
   CheckCircle, Plug, Zap, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Sparkles,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { href: '/research', label: 'Research & Topics', icon: Search },
   { href: '/generator', label: 'Blog Generator', icon: PenTool },
   { href: '/content', label: 'Content Library', icon: BookOpen },
-  { href: '/approvals', label: 'Approval Center', icon: CheckCircle },
+  { href: '/approvals', label: 'Approval Center', icon: CheckCircle, badgeKey: 'pending' as const },
   { href: '/integrations', label: 'CMS Integrations', icon: Plug },
   { href: '/automation', label: 'Automation', icon: Zap },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
@@ -32,6 +32,9 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const setCollapsed = useAppStore((s) => s.setSidebarCollapsed);
+  const blogs = useAppStore((s) => s.blogs);
+
+  const pendingApprovalCount = blogs.filter((b) => b.status === 'pending_approval').length;
 
   return (
     <>
@@ -51,21 +54,11 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         )}
       >
         <Link href="/landing" className="sidebar-logo" style={{ textDecoration: 'none' }}>
-          {collapsed ? (
-            <div className="sidebar-logo-icon"
-              style={{
-                background: 'var(--color-primary)',
-                color: '#fff',
-                fontFamily: 'Merriweather',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              B
-            </div>
-          ) : (
-            <span className="text-lg font-bold"
-              style={{ fontFamily: 'Merriweather', color: 'var(--color-text)' }}>
+          <div className="sidebar-logo-icon font-editorial font-bold text-sm">
+            B
+          </div>
+          {!collapsed && (
+            <span className="text-base font-bold tracking-tight font-editorial text-[var(--color-text)] whitespace-nowrap">
               BlogFlow AI
             </span>
           )}
@@ -82,12 +75,19 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={cn('sidebar-nav-item', isActive && 'active')}
+                className={cn('sidebar-nav-item justify-between', isActive && 'active')}
                 onClick={onMobileClose}
                 title={collapsed ? item.label : undefined}
               >
-                <item.icon size={20} />
-                {!collapsed && <span>{item.label}</span>}
+                <span className="flex items-center gap-3 min-w-0">
+                  <item.icon size={18} />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </span>
+                {!collapsed && item.badgeKey === 'pending' && pendingApprovalCount > 0 && (
+                  <span className="text-xs font-mono tabular-nums text-[var(--color-accent)] font-semibold">
+                    {pendingApprovalCount}
+                  </span>
+                )}
               </Link>
             );
           })}
