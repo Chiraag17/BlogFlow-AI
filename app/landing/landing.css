@@ -3129,8 +3129,55 @@
 }
 
 /* ============================================================
-   1. HAIRLINE CHAPTER INDEX & EDITORIAL MASK REVEAL (HERO)
+   1. CENTER-STAGE WORD MORPH & HAIRLINE CHAPTER INDEX (HERO)
    ============================================================ */
+.lp-hero-center-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding: 0 24px;
+}
+
+.lp-hero-center-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+}
+
+.lp-hero-kicker-center {
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.lp-hero-headline-center {
+  font-family: var(--font-serif);
+  font-size: clamp(3.75rem, 7vw, 6.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  color: var(--lp-text);
+  text-align: center;
+}
+
+.lp-hero-center-seam {
+  width: min(360px, 65vw);
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--lp-accent) 20%,
+    var(--lp-accent) 80%,
+    transparent 100%
+  );
+  transform-origin: center;
+  margin-top: 6px;
+}
+
 .lp-hero-headline-row {
   display: block;
 }

@@ -331,6 +331,7 @@ const HERO_CHAPTER_INDEX: ChapterStageSpec[] = [
 ];
 
 const HERO_REVEAL_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const HERO_MORPH_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function HeroSection({
   activeDeskStage,
@@ -339,73 +340,162 @@ function HeroSection({
   activeDeskStage: DeskStage;
   onSelectDeskStage: (stage: DeskStage) => void;
 }) {
+  // 'center' (0.0s -> 0.85s): Giant centered keynote stage
+  // 'split'  (0.85s+): Smoothly morphs into the left column while 3D Desk & Chapter Index glide in
+  const [heroStage, setHeroStage] = useState<'center' | 'split'>('center');
+
+  useEffect(() => {
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) {
+      setHeroStage('split');
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setHeroStage('split');
+    }, 850);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const isSplit = heroStage === 'split';
   const activeChapter =
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
 
   return (
     <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
       <div className="lp-hero-bg" aria-hidden="true" />
+
+      {/* ACT I: Center-Stage Keynote Reveal Overlay (0.0s -> 0.85s) */}
+      <AnimatePresence>
+        {!isSplit && (
+          <motion.div
+            key="hero-center-keynote"
+            className="lp-hero-center-stage"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.42, ease: HERO_REVEAL_EASE }}
+            aria-hidden="true"
+          >
+            <div className="lp-hero-center-inner">
+              <motion.div
+                layoutId="hero-kicker-morph"
+                transition={{ duration: 0.82, ease: HERO_MORPH_EASE }}
+                className="lp-hero-kicker lp-hero-kicker-center"
+              >
+                AI-Powered Editorial Automation · Interactive 3D Studio
+              </motion.div>
+
+              <motion.div
+                layoutId="hero-headline-morph"
+                transition={{ duration: 0.88, ease: HERO_MORPH_EASE }}
+                className="lp-hero-headline lp-hero-headline-center"
+              >
+                <span className="lp-hero-headline-row">
+                  <span className="lp-hero-word-mask">
+                    <motion.span
+                      className="lp-hero-word-inner"
+                      initial={{ y: '110%', opacity: 0 }}
+                      animate={{ y: '0%', opacity: 1 }}
+                      transition={{ duration: 0.52, delay: 0.04, ease: HERO_REVEAL_EASE }}
+                    >
+                      Research.
+                    </motion.span>
+                  </span>{' '}
+                  <span className="lp-hero-word-mask">
+                    <motion.span
+                      className="lp-hero-word-inner"
+                      initial={{ y: '110%', opacity: 0 }}
+                      animate={{ y: '0%', opacity: 1 }}
+                      transition={{ duration: 0.52, delay: 0.18, ease: HERO_REVEAL_EASE }}
+                    >
+                      Think.
+                    </motion.span>
+                  </span>
+                </span>
+                <span className="lp-hero-word-mask">
+                  <motion.em
+                    className="lp-hero-word-inner italic text-[var(--lp-primary)]"
+                    initial={{ y: '110%', opacity: 0 }}
+                    animate={{ y: '0%', opacity: 1 }}
+                    transition={{ duration: 0.56, delay: 0.32, ease: HERO_REVEAL_EASE }}
+                  >
+                    Publish.
+                  </motion.em>
+                </span>
+              </motion.div>
+
+              {/* Brushed-Brass Keynote Seam that slices across before the split morph */}
+              <motion.div
+                className="lp-hero-center-seam"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ duration: 0.58, delay: 0.24, ease: HERO_REVEAL_EASE }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ACT II: Split-Column Studio Layout (Headline glides left, 3D Desk slides in right) */}
       <div className="lp-container">
         <div className="lp-hero-inner">
 
           {/* Left: Editorial Copy + Minimalist Hairline Chapter Index */}
           <div className="lp-hero-left">
-            {/* Kicker Reveal */}
-            <motion.div
-              className="lp-hero-kicker"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.04, ease: HERO_REVEAL_EASE }}
-            >
-              AI-Powered Editorial Automation · Interactive 3D Studio
-            </motion.div>
+            {isSplit ? (
+              <motion.div
+                layoutId="hero-kicker-morph"
+                transition={{ duration: 0.82, ease: HERO_MORPH_EASE }}
+                className="lp-hero-kicker"
+              >
+                AI-Powered Editorial Automation · Interactive 3D Studio
+              </motion.div>
+            ) : (
+              <div className="lp-hero-kicker opacity-0 pointer-events-none">
+                AI-Powered Editorial Automation · Interactive 3D Studio
+              </div>
+            )}
 
-            {/* Editorial Baseline Mask Reveal for "Research. Think. Publish." */}
-            <h1 className="lp-hero-headline" id="hero-headline">
-              <span className="lp-hero-headline-row">
-                <span className="lp-hero-word-mask">
-                  <motion.span
-                    className="lp-hero-word-inner"
-                    initial={{ y: '108%', opacity: 0 }}
-                    animate={{ y: '0%', opacity: 1 }}
-                    transition={{ duration: 0.78, delay: 0.08, ease: HERO_REVEAL_EASE }}
-                  >
-                    <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />
-                  </motion.span>
-                </span>{' '}
-                <span className="lp-hero-word-mask">
-                  <motion.span
-                    className="lp-hero-word-inner"
-                    initial={{ y: '108%', opacity: 0 }}
-                    animate={{ y: '0%', opacity: 1 }}
-                    transition={{ duration: 0.78, delay: 0.17, ease: HERO_REVEAL_EASE }}
-                  >
-                    <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
-                  </motion.span>
+            {isSplit ? (
+              <motion.h1
+                layoutId="hero-headline-morph"
+                transition={{ duration: 0.88, ease: HERO_MORPH_EASE }}
+                className="lp-hero-headline"
+                id="hero-headline"
+              >
+                <span className="lp-hero-headline-row">
+                  <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
+                  <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
                 </span>
-              </span>
-              <span className="lp-hero-word-mask">
-                <motion.span
-                  className="lp-hero-word-inner"
-                  initial={{ y: '108%', opacity: 0 }}
-                  animate={{ y: '0%', opacity: 1 }}
-                  transition={{ duration: 0.82, delay: 0.26, ease: HERO_REVEAL_EASE }}
-                >
-                  <KineticText
-                    text="Publish."
-                    as="em"
-                    className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
-                  />
-                </motion.span>
-              </span>
-            </h1>
+                <KineticText
+                  text="Publish."
+                  as="em"
+                  className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
+                />
+              </motion.h1>
+            ) : (
+              <h1 className="lp-hero-headline opacity-0 pointer-events-none" id="hero-headline">
+                <span className="lp-hero-headline-row">
+                  <span>Research.</span> <span>Think.</span>
+                </span>
+                <em>Publish.</em>
+              </h1>
+            )}
 
-            {/* Subtitle Reveal */}
+            {/* Subtitle cascades in as the headline docks into the left column */}
             <motion.p
               className="lp-hero-desc"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.34, ease: HERO_REVEAL_EASE }}
+              initial={false}
+              animate={
+                isSplit
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 18 }
+              }
+              transition={{ duration: 0.62, delay: isSplit ? 0.22 : 0, ease: HERO_REVEAL_EASE }}
             >
               BlogFlow AI transforms any website, topic, or brief into citation-grounded,
               SEO-optimized articles — orchestrating web research, long-form drafting, editorial
@@ -425,17 +515,21 @@ function HeroSection({
                       aria-selected={isActive}
                       onClick={() => onSelectDeskStage(chapter.id)}
                       className={`lp-chapter-tab${isActive ? ' active' : ''}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={false}
+                      animate={
+                        isSplit
+                          ? { opacity: 1, y: 0 }
+                          : { opacity: 0, y: 12 }
+                      }
                       transition={{
                         duration: 0.52,
-                        delay: 0.42 + idx * 0.06,
+                        delay: isSplit ? 0.3 + idx * 0.055 : 0,
                         ease: HERO_REVEAL_EASE,
                       }}
                     >
                       <span className="lp-chapter-num tabular-nums">{chapter.num}</span>
                       <span className="lp-chapter-label">{chapter.label}</span>
-                      {isActive && (
+                      {isActive && isSplit && (
                         <motion.span
                           layoutId="hero-chapter-brass-line"
                           className="lp-chapter-active-bar"
@@ -450,18 +544,18 @@ function HeroSection({
                 <motion.span
                   aria-hidden="true"
                   className="lp-chapter-hairline-draw"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.85, delay: 0.38, ease: HERO_REVEAL_EASE }}
+                  initial={false}
+                  animate={isSplit ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
+                  transition={{ duration: 0.78, delay: isSplit ? 0.26 : 0, ease: HERO_REVEAL_EASE }}
                 />
               </div>
 
               <motion.div
                 className="lp-chapter-caption-wrap"
                 role="tabpanel"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, delay: 0.58, ease: HERO_REVEAL_EASE }}
+                initial={false}
+                animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                transition={{ duration: 0.55, delay: isSplit ? 0.44 : 0, ease: HERO_REVEAL_EASE }}
               >
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -482,9 +576,9 @@ function HeroSection({
             {/* CTAs Reveal */}
             <motion.div
               className="lp-hero-ctas"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.64, ease: HERO_REVEAL_EASE }}
+              initial={false}
+              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.5 : 0, ease: HERO_REVEAL_EASE }}
             >
               <Link
                 href="/generator?topic=The%20Architecture%20of%20AI-Native%20Search%20Engines"
@@ -503,9 +597,9 @@ function HeroSection({
             {/* Social Proof Reveal */}
             <motion.div
               className="lp-hero-social"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.72, ease: HERO_REVEAL_EASE }}
+              initial={false}
+              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.58 : 0, ease: HERO_REVEAL_EASE }}
             >
               <AvatarCircles
                 avatarUrls={CREATOR_AVATARS}
@@ -524,12 +618,16 @@ function HeroSection({
             </motion.div>
           </div>
 
-          {/* Right: 3D FloatingEditorialDesk with Optical Focus-Pull Entrance */}
+          {/* Right: 3D FloatingEditorialDesk glides in from the right as headline morphs left */}
           <motion.div
             className="lp-hero-right-3d"
-            initial={{ opacity: 0, scale: 0.965, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            transition={{ duration: 0.95, delay: 0.22, ease: HERO_REVEAL_EASE }}
+            initial={false}
+            animate={
+              isSplit
+                ? { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
+                : { opacity: 0, x: 56, scale: 0.94, filter: 'blur(12px)' }
+            }
+            transition={{ duration: 0.92, delay: isSplit ? 0.08 : 0, ease: HERO_MORPH_EASE }}
           >
             <FloatingEditorialDesk
               currentStage={activeDeskStage}
@@ -546,9 +644,9 @@ function HeroSection({
       <motion.div
         className="lp-trust"
         style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.7, delay: 0.82, ease: HERO_REVEAL_EASE }}
+        initial={false}
+        animate={isSplit ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ duration: 0.65, delay: isSplit ? 0.66 : 0, ease: HERO_REVEAL_EASE }}
       >
         <div className="lp-trust-inner">
           {[
