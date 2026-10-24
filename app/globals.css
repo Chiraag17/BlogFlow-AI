@@ -936,3 +936,90 @@ body {
   background: #fee2e2;
   color: #991b1b;
 }
+
+/* ============================================================
+   3D Editorial Studio — Archival Folio Stack & Perspective Physics
+   ============================================================ */
+.perspective-stage {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* 3D Stacked Archival Folio Card */
+.folio-card-3d {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transform-style: preserve-3d;
+  transition:
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 2px 0 0 var(--color-bg-muted),
+    0 3px 0 0 var(--color-border),
+    0 5px 0 -1px var(--color-surface),
+    0 6px 0 -1px var(--color-border),
+    0 8px 18px -4px rgba(22, 63, 50, 0.08);
+}
+
+.folio-card-3d:hover {
+  border-color: var(--color-primary);
+  transform: translate3d(0, -4px, 16px) rotateX(2deg) rotateY(-0.6deg);
+  box-shadow:
+    0 3px 0 0 var(--color-bg-muted),
+    0 4px 0 0 var(--color-border),
+    0 7px 0 -1px var(--color-surface),
+    0 8px 0 -1px var(--color-accent),
+    0 18px 28px -6px rgba(22, 63, 50, 0.16);
+}
+
+/* 3D Stamp & Glide Animation when Approving / Publishing a Folio */
+@keyframes folioStampGlide {
+  0% {
+    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
+  }
+  32% {
+    transform: translate3d(0, 4px, -18px) rotateX(-6deg) rotateY(2deg) scale(0.975);
+    border-color: var(--color-accent);
+  }
+  68% {
+    transform: translate3d(10px, -6px, 26px) rotateX(4deg) rotateY(-2deg) scale(1.015);
+    border-color: var(--color-primary);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
+  }
+}
+
+.folio-stamping {
+  animation: folioStampGlide 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3D Unfolding Broadsheet Modal Choreography */
+@keyframes unfoldBroadsheet3D {
+  0% {
+    opacity: 0;
+    transform: perspective(1600px) rotateX(-24deg) rotateY(12deg) translateZ(-140px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(1600px) rotateX(3deg) rotateY(-2deg) translateZ(14px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1600px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1);
+  }
+}
+
+.modal-unfold-3d {
+  transform-origin: center top;
+  transform-style: preserve-3d;
+  animation: unfoldBroadsheet3D 460ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

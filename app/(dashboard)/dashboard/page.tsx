@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { motion } from 'framer-motion';
 import {
   FileText, Globe, Clock, CheckCircle, BarChart3,
-  TrendingUp, ArrowRight, Sparkles, Send, Eye,
-  CheckCircle2, Download, Search, Filter, Plus,
-  BookOpen, X, ExternalLink, Layers, PenTool,
+  TrendingUp, ArrowRight, Send,
+  CheckCircle2, Download, Search,
+  X, ExternalLink, PenTool, Stamp,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar,
@@ -19,6 +20,7 @@ import { DEMO_ANALYTICS } from '@/lib/mock-data';
 import { getStatusLabel, timeAgo, truncate } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
 import { BlogStatus } from '@/types';
+import EditorialOrrery3D from '@/components/dashboard/EditorialOrrery3D';
 
 const TOPIC_SUGGESTIONS = [
   {
@@ -44,6 +46,74 @@ const TELEMETRY_SERIES = [
   { month: 'Sep', generated: 15, published: 12, seoAvg: 92, readabilityAvg: 88, words: 24800 },
 ];
 
+// Cursor-tracked 3D Perspective Tilt Card for KPI Ledger
+function Tilt3DCard({
+  children,
+  onClick,
+  href,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  href?: string;
+}) {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const ry = (px - 0.5) * 11;
+    const rx = (0.5 - py) * 11;
+    setTilt({ rx, ry, gx: px * 100, gy: py * 100, active: true });
+  };
+
+  const handlePointerLeave = () => {
+    setTilt({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
+  };
+
+  const innerContent = (
+    <div
+      ref={cardRef}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+      onClick={onClick}
+      className="card p-5 text-left relative overflow-hidden cursor-pointer group transition-colors hover:border-[var(--color-primary)]"
+      style={{
+        transform: `perspective(1050px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${tilt.active ? '6px' : '0px'})`,
+        transformStyle: 'preserve-3d',
+        transition: tilt.active
+          ? 'transform 60ms linear, border-color 200ms ease'
+          : 'transform 380ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease',
+      }}
+    >
+      {/* Dynamic Brass Specular Reflection */}
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        style={{
+          opacity: tilt.active ? 1 : 0,
+          background: `radial-gradient(260px circle at ${tilt.gx}% ${tilt.gy}%, rgba(200, 161, 90, 0.16), transparent 70%)`,
+        }}
+      />
+      <div style={{ transform: 'translateZ(18px)', transformStyle: 'preserve-3d' }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {innerContent}
+      </Link>
+    );
+  }
+
+  return innerContent;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -61,6 +131,11 @@ export default function DashboardPage() {
   const [quickTopic, setQuickTopic] = useState('');
   const [selectedSiteId, setSelectedSiteId] = useState('');
   const [selectedLength, setSelectedLength] = useState<'short' | 'medium' | 'long'>('medium');
+
+  // 3D Orrery Reactive Impulses
+  const [typingPulse, setTypingPulse] = useState(0);
+  const [stampPulse, setStampPulse] = useState(0);
+  const [stampingBlogId, setStampingBlogId] = useState<string | null>(null);
 
   // Interactive Telemetry Controls
   const [chartMetric, setChartMetric] = useState<'velocity' | 'seo' | 'words'>('velocity');
@@ -137,6 +212,19 @@ export default function DashboardPage() {
     return storeBlogs.reduce((acc, b) => acc + (b.wordCount || 1500), 0);
   }, [storeBlogs]);
 
+  // Map statusFilter <-> 3D Orrery stage index (0..3)
+  const activeStageIndex = useMemo(() => {
+    if (statusFilter === 'pending_approval' || statusFilter === 'draft') return 1;
+    if (statusFilter === 'approved') return 2;
+    if (statusFilter === 'published') return 3;
+    return 0;
+  }, [statusFilter]);
+
+  const handleSelectOrreryStage = (stageIndex: number) => {
+    const map: ('all' | BlogStatus)[] = ['all', 'pending_approval', 'approved', 'published'];
+    setStatusFilter(map[stageIndex] || 'all');
+  };
+
   // Filtered Telemetry Data
   const chartData = useMemo(() => {
     if (timeframe === '3M') return TELEMETRY_SERIES.slice(-3);
@@ -166,6 +254,7 @@ export default function DashboardPage() {
   // Quick-Dispatch Handler
   const handleQuickDispatch = (e: React.FormEvent) => {
     e.preventDefault();
+    setStampPulse((p) => p + 1);
     const params = new URLSearchParams();
     if (quickTopic.trim()) params.set('topic', quickTopic.trim());
     if (selectedSiteId) params.set('websiteId', selectedSiteId);
@@ -189,22 +278,31 @@ export default function DashboardPage() {
     triggerToast(`Exported ${timeframe} editorial telemetry report to CSV.`);
   };
 
-  // Inline Status Change Handler (Approve / Publish)
+  // Inline Status Change Handler with 3D Folio Stamp-and-Glide Choreography
   const handleInlineStatusUpdate = (blog: any, nextStatus: BlogStatus) => {
-    updateBlogStatus(blog.id, nextStatus);
-    if (dbData?.recentBlogs) {
-      setDbData((prev: any) => ({
-        ...prev,
-        recentBlogs: prev.recentBlogs.map((item: any) =>
-          item.id === blog.id ? { ...item, status: nextStatus } : item
-        ),
-      }));
-    }
-    if (inspectBlog?.id === blog.id) {
-      setInspectBlog((prev: any) => (prev ? { ...prev, status: nextStatus } : null));
-    }
-    const actionLabel = nextStatus === 'approved' ? 'Approved manuscript' : 'Published manuscript live';
-    triggerToast(`${actionLabel}: "${truncate(blog.title, 38)}"`);
+    setStampingBlogId(blog.id);
+    setStampPulse((p) => p + 1);
+
+    setTimeout(() => {
+      updateBlogStatus(blog.id, nextStatus);
+      if (dbData?.recentBlogs) {
+        setDbData((prev: any) => ({
+          ...prev,
+          recentBlogs: prev.recentBlogs.map((item: any) =>
+            item.id === blog.id ? { ...item, status: nextStatus } : item
+          ),
+        }));
+      }
+      if (inspectBlog?.id === blog.id) {
+        setInspectBlog((prev: any) => (prev ? { ...prev, status: nextStatus } : null));
+      }
+      setStampingBlogId(null);
+      const actionLabel =
+        nextStatus === 'approved'
+          ? '3D Brass Seal Stamped — Approved'
+          : '3D Press Dispatched — Published Live';
+      triggerToast(`${actionLabel}: "${truncate(blog.title, 36)}"`);
+    }, 340);
   };
 
   const firstName = ((session?.user as any)?.name || 'Editor').split(' ')[0];
@@ -231,139 +329,162 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================
-          SECTION 1: EXECUTIVE MASTHEAD & QUICK-DISPATCH BRIEF LAUNCHER
+          SECTION 1: EXECUTIVE COMMAND DESK (2-COL SPLIT WITH 3D ORRERY)
           ============================================================ */}
       <div className="card p-6 sm:p-7">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-[var(--color-border)]">
-          <div>
-            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
-              <span>Editorial Command Desk</span>
-              <span>·</span>
-              <span>
-                {new Date().toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
-              <span>·</span>
-              <span className="text-[var(--color-primary)] font-medium">
-                {isDbConnected ? 'PostgreSQL Persistent Mode' : 'Live Studio Workspace'}
-              </span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* Left 7 Cols: Greeting + Quick-Dispatch Brief Launcher */}
+          <div className="lg:col-span-7 flex flex-col justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[var(--color-border)]">
+              <div>
+                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
+                  <span>Editorial Command Desk</span>
+                  <span>·</span>
+                  <span>
+                    {new Date().toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  <span>·</span>
+                  <span className="text-[var(--color-primary)] font-medium">
+                    {isDbConnected ? 'PostgreSQL Persistent Mode' : 'Live Studio Workspace'}
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight font-editorial text-[var(--color-text)]">
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {firstName}.
+                </h2>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Link href="/research" className="btn btn-secondary btn-sm">
+                  <Search size={14} />
+                  <span>Topics</span>
+                </Link>
+                <Link href="/approvals" className="btn btn-secondary btn-sm">
+                  <CheckCircle size={14} />
+                  <span>Queue ({pendingCount})</span>
+                </Link>
+              </div>
             </div>
-            <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight font-editorial text-[var(--color-text)]">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {firstName}.
-            </h2>
+
+            {/* Inline Quick-Dispatch Topic Bar (Reacts with 3D Orrery) */}
+            <form onSubmit={handleQuickDispatch} className="pt-5">
+              <div className="flex items-center justify-between mb-2.5">
+                <label
+                  htmlFor="quick-dispatch-input"
+                  className="text-xs font-semibold text-[var(--color-text)] flex items-center gap-2"
+                >
+                  <PenTool size={13} className="text-[var(--color-accent)]" />
+                  <span>Quick-Dispatch Article Brief</span>
+                </label>
+                <span className="text-xs text-[var(--color-text-muted)] hidden sm:inline">
+                  Typing spins the 3D Research Calibration Ring in real time
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                <div className="sm:col-span-6">
+                  <input
+                    id="quick-dispatch-input"
+                    type="text"
+                    value={quickTopic}
+                    onChange={(e) => {
+                      setQuickTopic(e.target.value);
+                      setTypingPulse((c) => c + 1);
+                    }}
+                    placeholder="Enter a headline, keyword, or research thesis…"
+                    className="form-input h-10 text-sm"
+                  />
+                </div>
+
+                <div className="sm:col-span-3">
+                  <select
+                    value={selectedSiteId}
+                    onChange={(e) => {
+                      setSelectedSiteId(e.target.value);
+                      setTypingPulse((c) => c + 1);
+                    }}
+                    className="form-select h-10 text-sm"
+                    aria-label="Target publication"
+                  >
+                    {activeWebsites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.name} ({site.niche})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-3 flex items-center gap-2">
+                  <select
+                    value={selectedLength}
+                    onChange={(e) => setSelectedLength(e.target.value as any)}
+                    className="form-select h-10 text-sm flex-1"
+                    aria-label="Target length"
+                  >
+                    <option value="short">~800w</option>
+                    <option value="medium">~1,500w</option>
+                    <option value="long">~2,500w</option>
+                  </select>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary h-10 px-4 whitespace-nowrap shrink-0"
+                  >
+                    <span>Draft</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Clickable Trending Brief Suggestions */}
+              <div className="mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--color-text-muted)]">
+                <span className="font-medium text-[var(--color-text-secondary)]">Suggested briefs:</span>
+                {TOPIC_SUGGESTIONS.map((item, idx) => (
+                  <button
+                    key={item.topic}
+                    type="button"
+                    onClick={() => {
+                      setQuickTopic(item.topic);
+                      setTypingPulse((c) => c + 1);
+                      setStampPulse((p) => p + 1);
+                    }}
+                    className="text-left hover:text-[var(--color-primary)] transition-colors cursor-pointer underline decoration-[var(--color-border)] underline-offset-4 hover:decoration-[var(--color-primary)]"
+                  >
+                    0{idx + 1}. {truncate(item.topic, 38)}
+                  </button>
+                ))}
+              </div>
+            </form>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link href="/research" className="btn btn-secondary btn-sm">
-              <Search size={14} />
-              <span>Discover Topics</span>
-            </Link>
-            <Link href="/approvals" className="btn btn-secondary btn-sm">
-              <CheckCircle size={14} />
-              <span>Approval Queue ({pendingCount})</span>
-            </Link>
-            <Link href="/websites" className="btn btn-secondary btn-sm">
-              <Globe size={14} />
-              <span>Manage Sites ({websitesCount})</span>
-            </Link>
+          {/* Right 5 Cols: 3D Brass Editorial Orrery & Multi-Agent Press */}
+          <div className="lg:col-span-5 flex items-center">
+            <EditorialOrrery3D
+              activeStageIndex={activeStageIndex}
+              onSelectStage={handleSelectOrreryStage}
+              typingPulse={typingPulse}
+              stampPulse={stampPulse}
+              isDark={isDark}
+              stageCounts={[
+                activeWebsites.length * 3,
+                draftCount + pendingCount,
+                approvedCount,
+                publishedCount,
+              ]}
+            />
           </div>
         </div>
-
-        {/* Inline Quick-Dispatch Topic Bar */}
-        <form onSubmit={handleQuickDispatch} className="pt-5">
-          <div className="flex items-center justify-between mb-2.5">
-            <label
-              htmlFor="quick-dispatch-input"
-              className="text-xs font-semibold text-[var(--color-text)] flex items-center gap-2"
-            >
-              <PenTool size={13} className="text-[var(--color-accent)]" />
-              <span>Quick-Dispatch Article Brief</span>
-            </label>
-            <span className="text-xs text-[var(--color-text-muted)] hidden sm:inline">
-              Pre-fills the multi-agent Blog Generator with your topic and target publication
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-            <div className="md:col-span-6 relative">
-              <input
-                id="quick-dispatch-input"
-                type="text"
-                value={quickTopic}
-                onChange={(e) => setQuickTopic(e.target.value)}
-                placeholder="Enter a headline, keyword, or research thesis to draft…"
-                className="form-input h-10 text-sm"
-              />
-            </div>
-
-            <div className="md:col-span-3">
-              <select
-                value={selectedSiteId}
-                onChange={(e) => setSelectedSiteId(e.target.value)}
-                className="form-select h-10 text-sm"
-                aria-label="Target publication"
-              >
-                {activeWebsites.map((site) => (
-                  <option key={site.id} value={site.id}>
-                    {site.name} ({site.niche})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-3 flex items-center gap-2">
-              <select
-                value={selectedLength}
-                onChange={(e) => setSelectedLength(e.target.value as any)}
-                className="form-select h-10 text-sm flex-1"
-                aria-label="Target length"
-              >
-                <option value="short">Short (~800w)</option>
-                <option value="medium">Medium (~1,500w)</option>
-                <option value="long">Deep (~2,500w)</option>
-              </select>
-
-              <button
-                type="submit"
-                className="btn btn-primary h-10 px-4 whitespace-nowrap shrink-0"
-              >
-                <span>Draft</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Clickable Trending Brief Suggestions */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--color-text-muted)]">
-            <span className="font-medium text-[var(--color-text-secondary)]">Suggested briefs:</span>
-            {TOPIC_SUGGESTIONS.map((item, idx) => (
-              <button
-                key={item.topic}
-                type="button"
-                onClick={() => setQuickTopic(item.topic)}
-                className="text-left hover:text-[var(--color-primary)] transition-colors cursor-pointer underline decoration-[var(--color-border)] underline-offset-4 hover:decoration-[var(--color-primary)]"
-              >
-                0{idx + 1}. {item.topic}
-              </button>
-            ))}
-          </div>
-        </form>
       </div>
 
       {/* ============================================================
-          SECTION 2: 4-COLUMN ARCHITECTURAL KPI LEDGER
+          SECTION 2: 3D PERSPECTIVE KPI LEDGER (CURSOR-TRACKED TILT)
           ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* Card 1: Total Manuscripts */}
-        <button
-          type="button"
-          onClick={() => setStatusFilter('all')}
-          className="card p-5 text-left hover:border-[var(--color-primary)] transition-colors cursor-pointer group"
-        >
+        <Tilt3DCard onClick={() => setStatusFilter('all')}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">
               01 · Total Manuscripts
@@ -381,14 +502,9 @@ export default function DashboardPage() {
               Filter all →
             </span>
           </div>
-        </button>
+        </Tilt3DCard>
 
-        {/* Card 2: Pending Approval */}
-        <button
-          type="button"
-          onClick={() => setStatusFilter('pending_approval')}
-          className="card p-5 text-left hover:border-[var(--color-primary)] transition-colors cursor-pointer group"
-        >
+        <Tilt3DCard onClick={() => setStatusFilter('pending_approval')}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">
               02 · Pending Editorial Review
@@ -406,14 +522,9 @@ export default function DashboardPage() {
               Triage queue →
             </span>
           </div>
-        </button>
+        </Tilt3DCard>
 
-        {/* Card 3: Published Live */}
-        <button
-          type="button"
-          onClick={() => setStatusFilter('published')}
-          className="card p-5 text-left hover:border-[var(--color-primary)] transition-colors cursor-pointer group"
-        >
+        <Tilt3DCard onClick={() => setStatusFilter('published')}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">
               03 · Published Articles
@@ -431,13 +542,9 @@ export default function DashboardPage() {
               View live →
             </span>
           </div>
-        </button>
+        </Tilt3DCard>
 
-        {/* Card 4: Connected Publications */}
-        <Link
-          href="/websites"
-          className="card p-5 text-left hover:border-[var(--color-primary)] transition-colors group block"
-        >
+        <Tilt3DCard href="/websites">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">
               04 · Connected Publications
@@ -455,7 +562,7 @@ export default function DashboardPage() {
               Configure →
             </span>
           </div>
-        </Link>
+        </Tilt3DCard>
       </div>
 
       {/* ============================================================
@@ -476,7 +583,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {/* Metric Switcher */}
               <div className="inline-flex items-center p-0.5 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)]">
                 {(
                   [
@@ -500,7 +606,6 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Timeframe Switcher */}
               <div className="inline-flex items-center p-0.5 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)]">
                 {(['3M', '6M'] as const).map((tf) => (
                   <button
@@ -518,7 +623,6 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* CSV Export */}
               <button
                 type="button"
                 onClick={handleExportCsv}
@@ -731,12 +835,12 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================
-          SECTION 4: 4-STAGE PIPELINE BOARD & CONTENT HEALTH LEDGER
+          SECTION 4: 3D ARCHIVAL FOLIO STACK & CONTENT HEALTH LEDGER
           ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left 8 Cols: Interactive 4-Stage Pipeline Board + Inline Approval Triage */}
+        {/* Left 8 Cols: 3D Archival Folio Stack + Inline Approval Triage */}
         <div className="lg:col-span-8 card">
-          {/* Hairline Chapter Index Header */}
+          {/* Hairline Chapter Index Header (Synced with 3D Orrery) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pb-4 mb-5 border-b border-[var(--color-border)]">
             {pipelineChapters.map((ch) => {
               const isSelected = statusFilter === ch.filter;
@@ -744,10 +848,13 @@ export default function DashboardPage() {
                 <button
                   key={ch.num}
                   type="button"
-                  onClick={() => setStatusFilter(ch.filter)}
-                  className={`text-left p-2.5 rounded-lg border transition-colors cursor-pointer ${
+                  onClick={() => {
+                    setStatusFilter(ch.filter);
+                    setStampPulse((p) => p + 1);
+                  }}
+                  className={`text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)] -translate-y-0.5 shadow-sm'
                       : 'border-[var(--color-border-light)] hover:border-[var(--color-border)] bg-[var(--color-bg)]/50'
                   }`}
                 >
@@ -766,11 +873,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Filter & Search Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)] overflow-x-auto">
               {(
                 [
-                  { key: 'all', label: 'All' },
+                  { key: 'all', label: 'All Folios' },
                   { key: 'pending_approval', label: 'Pending Review' },
                   { key: 'approved', label: 'Approved' },
                   { key: 'published', label: 'Published' },
@@ -780,7 +887,10 @@ export default function DashboardPage() {
                 <button
                   key={tab.key}
                   type="button"
-                  onClick={() => setStatusFilter(tab.key)}
+                  onClick={() => {
+                    setStatusFilter(tab.key);
+                    setTypingPulse((c) => c + 1);
+                  }}
                   className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
                     statusFilter === tab.key
                       ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-xs'
@@ -801,7 +911,10 @@ export default function DashboardPage() {
                 <input
                   type="text"
                   value={articleSearch}
-                  onChange={(e) => setArticleSearch(e.target.value)}
+                  onChange={(e) => {
+                    setArticleSearch(e.target.value);
+                    setTypingPulse((c) => c + 1);
+                  }}
                   placeholder="Filter manuscripts…"
                   className="form-input py-1.5 pl-8 pr-3 text-xs w-44 sm:w-52"
                 />
@@ -823,11 +936,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Pipeline Manuscript Table */}
+          {/* 3D Archival Folio Stack Stage */}
           {filteredBlogs.length === 0 ? (
             <div className="py-12 text-center border border-dashed border-[var(--color-border)] rounded-lg">
               <p className="text-sm font-medium text-[var(--color-text)]">
-                No manuscripts match the active filter.
+                No archival folios match the active filter.
               </p>
               <p className="text-xs text-[var(--color-text-muted)] mt-1 mb-4">
                 Try clearing the filter or dispatch a new article brief above.
@@ -845,26 +958,54 @@ export default function DashboardPage() {
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-[var(--color-border-light)]">
-              {filteredBlogs.slice(0, 6).map((blog: any) => {
+            <div className="perspective-stage space-y-3">
+              {filteredBlogs.slice(0, 6).map((blog: any, idx: number) => {
                 const rawStatus = (blog.status || 'draft').toLowerCase() as BlogStatus;
                 const seo = blog.seoScore || 88;
                 const words = blog.wordCount || 1650;
+                const isStamping = stampingBlogId === blog.id;
+
                 return (
-                  <div
-                    key={blog.id}
-                    className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[var(--color-bg)]/50 px-2 -mx-2 rounded-lg transition-colors"
+                  <motion.div
+                    key={`${blog.id}-${statusFilter}`}
+                    initial={{
+                      opacity: 0,
+                      y: 16,
+                      rotateX: -12,
+                      z: -30 * idx,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      rotateX: 0,
+                      z: 0,
+                    }}
+                    transition={{
+                      duration: 0.36,
+                      delay: idx * 0.045,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className={`folio-card-3d p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      isStamping ? 'folio-stamping' : ''
+                    }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <button
-                        type="button"
-                        onClick={() => setInspectBlog(blog)}
-                        className="text-sm font-semibold text-[var(--color-text)] hover:text-[var(--color-primary)] text-left truncate block max-w-full cursor-pointer"
-                      >
-                        {blog.title}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono tabular-nums text-[var(--color-accent)] font-semibold">
+                          FOLIO 0{idx + 1}
+                        </span>
+                        <span className="text-xs text-[var(--color-text-muted)]">·</span>
+                        <button
+                          type="button"
+                          onClick={() => setInspectBlog(blog)}
+                          className="text-sm font-semibold text-[var(--color-text)] hover:text-[var(--color-primary)] text-left truncate block max-w-full cursor-pointer"
+                        >
+                          {blog.title}
+                        </button>
+                      </div>
+
                       {/* Zero-Pill Unboxed Metadata */}
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1.5">
                         <span className="font-medium text-[var(--color-text-secondary)]">
                           {blog.websiteName || 'TechPulse'}
                         </span>
@@ -879,7 +1020,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Right: Status & One-Click Inline Triage Controls */}
+                    {/* Right: Status & One-Click 3D Stamp Actions */}
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-xs font-medium text-[var(--color-text-secondary)] mr-1">
                         {getStatusLabel(rawStatus)}
@@ -889,9 +1030,10 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={() => handleInlineStatusUpdate(blog, 'approved')}
-                          className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#163F32]/10 dark:bg-[#B8D5C5]/15 text-[#163F32] dark:text-[#B8D5C5] hover:bg-[#163F32] hover:text-white dark:hover:bg-[#B8D5C5] dark:hover:text-[#101714] transition-colors cursor-pointer whitespace-nowrap"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-[#163F32]/10 dark:bg-[#B8D5C5]/15 text-[#163F32] dark:text-[#B8D5C5] hover:bg-[#163F32] hover:text-white dark:hover:bg-[#B8D5C5] dark:hover:text-[#101714] transition-colors cursor-pointer whitespace-nowrap"
                         >
-                          Approve
+                          <Stamp size={12} />
+                          <span>Approve</span>
                         </button>
                       )}
 
@@ -899,29 +1041,30 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={() => handleInlineStatusUpdate(blog, 'published')}
-                          className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#163F32] text-white dark:bg-[#B8D5C5] dark:text-[#101714] hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-[#163F32] text-white dark:bg-[#B8D5C5] dark:text-[#101714] hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap"
                         >
-                          Publish
+                          <Send size={12} />
+                          <span>Publish</span>
                         </button>
                       )}
 
                       <button
                         type="button"
                         onClick={() => setInspectBlog(blog)}
-                        className="px-2.5 py-1 rounded-md text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-text)] transition-colors cursor-pointer whitespace-nowrap"
+                        className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-text)] transition-colors cursor-pointer whitespace-nowrap"
                       >
-                        Inspect
+                        Unfold 3D
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           )}
 
-          <div className="pt-4 mt-2 border-t border-[var(--color-border)] flex items-center justify-between text-xs">
+          <div className="pt-4 mt-4 border-t border-[var(--color-border)] flex items-center justify-between text-xs">
             <span className="text-[var(--color-text-muted)] tabular-nums">
-              Showing {Math.min(6, filteredBlogs.length)} of {filteredBlogs.length} manuscripts
+              Showing {Math.min(6, filteredBlogs.length)} of {filteredBlogs.length} archival folios
             </span>
             <Link
               href="/content"
@@ -947,7 +1090,6 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Stacked Horizontal Progress Bar (Replacing Rainbow Donut) */}
             <div className="h-2.5 w-full rounded-full bg-[var(--color-bg-muted)] overflow-hidden flex mb-4">
               <div
                 style={{ width: '52%', background: isDark ? '#B8D5C5' : '#163F32' }}
@@ -982,7 +1124,6 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Quality Benchmarks */}
             <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border-light)]">
                 <div className="text-[11px] text-[var(--color-text-muted)]">SEO Threshold</div>
@@ -1042,24 +1183,25 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================
-          INLINE MANUSCRIPT & SEO INSPECTOR MODAL
+          3D UNFOLDING BROADSHEET MANUSCRIPT INSPECTOR MODAL
           ============================================================ */}
       {inspectBlog && (
         <div
-          className="modal-overlay"
+          className="modal-overlay perspective-stage"
           onClick={() => setInspectBlog(null)}
         >
           <div
-            className="modal modal-lg"
+            className="modal modal-lg modal-unfold-3d border border-[var(--color-border)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
               <div>
                 <div className="text-xs text-[var(--color-text-muted)]">
-                  {inspectBlog.websiteName || 'TechPulse'} · {inspectBlog.category || 'Editorial'} ·{' '}
+                  Archival Broadsheet Folio · {inspectBlog.websiteName || 'TechPulse'} ·{' '}
+                  {inspectBlog.category || 'Editorial'} ·{' '}
                   {getStatusLabel((inspectBlog.status || 'draft').toLowerCase())}
                 </div>
-                <h3 className="modal-title mt-0.5">{inspectBlog.title}</h3>
+                <h3 className="modal-title font-editorial mt-0.5">{inspectBlog.title}</h3>
               </div>
               <button
                 type="button"
@@ -1072,23 +1214,23 @@ export default function DashboardPage() {
             </div>
 
             <div className="modal-body space-y-4">
-              {/* Telemetry Strip */}
+              {/* 3D Extruded Telemetry Strip */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)]">
+                <div className="folio-card-3d p-3.5">
                   <div className="text-xs text-[var(--color-text-muted)]">Word Count</div>
-                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)]">
+                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
                     {(inspectBlog.wordCount || 1650).toLocaleString()} words
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)]">
+                <div className="folio-card-3d p-3.5">
                   <div className="text-xs text-[var(--color-text-muted)]">SEO Score</div>
-                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-primary)]">
+                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-primary)] mt-0.5">
                     {inspectBlog.seoScore || 88}/100
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)]">
+                <div className="folio-card-3d p-3.5">
                   <div className="text-xs text-[var(--color-text-muted)]">Readability</div>
-                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)]">
+                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
                     {inspectBlog.readabilityScore || 84}/100
                   </div>
                 </div>
@@ -1109,9 +1251,9 @@ export default function DashboardPage() {
               {/* Excerpt / Content Preview */}
               <div>
                 <div className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">
-                  Manuscript Excerpt
+                  Manuscript Broadsheet Preview
                 </div>
-                <div className="p-4 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] leading-relaxed max-h-56 overflow-y-auto">
+                <div className="p-4 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] leading-relaxed max-h-56 overflow-y-auto shadow-inner">
                   {inspectBlog.excerpt ||
                     'This long-form editorial manuscript is structured with primary-source citations, H2/H3 hierarchy, and automated FAQ schema ready for WordPress REST publication.'}
                 </div>
@@ -1133,7 +1275,7 @@ export default function DashboardPage() {
                   onClick={() => setInspectBlog(null)}
                   className="btn btn-secondary btn-sm"
                 >
-                  Close
+                  Fold Folio
                 </button>
                 {((inspectBlog.status || '').toLowerCase() === 'pending_approval' ||
                   (inspectBlog.status || '').toLowerCase() === 'draft') && (
@@ -1142,8 +1284,8 @@ export default function DashboardPage() {
                     onClick={() => handleInlineStatusUpdate(inspectBlog, 'approved')}
                     className="btn btn-primary btn-sm"
                   >
-                    <CheckCircle size={14} />
-                    <span>Approve Manuscript</span>
+                    <Stamp size={14} />
+                    <span>Stamp & Approve</span>
                   </button>
                 )}
                 {(inspectBlog.status || '').toLowerCase() === 'approved' && (
