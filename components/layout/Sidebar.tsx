@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import GutenbergTypeBlock3D, { type TypeBlockFace } from '@/components/brand/GutenbergTypeBlock3D';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -23,6 +24,14 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
+function resolveSidebarLogoFace(pathname: string): TypeBlockFace {
+  if (pathname.startsWith('/research')) return 'loupe';
+  if (pathname.startsWith('/generator')) return 'nib';
+  if (pathname.startsWith('/approvals')) return 'seal';
+  if (pathname.startsWith('/content')) return 'section';
+  return 'monogram';
+}
+
 interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
@@ -35,6 +44,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const blogs = useAppStore((s) => s.blogs);
 
   const pendingApprovalCount = blogs.filter((b) => b.status === 'pending_approval').length;
+  const activeLogoFace = resolveSidebarLogoFace(pathname);
 
   return (
     <>
@@ -53,14 +63,21 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           mobileOpen && 'mobile-open'
         )}
       >
-        <Link href="/landing" className="sidebar-logo" style={{ textDecoration: 'none' }}>
-          <div className="sidebar-logo-icon font-editorial font-bold text-sm">
-            B
-          </div>
+        <Link href="/landing" className="sidebar-logo group" style={{ textDecoration: 'none' }}>
+          <GutenbergTypeBlock3D
+            size={32}
+            activeFace={activeLogoFace}
+            interactiveStamp={true}
+          />
           {!collapsed && (
-            <span className="text-base font-bold tracking-tight font-editorial text-[var(--color-text)] whitespace-nowrap">
-              BlogFlow AI
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-bold tracking-tight font-editorial text-[var(--color-text)] whitespace-nowrap leading-tight">
+                BlogFlow AI
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-text-muted)] truncate">
+                Type-Block · {activeLogoFace}
+              </span>
+            </div>
           )}
         </Link>
 

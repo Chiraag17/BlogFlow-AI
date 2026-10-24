@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { RotateCw, ShieldCheck, Lock, Unlock, CheckCircle2, Sparkles } from 'lucide-react';
+import GutenbergTypeBlock3D, { type TypeBlockFace } from '@/components/brand/GutenbergTypeBlock3D';
 
 export interface EditorialPressPass3DProps {
   mode: 'login' | 'register';
@@ -17,11 +17,11 @@ export interface EditorialPressPass3DProps {
   isVerified?: boolean;
 }
 
-const STAGES = [
-  { num: '01', label: 'Research', desc: 'Live Tavily primary-source indexing' },
-  { num: '02', label: 'Draft', desc: 'Gemini long-form H2/H3 manuscript synthesis' },
-  { num: '03', label: 'Review', desc: 'SEO, readability & human editorial gate' },
-  { num: '04', label: 'Publish', desc: 'AES-256 encrypted WordPress REST sync' },
+const STAGES: { num: string; label: string; desc: string; face: TypeBlockFace }[] = [
+  { num: '01', label: 'Research', desc: 'Live Tavily primary-source indexing', face: 'loupe' },
+  { num: '02', label: 'Draft', desc: 'Gemini long-form H2/H3 manuscript synthesis', face: 'nib' },
+  { num: '03', label: 'Review', desc: 'SEO, readability & human editorial gate', face: 'seal' },
+  { num: '04', label: 'Publish', desc: 'AES-256 encrypted WordPress REST sync', face: 'section' },
 ];
 
 export default function EditorialPressPass3D({
@@ -105,6 +105,12 @@ export default function EditorialPressPass3D({
 
   const passedCount = entropyChecks.filter((c) => c.passed).length;
   const tumblerAngle = isVerified ? 0 : password.length * 24;
+  const activityPulse = (name?.length || 0) + email.length + password.length + (confirmPassword?.length || 0);
+  const crestFace: TypeBlockFace = isVerified || isFlipped
+    ? 'seal'
+    : email.length > 0 || (name && name.length > 0)
+      ? STAGES[activeStageIdx]?.face || 'nib'
+      : 'monogram';
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = cardRef.current;
@@ -199,9 +205,12 @@ export default function EditorialPressPass3D({
                     BlogFlow AI Studio
                   </div>
                 </div>
-                <div className="w-9 h-9 rounded-lg border border-[#C8A15A]/45 bg-[#C8A15A]/15 flex items-center justify-center text-[#C8A15A] font-serif font-bold text-base">
-                  B
-                </div>
+                <GutenbergTypeBlock3D
+                  size={36}
+                  activeFace={crestFace}
+                  activityPulse={activityPulse}
+                  interactiveStamp={true}
+                />
               </div>
             </div>
 

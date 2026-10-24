@@ -15,6 +15,7 @@ import {
 import { useTheme } from '@/lib/theme';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
 import { KineticText } from '@/components/ui/kinetic-text';
+import GutenbergTypeBlock3D, { type TypeBlockFace } from '@/components/brand/GutenbergTypeBlock3D';
 import type { DeskStage } from '@/components/3d/FloatingEditorialDesk';
 
 const FloatingEditorialDesk = dynamic(
@@ -233,6 +234,7 @@ interface NavIndexSpec {
   abstract: string;
   telemetry: string;
   deliverable: string;
+  face: TypeBlockFace;
 }
 
 const NAV_INDEX_SPECS: NavIndexSpec[] = [
@@ -245,6 +247,7 @@ const NAV_INDEX_SPECS: NavIndexSpec[] = [
     abstract: 'Inspect citation-grounded manuscripts, semantic H2 structures, and live SEO telemetry before a single word hits production.',
     telemetry: '3D Spatial Studio · Live Citation Grounding',
     deliverable: 'Dossier #01 — Architecture & Proofing',
+    face: 'monogram',
   },
   {
     id: 'workflow',
@@ -255,6 +258,7 @@ const NAV_INDEX_SPECS: NavIndexSpec[] = [
     abstract: 'From Tavily live web discovery and outline synthesis to human-in-the-loop quality sign-off and WordPress REST dispatch.',
     telemetry: '5 Specialized Agents · 0% Unverified Claims',
     deliverable: 'Dossier #02 — Multi-Agent Choreography',
+    face: 'loupe',
   },
   {
     id: 'features',
@@ -265,6 +269,7 @@ const NAV_INDEX_SPECS: NavIndexSpec[] = [
     abstract: 'Automated internal linking, schema.org FAQ blocks, readability grading, and AES-256-GCM authenticated WordPress publishing.',
     telemetry: 'SEO 94+ Benchmark · AES-256-GCM Vault',
     deliverable: 'Dossier #03 — System Specifications',
+    face: 'nib',
   },
   {
     id: 'creators',
@@ -275,6 +280,7 @@ const NAV_INDEX_SPECS: NavIndexSpec[] = [
     abstract: 'Why high-trust engineering and growth teams pair autonomous research engines with mandatory human editorial approval.',
     telemetry: '2,400+ Editorial Teams · 4.9/5 Rating',
     deliverable: 'Dossier #04 — The Editorial Manifesto',
+    face: 'seal',
   },
 ];
 
@@ -313,6 +319,11 @@ function LandingNavbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const activeNavFace: TypeBlockFace =
+    hoveredNav?.face ||
+    NAV_INDEX_SPECS.find((s) => s.code === activeSectionCode)?.face ||
+    'monogram';
+
   return (
     <header
       id="lp-navbar"
@@ -324,16 +335,13 @@ function LandingNavbar() {
       <div className="lp-nav-main-row">
         <div className="lp-nav-brand-cluster">
           <Link href="/" className="lp-nav-logo">
-            <span className="lp-nav-logo-icon" aria-hidden="true">
-              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 2h7l3 3v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                <path d="M10 2v3h3" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                <line x1="5.5" y1="7" x2="10.5" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                <line x1="5.5" y1="9.5" x2="10.5" y2="9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                <line x1="5.5" y1="12" x2="8.5" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            </span>
-            BlogFlow AI
+            <GutenbergTypeBlock3D
+              size={32}
+              activeFace={activeNavFace}
+              scrollPct={scrollPct}
+              interactiveStamp={true}
+            />
+            <span>BlogFlow AI</span>
           </Link>
           <span className="lp-nav-edition-tag" aria-hidden="true">
             VOL. IV · ARCHIVAL STUDIO

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import EditorialPressPass3D from '@/components/auth/EditorialPressPass3D';
+import GutenbergTypeBlock3D from '@/components/brand/GutenbergTypeBlock3D';
 
 const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -141,51 +142,14 @@ function LoginForm() {
           {/* Editorial Wordmark Lockup */}
           <Link
             href="/landing"
-            className="inline-flex items-center gap-2.5 text-[#18211D] dark:text-[#F3F0E8] mb-7 group"
+            className="inline-flex items-center gap-3 text-[#18211D] dark:text-[#F3F0E8] mb-7 group"
           >
-            <span className="w-7 h-7 rounded-lg bg-[#163F32] dark:bg-[#B8D5C5]/15 dark:border dark:border-[#B8D5C5]/35 text-[#F7F4EC] dark:text-[#B8D5C5] flex items-center justify-center">
-              <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-                <path
-                  d="M3 2h7l3 3v9H3V2z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M10 2v3h3"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1="5.5"
-                  y1="7"
-                  x2="10.5"
-                  y2="7"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="5.5"
-                  y1="9.5"
-                  x2="10.5"
-                  y2="9.5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="5.5"
-                  y1="12"
-                  x2="8.5"
-                  y2="12"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
+            <GutenbergTypeBlock3D
+              size={30}
+              activeFace={isPasswordFocused ? 'seal' : form.email.length > 0 ? 'nib' : 'monogram'}
+              activityPulse={form.email.length + form.password.length}
+              interactiveStamp={true}
+            />
             <span
               className="text-xl tracking-tight font-semibold"
               style={{ fontFamily: "'Instrument Serif', 'Newsreader', Georgia, serif" }}

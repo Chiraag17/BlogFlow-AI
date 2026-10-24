@@ -1,107 +1,87 @@
-# Editorial Vernier Navigation, Hero X-Ray Loupe & 3D Press-Pass Auth Suite
+# 3D Gutenberg Movable-Type Brass Block Logo & Spatial Animations
 
-This plan upgrades BlogFlow AI’s core entry and navigation touchpoints—the **Navigation Bar**, **Landing Hero Section**, and **Login / Signup Pages**—with bespoke horological and archival publishing mechanics: a **Calibrated Brass Vernier Scroll Rule & Archival Index Hover Drawer**, an **Interactive X-Ray Editor’s Loupe & 3-Brief Switcher** in the Hero, and a **3D Live-Engraved Editorial Press Pass** that flips `180°` on password focus and parts the screen like sliding studio doors on sign-in.
+This plan introduces a bespoke **3D Gutenberg Movable-Type Brass Block Logo** and reactive 3D mechanical animations across BlogFlow AI, replacing flat 2D icons with a physical cast-brass and deep-forest letterpress type-block that responds to hover, click, scroll velocity, and route transitions.
 
-### User Review & Critical Decisions
+## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following design and interaction specifications have been confirmed from your answers:
+> The following design and interaction choices were confirmed during our planning interview and govern the implementation:
 
-- **Confirmed Decision 1 — Calibrated Brass Vernier Navbar & Archival Hover Cards**: Replace the rounded floating glass pill navbar with a crisp, full-span **Architectural Editorial Masthead** featuring a live millimeter-calibrated **Brass Vernier Scroll Caliper** along the bottom rule (`00%`–`100%` reading progress + active chapter indicator) and **Archival Index Cards** that slide down from the hairline rule when hovering navigation links.
-- **Confirmed Decision 2 — Hero Interactive X-Ray Optical Loupe + 3 Clickable Topic Briefs**: Add a **Rotary Brief Switcher** (`AI Search Architecture`, `Hybrid SaaS Pricing`, `Zero-Trust Security`) and an interactive **X-Ray Editor’s Loupe** manuscript card in the Hero where moving the cursor across the live draft reveals the hidden citation provenance, H2 semantic score, and keyword weight inside a brushed-brass magnifying lens.
-- **Confirmed Decision 3 — Login & Signup 3D Live-Engraved Press Pass with 180° Password Flip**: Transform the right-hand auth showcase into a **3D Embossed Editorial Press Credential** (`perspective: 1400px`, `preserve-3d`) that dynamically engraves the user’s name/email as they type, physically flips `180°` to its cryptographic reverse side when focusing the password input, and parts the split-screen columns like **Sliding Studio Doors** upon successful authentication.
-
----
-
-### 1. Overview & Core Concept
-
-- **What It Does**: Replaces conventional web navigation, static hero copy, and passive auth forms with tactile, domain-native instruments inspired by *Stripe Press*, *Monocle*, and horological calipers.
-- **Target Audience / Persona**: Visitors, editors, and publication leads evaluating or signing into BlogFlow AI who expect every surface to feel intentionally crafted rather than assembled from off-the-shelf UI templates.
-- **Key Value**: Creates a continuous narrative thread from the first scroll on the Landing Page (`Vernier Navbar` + `X-Ray Hero Loupe`) through credential verification (`3D Flipping Press Pass`) into the `3D Editorial Orrery` dashboard.
+- **Confirmed Decision 1 (3D Logo Concept)**: **3D Gutenberg Movable-Type Brass Block (`B·F` Letterpress Cube)** — a true 6-faced 3D cast-brass and deep-forest enamel movable-type block with raised relief glyphs on its faces (`B` serif monogram on the front, Fountain Nib on the right, Optical Loupe on the top, Wax Seal on the left, and Editorial Section Mark `§` on the back).
+- **Confirmed Decision 2 (Placement & Integration)**: Integrated across the **Landing Page Navbar**, the **App Sidebar Header** (expanding and collapsing gracefully with the sidebar), and the **Login & Signup 3D Press Pass Crest**.
+- **Confirmed Decision 3 (Interactive Choreography)**: Reactive to **hover, click, scroll velocity, and route transitions**, including a mechanical `90°` face-indexing tumble, a downward letterpress ink-stamping plunge (`translateZ`), and a live brass specular sheen.
 
 ---
 
-### 2. User Experience & Visual Design
+## 1. Overview & Core Concept
+
+- **What It Does**: Replaces static brand icons with a tactile, six-sided 3D movable-type printing block crafted in CSS `preserve-3d` and SVG relief plates. Each face of the 3D cube represents a pillar of the BlogFlow AI editorial pipeline:
+  - **Front Face (`0°`)**: Raised Brushed-Brass `B` Editorial Serif Monogram with alignment nicks (the signature notch on physical Gutenberg metal type).
+  - **Right Face (`90° Y`)**: Engraved Fountain Pen Nib (`Drafting & Synthesis`).
+  - **Back Face (`180° Y`)**: Typographic Section Sign `§` (`Semantic Structure`).
+  - **Left Face (`-90° Y`)**: Calibration Optical Loupe (`Citation Research`).
+  - **Top Face (`90° X`)**: Fluted Brass Approval Seal (`Editorial Sign-Off`).
+  - **Bottom Face (`-90° X`)**: Machined Cast-Iron Foundry Base with serial stamp.
+- **Target Audience / Persona**: Editorial directors, technical writers, and SaaS founders who appreciate tactile archival craftsmanship and Swiss-watch mechanical responsiveness.
+- **Key Value**: Gives BlogFlow AI an unmistakable, memorable spatial brand signature that physically embodies the transition from classical movable-type craftsmanship to autonomous AI publishing.
+
+---
+
+## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Calibrated Brass Vernier Navbar (`LandingNavbar`)**:
-     - Sits as a sharp, full-width architectural masthead (`border-b`) in Warm Archival Paper (`#F7F4EC`) / Midnight Studio (`#101714`)—eliminating the generic rounded floating glass pill.
-     - **Vernier Caliper Bottom Rule**: A 6px-tall precision ruler along the bottom edge with millimeter tick marks and a sliding **Brushed-Brass Vernier Needle** that tracks scroll percentage (`00%` to `100%`) and displays the active section code (`SEC 01 · STUDIO`, `SEC 02 · PIPELINE`, `SEC 03 · CAPABILITIES`, `SEC 04 · PHILOSOPHY`).
-     - **Archival Index Hover Drawer**: Hovering `Product`, `Workflow`, `Features`, or `Philosophy` unfolds a structured **Archival Catalog Card** directly beneath the link—showing its catalogue number (`CAT. 01`), chapter thesis, and primary verified metric (`14 Primary Sources · 0% Hallucination`).
-  2. **Hero Section: Rotary Brief Switcher & X-Ray Editor’s Loupe (`HeroSection`)**:
-     - **3-Brief Rotary Switcher**: Visitors can click between `01. AI Search Architecture`, `02. Usage-Based SaaS Pricing`, and `03. Zero-Trust Cloud Security`. Switching a brief updates the CTA target query, animates the 3D Desk HUD, and loads that brief’s live manuscript excerpt into the **X-Ray Proof Sheet**.
-     - **Interactive X-Ray Optical Loupe**: Hovering or dragging across the Hero’s **Live Galley Proof Sheet** tracks pointer `(x, y)` coordinates to position a circular **Brushed-Brass Magnifying Loupe** (`170px` diameter, `clip-path` / radial mask). Inside the lens, the surface prose transforms into the **X-Ray Provenance Layer**—revealing verified Tavily citation sources (`MIT Tech Review`, `NIST SP 800-207`), H2 keyword density, and SEO score (`94/100`).
-  3. **Login & Signup: 3D Live-Engraved Press Pass & 180° Password Flip**:
-     - **Front Face (Identity & Accession Engraving)**: As the user types their Name or Email, the 3D Press Pass in the right column live-engraves their name in `Fraunces` serif, derives their publication handle (`@domain`), and stamps a monospaced credential code (`ACC. 2026 // PRESS-04`). Moving the cursor tilts the 3D pass with a brushed-brass foil reflection.
-     - **Back Face (180° Flip on Password Focus)**: Focusing the `Password` or `Confirm Password` field smoothly rotates the 3D Press Pass `180deg` along the Y-axis (`rotateY(180deg)`, `backface-visibility: hidden`) to reveal the **Cryptographic Security Ledger**—showing live password entropy bars, AES-256-GCM token status, and an interactive brass lock ring that rotates as characters are typed.
-     - **Sliding Studio Doors Submit Choreography**: When credentials are verified, the brass lock clicks shut and the left and right columns part horizontally to reveal entry into the Editorial Studio.
-
+  1. **Landing Navbar Masthead**: As the visitor scrolls down the page, the 3D Gutenberg Type-Block subtly pitches and indexes its faces proportional to scroll velocity, while hovering tilts the cube toward the cursor and reveals a miniature brass foundry tooltip (`INDEX FACE · CLICK TO STAMP`). Clicking triggers a crisp 3D letterpress downward stamp (`translateZ(-8px)`) with an expanding brass ink-ring ripple.
+  2. **App Sidebar Header (`/dashboard`, `/generator`, `/research`, etc.)**: Navigating between routes automatically rotates the 3D Type-Block to the face matching the active workspace mode (e.g., Loupe face on *Research*, Nib face on *Generator*, Seal face on *Approval Center*, and `B` Monogram on *Overview*). Clicking the logo or collapsing the sidebar smoothly animates the 3D cube and its adjacent foundry wordmark.
+  3. **Login & Signup 3D Press Pass Crest**: Embeds the 3D Gutenberg Type-Block into the top crest of the 3D Editorial Press Pass so typing in form fields or flipping the pass to the password vault causes the 3D type-block to rotate and lock into its cryptographic seal face.
 - **Visual Identity & Theme**:
-  - *Aesthetic Direction*: Precision Archival Monograph & Horological Press Studio (zero generic glassmorphism, zero neon gradients, zero pill badge clutter).
-  - *Color Palette & Mood*:
-    - Light Mode: Warm Archival Paper (`#F7F4EC`), Crisp Folio Surface (`#FFFFFF`), Deep Forest Ink (`#163F32`), Brushed Brass (`#C8A15A`).
-    - Dark Mode: Midnight Forest (`#101714`), Elevated Studio Slate (`#17211D`), Soft Sage (`#B8D5C5`), Warm Gold Brass (`#D4AF67`).
-  - *Typography & Hierarchy*: `Fraunces` / `Instrument Serif` for display headlines and press-pass engraving, `Plus Jakarta Sans` / `Manrope` for UI controls, and `JetBrains Mono` (`tabular-nums`) for vernier ruler ticks, SERP pixel meters, and credential codes.
+  - *Aesthetic Direction*: Tactile Gutenberg Foundry meets High-Craft Editorial Studio.
+  - *Color Palette & Mood*: Deep Forest Lacquer (`#163F32`), Brushed Brass (`#C8A15A`), Polished Gold Specular Highlights (`#E5C98B`), Warm Archival Paper (`#F7F4EC`), and Cast-Iron Shadow (`#0D1612`).
+  - *Typography & Hierarchy*: High-contrast editorial serif (`Fraunces` / `Playfair Display`) for the raised relief `B` and `§` glyphs paired with monospaced foundry registration marks (`JetBrains Mono`, `tabular-nums`).
+- **Interactive Feedback & Motion**:
+  - Spring-damped 3D gimbal rotation (`rotateX`, `rotateY`, `rotateZ`, `translateZ`) using compositor-friendly transforms.
+  - Respects `prefers-reduced-motion` by providing instant face switching without rapid spinning.
 
 ---
 
-### 3. Key Product Decisions & Trade-Offs
+## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Full-Width Architectural Masthead Over Floating Glass Pill Navbar**
-  - *Chosen Approach*: Replace the `border-radius: 16px; backdrop-filter: blur(20px)` floating navbar with a crisp, edge-to-edge architectural masthead anchored by a calibrated vernier ruler track along its bottom hairline.
-  - *Why*: Directly fulfills the requirement to eliminate generic glassmorphic UI components while giving the navigation bar a functional, tactile reading-depth instrument.
-
-- **Decision 2: CSS `clip-path: circle()` Dual-Layer X-Ray Loupe in the Hero**
-  - *Chosen Approach*: Render two perfectly aligned DOM layers inside the Hero Proof Sheet—Layer A (Editorial Prose) and Layer B (X-Ray Citation & SEO Telemetry Layer clipped to `circle(88px at var(--loupe-x) var(--loupe-y))`)—framed by a custom SVG brushed-brass magnifying bezel that tracks the pointer at 60fps.
-  - *Why*: Keeps all text 100% sharp, selectable, and responsive while delivering a striking optical "X-Ray" inspection interaction without heavy shaders.
-
-- **Decision 3: Two-Sided `preserve-3d` Press Pass Card Bound to Form Focus & Input State**
-  - *Chosen Approach*: Use a hardware-accelerated 3D scene (`perspective: 1400px`, `transform-style: preserve-3d`) with two `backface-visibility: hidden` faces (`0deg` Front Identity Face and `180deg` Rear Cryptographic Seal Face) driven by `isPasswordFocused`, `email`/`name` state, and password strength metrics.
-  - *Why*: Turns filling out a login or registration form into an immediate, rewarding tactile interaction where every keystroke and field focus visibly operates a 3D physical object.
+- **Decision 1: True 6-Faced CSS 3D Volumetric Geometry (`preserve-3d`) vs. Heavy WebGL Canvas per Icon**
+  - *Chosen Approach*: Build the reusable 3D Gutenberg Movable-Type Block using hardware-accelerated CSS 3D volumetric planes (`transform-style: preserve-3d`), recessed bevel layers, and precision SVG relief plates.
+  - *Why*: Since the logo appears simultaneously in persistent chrome (Navbar, Sidebar, and inside the 3D Press Pass), CSS `preserve-3d` delivers zero-latency instant rendering on page load, razor-sharp vector typography at any DPI, and zero WebGL context-limit conflicts with the existing Three.js 3D Desk on the landing page.
+  - *Alternatives Considered*: Spawning multiple `<Canvas>` instances for small navbar/sidebar logos would add unnecessary GPU memory overhead and WebGL context pressure.
+- **Decision 2: Route-Aware & Scroll-Velocity Reactive Choreography**
+  - *Chosen Approach*: Connect the 3D Type-Block to both scroll velocity (on the landing page) and Next.js `usePathname()` (in the dashboard sidebar) plus direct pointer hover/click stamping.
+  - *Why*: Ensures the 3D animation feels purposefully wired to the user's workflow rather than a disconnected looping gimmick.
 
 ---
 
-### 4. Technical Architecture & Data Strategy *(Technical Reference)*
+## 4. Technical Architecture & Data Strategy *(Technical Reference)*
 
 - **Architecture & Component Diagram**:
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                     PUBLIC & AUTH EDITORIAL SURFACES                       │
-│                                                                            │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │        1. CALIBRATED BRASS VERNIER NAVBAR & HOVER INDEX CARDS        │  │
-│  │  • 3-Zone Architectural Masthead (Wordmark | Nav Links | Primary CTA)│  │
-│  │  • Hover Index Drawer (CAT. 01–04 thesis + verified proof metric)    │  │
-│  │  • Bottom Vernier Caliper Track (scroll % needle + active chapter)   │  │
-│  └──────────────────────────────────┬───────────────────────────────────┘  │
-│                                     │                                      │
-│                                     ▼                                      │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │         2. HERO SECTION: X-RAY OPTICAL LOUPE & BRIEF SWITCHER        │  │
-│  │  ┌────────────────────────────────┐  ┌────────────────────────────┐  │  │
-│  │  │ Left: Editorial Copy +         │  │ Right: 3D Editorial Desk   │  │  │
-│  │  │ • 3-Brief Rotary Switcher      │  │ • Synced to Active Chapter │  │  │
-│  │  │ • X-Ray Galley Proof Card      │◄─┼─► & Selected Topic Brief   │  │  │
-│  │  │   - Base Prose Layer           │  └────────────────────────────┘  │  │
-│  │  │   - Clipped X-Ray Loupe Layer  │                                  │  │
-│  │  └────────────────────────────────┘                                  │  │
-│  └──────────────────────────────────┬───────────────────────────────────┘  │
-│                                     │                                      │
-│                                     ▼                                      │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │       3. LOGIN & SIGNUP: 3D LIVE-ENGRAVED PRESS PASS & DOORS         │  │
-│  │  ┌────────────────────────────────┐  ┌────────────────────────────┐  │  │
-│  │  │ Left: Archival Paper Form      │  │ Right: 3D Press Pass Stage │  │  │
-│  │  │ • Name / Email Input ──────────┼─►│ • Front: Live Name/ID Foil │  │  │
-│  │  │ • Password Focus / Strength ───┼─►│ • Back: 180° Flip Seal     │  │  │
-│  │  │ • Submit Verified ─────────────┼─►│ • Sliding Studio Door Exit │  │  │
-│  │  └────────────────────────────────┘  └────────────────────────────┘  │  │
-│  └──────────────────────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│             GutenbergTypeBlock3D (Reusable 3D Brand Emblem)             │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │  6-Faced preserve-3d Cube + Recessed Brass Relief & Ink Ripple    │  │
+│  │  • Front (0°):   Raised 'B' Serif Relief + Gutenberg Type Nick    │  │
+│  │  • Right (90°):  Engraved Fountain Pen Nib (Draft / Generator)    │  │
+│  │  • Back (180°):  Section Sign '§' (Content / Architecture)        │  │
+│  │  • Left (-90°):  Brass Optical Loupe (Research & Citations)       │  │
+│  │  • Top (+90°X):  Editorial Approval Seal (Approvals / Security)   │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+└───────────────┬─────────────────────────┬───────────────────────────────┘
+                │                         │
+   ┌────────────▼────────────┐ ┌──────────▼─────────────┐ ┌───────────────▼──────────────┐
+   │  LandingNavbar Masthead │ │   App Sidebar Header   │ │  EditorialPressPass3D Crest  │
+   │  • Scroll-velocity tilt │ │  • Route-synced face   │ │  • Synced with keystrokes &  │
+   │  • Hover 3D gimbal      │ │    indexing on nav     │ │    password vault 180° flip  │
+   │  • Click ink-stamp      │ │  • Collapsed state     │ │  • Clearance seal lock       │
+   └─────────────────────────┘ └────────────────────────┘ └──────────────────────────────┘
 ```
 
-- **Data Model & State**:
-  - **Vernier Navbar State**: Tracks `scrollPct` (`0`–`100`), `activeSectionCode` (`01 STUDIO` through `04 PHILOSOPHY`), and `hoveredNavIndex` (`null` or `0`–`3` for the Archival Index Card drawer).
-  - **Hero X-Ray & Brief State**: Tracks `activeBriefIndex` (`0`–`2` mapping to `HERO_TOPIC_PRESETS`), `loupePos` (`{ x, y, active }`), and synchronizes both the CTA `href` (`/generator?topic=...`) and the 3D Desk HUD readout.
-  - **3D Press Pass Auth State**: Tracks `isPasswordFocused` (triggers `rotateY(180deg)`), `pointerTilt` (`{ rx, ry }`), derived `pressAccessionId` (deterministic hash from user email/name), `passwordEntropyScore` (`0`–`4` segments lighting up the rear brass lock cylinder), and `doorsOpening` (`true` on auth success before route push).
+- **Interactive Component & State Mapping**:
+  - `faceIndex` (`'monogram' | 'nib' | 'section' | 'loupe' | 'seal'`): Maps to target `(rotateX, rotateY)` angles in 3D space.
+  - `scrollVelocity` (Landing Navbar): Applies dynamic pitch/yaw offset as the user scrolls and settles smoothly back to the active section face.
+  - `isStamping` (Click handler): Animates `translateZ(-7px) scale(0.94)` followed by a spring rebound and a radial brass ink-impression ring.
+  - `pathname` (App Sidebar): Automatically indexes the 3D block to `'loupe'` on `/research`, `'nib'` on `/generator`, `'seal'` on `/approvals`, `'section'` on `/content`, and `'monogram'` on `/dashboard`.
