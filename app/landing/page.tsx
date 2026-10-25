@@ -141,154 +141,19 @@ const HERO_TOPIC_PRESETS: HeroTopicPreset[] = [
 ];
 
 /* ============================================================
-   STAGE DETAILS FOR PHILOSOPHY SECTION
+   NAVBAR — Streamlined 3D Gutenberg Logo + Clean Links + 2px Brass Scroll Line
    ============================================================ */
-const STAGE_DETAILS: Record<
-  DeskStage,
-  {
-    stepNum: string;
-    title: string;
-    subtitle: string;
-    automatedTasks: string[];
-    humanDecisions: string[];
-    artifactLabel: string;
-    artifactPreview: string;
-    deliverables: string[];
-  }
-> = {
-  research: {
-    stepNum: '01',
-    title: 'Multi-Source Web Research & Citation Discovery',
-    subtitle: 'Brushed brass optical loupe & indexed citation dossiers on the studio desk',
-    automatedTasks: [
-      'Live web & academic query expansion via Tavily',
-      'Competitor SERP structure & content gap extraction',
-    ],
-    humanDecisions: [
-      'Select primary angle & target reader persona',
-      'Curate or exclude specific domain sources',
-    ],
-    artifactLabel: 'Research Dossier #01',
-    artifactPreview: '14 verified citations indexed across MIT Tech Review, Nature, and industry benchmarks.',
-    deliverables: ['Source URL verification', 'Key factual claims', 'Search intent mapping'],
-  },
-  draft: {
-    stepNum: '02',
-    title: 'Structured Long-Form Synthesis & Drafting',
-    subtitle: 'Archival manuscript stack & fountain pen actively composing structured prose',
-    automatedTasks: [
-      'Gemini synthesizes outline into H2/H3 long-form prose',
-      'Inline footnote citations & FAQ schema generation',
-    ],
-    humanDecisions: [
-      'Refine narrative voice & executive thesis',
-      'Adjust section depth or trigger targeted AI revisions',
-    ],
-    artifactLabel: 'Editorial Manuscript #02',
-    artifactPreview: '1,840 words drafted with semantic heading hierarchy and embedded source attributions.',
-    deliverables: ['Full Markdown manuscript', 'FAQ structured block', 'Meta title & slug'],
-  },
-  review: {
-    stepNum: '03',
-    title: 'Quality Gatekeeper & Human Editorial Sign-Off',
-    subtitle: 'Translucent emerald telemetry slab & brass approval seal descending on the draft',
-    automatedTasks: [
-      'Automated SEO score, keyword density & readability audit',
-      'Hallucination & duplicate-content verification',
-    ],
-    humanDecisions: [
-      'Inspect quality scorecard & approve manuscript',
-      'Request granular section rewrites with reviewer notes',
-    ],
-    artifactLabel: 'Quality Audit #03',
-    artifactPreview: 'SEO Score 94/100 · Readability Grade 8.4 · 100% citation alignment verified.',
-    deliverables: ['SEO & Readability report', 'Editorial approval log', 'Revision audit trail'],
-  },
-  publish: {
-    stepNum: '04',
-    title: 'Encrypted CMS Dispatch & WordPress Sync',
-    subtitle: 'Hardcover monograph folio sealed with brass clasps ready for WordPress REST dispatch',
-    automatedTasks: [
-      'AES-256-GCM authenticated WordPress REST API push',
-      'Automatic category, tag, and SEO metadata mapping',
-    ],
-    humanDecisions: [
-      'Choose initial Draft mode or scheduled live release',
-      'Confirm destination website & final publication slot',
-    ],
-    artifactLabel: 'CMS Dispatch #04',
-    artifactPreview: 'Synced directly to WordPress as a formatted draft with categories, tags, and schema.',
-    deliverables: ['WordPress Draft Post ID', 'Live preview link', 'Publishing history record'],
-  },
-};
-
-/* ============================================================
-   NAVBAR — Calibrated Brass Vernier Masthead & Archival Index Cards
-   ============================================================ */
-interface NavIndexSpec {
-  id: string;
-  code: string;
-  label: string;
-  href: string;
-  folioTitle: string;
-  abstract: string;
-  telemetry: string;
-  deliverable: string;
-  face: TypeBlockFace;
-}
-
-const NAV_INDEX_SPECS: NavIndexSpec[] = [
-  {
-    id: 'product',
-    code: 'SEC 01 · STUDIO',
-    label: 'Product',
-    href: '#product',
-    folioTitle: 'Interactive 3D Editorial Desk & Galley Proofing',
-    abstract: 'Inspect citation-grounded manuscripts, semantic H2 structures, and live SEO telemetry before a single word hits production.',
-    telemetry: '3D Spatial Studio · Live Citation Grounding',
-    deliverable: 'Dossier #01 — Architecture & Proofing',
-    face: 'monogram',
-  },
-  {
-    id: 'workflow',
-    code: 'SEC 02 · PIPELINE',
-    label: 'Workflow',
-    href: '#workflow',
-    folioTitle: '5-Stage Autonomous Editorial Pipeline',
-    abstract: 'From Tavily live web discovery and outline synthesis to human-in-the-loop quality sign-off and WordPress REST dispatch.',
-    telemetry: '5 Specialized Agents · 0% Unverified Claims',
-    deliverable: 'Dossier #02 — Multi-Agent Choreography',
-    face: 'loupe',
-  },
-  {
-    id: 'features',
-    code: 'SEC 03 · CAPABILITIES',
-    label: 'Features',
-    href: '#features',
-    folioTitle: 'Archival Precision & Encrypted CMS Sync',
-    abstract: 'Automated internal linking, schema.org FAQ blocks, readability grading, and AES-256-GCM authenticated WordPress publishing.',
-    telemetry: 'SEO 94+ Benchmark · AES-256-GCM Vault',
-    deliverable: 'Dossier #03 — System Specifications',
-    face: 'nib',
-  },
-  {
-    id: 'creators',
-    code: 'SEC 04 · PHILOSOPHY',
-    label: 'Philosophy',
-    href: '#creators',
-    folioTitle: 'Human Editorial Sovereignty Over AI Slop',
-    abstract: 'Why high-trust engineering and growth teams pair autonomous research engines with mandatory human editorial approval.',
-    telemetry: '2,400+ Editorial Teams · 4.9/5 Rating',
-    deliverable: 'Dossier #04 — The Editorial Manifesto',
-    face: 'seal',
-  },
+const NAV_LINKS: { id: string; label: string; href: string; face: TypeBlockFace }[] = [
+  { id: 'product', label: 'Product', href: '#product', face: 'loupe' },
+  { id: 'workflow', label: 'Workflow', href: '#workflow', face: 'nib' },
+  { id: 'features', label: 'Features', href: '#features', face: 'seal' },
 ];
 
 function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
-  const [activeSectionCode, setActiveSectionCode] = useState('SEC 01 · STUDIO');
-  const [hoveredNav, setHoveredNav] = useState<NavIndexSpec | null>(null);
+  const [activeNavId, setActiveNavId] = useState<string>('hero');
+  const [hoveredFace, setHoveredFace] = useState<TypeBlockFace | null>(null);
   const { isDark, toggleTheme, mounted } = useTheme();
 
   useEffect(() => {
@@ -303,14 +168,14 @@ function LandingNavbar() {
       const pct = Math.min(100, Math.max(0, Math.round((y / docHeight) * 100)));
       setScrollPct(pct);
 
-      if (pct < 22) {
-        setActiveSectionCode('SEC 01 · STUDIO');
-      } else if (pct < 50) {
-        setActiveSectionCode('SEC 02 · PIPELINE');
-      } else if (pct < 78) {
-        setActiveSectionCode('SEC 03 · CAPABILITIES');
+      if (pct < 20) {
+        setActiveNavId('hero');
+      } else if (pct < 48) {
+        setActiveNavId('product');
+      } else if (pct < 76) {
+        setActiveNavId('workflow');
       } else {
-        setActiveSectionCode('SEC 04 · PHILOSOPHY');
+        setActiveNavId('features');
       }
     };
 
@@ -320,8 +185,8 @@ function LandingNavbar() {
   }, []);
 
   const activeNavFace: TypeBlockFace =
-    hoveredNav?.face ||
-    NAV_INDEX_SPECS.find((s) => s.code === activeSectionCode)?.face ||
+    hoveredFace ||
+    NAV_LINKS.find((item) => item.id === activeNavId)?.face ||
     'monogram';
 
   return (
@@ -330,7 +195,7 @@ function LandingNavbar() {
       className={`lp-nav${scrolled ? ' scrolled' : ''}`}
       role="navigation"
       aria-label="Main navigation"
-      onMouseLeave={() => setHoveredNav(null)}
+      onMouseLeave={() => setHoveredFace(null)}
     >
       <div className="lp-nav-main-row">
         <div className="lp-nav-brand-cluster">
@@ -343,25 +208,20 @@ function LandingNavbar() {
             />
             <span>BlogFlow AI</span>
           </Link>
-          <span className="lp-nav-edition-tag" aria-hidden="true">
-            VOL. IV · ARCHIVAL STUDIO
-          </span>
         </div>
 
         <ul className="lp-nav-links">
-          {NAV_INDEX_SPECS.map((item) => {
-            const isActive = activeSectionCode === item.code;
-            const isHovered = hoveredNav?.id === item.id;
+          {NAV_LINKS.map((item) => {
+            const isActive = activeNavId === item.id;
             return (
               <li key={item.id}>
                 <a
                   href={item.href}
-                  className={isActive || isHovered ? 'active' : ''}
-                  onMouseEnter={() => setHoveredNav(item)}
-                  onFocus={() => setHoveredNav(item)}
+                  className={isActive ? 'active' : ''}
+                  onMouseEnter={() => setHoveredFace(item.face)}
+                  onFocus={() => setHoveredFace(item.face)}
                 >
-                  <span className="lp-nav-link-code">{item.code.split(' · ')[0]}</span>
-                  <span>{item.label}</span>
+                  {item.label}
                 </a>
               </li>
             );
@@ -369,14 +229,6 @@ function LandingNavbar() {
         </ul>
 
         <div className="lp-nav-actions">
-          <div className="lp-nav-telemetry-readout" aria-live="polite">
-            <span className="lp-nav-telemetry-dot" aria-hidden="true" />
-            <span className="lp-nav-telemetry-sec">{activeSectionCode}</span>
-            <span className="lp-nav-telemetry-pct">
-              {String(scrollPct).padStart(2, '0')}%
-            </span>
-          </div>
-
           <button
             type="button"
             onClick={toggleTheme}
@@ -401,70 +253,24 @@ function LandingNavbar() {
         </div>
       </div>
 
-      {/* Archival Index Hover Card Drawer */}
-      <AnimatePresence>
-        {hoveredNav && (
-          <motion.div
-            key={hoveredNav.id}
-            initial={{ opacity: 0, y: -6, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -6, height: 0 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="lp-nav-index-drawer"
-          >
-            <div className="lp-nav-index-card">
-              <div className="lp-nav-index-left">
-                <span className="lp-nav-index-kicker">{hoveredNav.code}</span>
-                <span className="lp-nav-index-deliverable">{hoveredNav.deliverable}</span>
-              </div>
-              <div className="lp-nav-index-center">
-                <h4 className="lp-nav-index-title">{hoveredNav.folioTitle}</h4>
-                <p className="lp-nav-index-desc">{hoveredNav.abstract}</p>
-              </div>
-              <div className="lp-nav-index-right">
-                <span className="lp-nav-index-metric">{hoveredNav.telemetry}</span>
-                <a
-                  href={hoveredNav.href}
-                  onClick={() => setHoveredNav(null)}
-                  className="lp-nav-index-jump"
-                >
-                  Inspect Section <ArrowRight size={12} />
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Bottom Calibrated Brass Vernier Rule */}
+      {/* Subtle 2px Brushed-Brass Scroll Progress Line */}
       <div className="lp-nav-vernier-track" aria-hidden="true">
         <div
           className="lp-nav-vernier-fill"
           style={{ width: `${scrollPct}%` }}
         />
-        <div
-          className="lp-nav-vernier-needle"
-          style={{ left: `clamp(24px, ${scrollPct}%, calc(100% - 24px))` }}
-        >
-          <span className="lp-nav-vernier-diamond" />
-          <span className="lp-nav-vernier-tag">
-            {String(scrollPct).padStart(2, '0')}%
-          </span>
-        </div>
       </div>
     </header>
   );
 }
 
 /* ============================================================
-   1. HERO SECTION (Hairline Chapter Index + X-Ray Optical Loupe + 3D Studio Desk)
+   1. HERO SECTION (Uncluttered Editorial Copy + 3D Studio Desk)
    ============================================================ */
 interface ChapterStageSpec {
   id: DeskStage;
   num: string;
   label: string;
-  caption: string;
-  detail: string;
   hudMetric: string;
 }
 
@@ -473,32 +279,24 @@ const HERO_CHAPTER_INDEX: ChapterStageSpec[] = [
     id: 'research',
     num: '01',
     label: 'Research',
-    caption: 'Queries live academic & industry sources via Tavily before a single sentence is drafted.',
-    detail: '14 verified sources indexed · MIT Tech Review, Stanford HAI, Nature',
     hudMetric: '14 Verified Sources · 0% Hallucination',
   },
   {
     id: 'draft',
     num: '02',
     label: 'Draft',
-    caption: 'Synthesizes structured H2/H3 long-form prose with inline footnote attributions.',
-    detail: '1,840 words · Semantic heading hierarchy & FAQ schema',
     hudMetric: '1,840 Words · 6 H2 Sections · 5 FAQs',
   },
   {
     id: 'review',
     num: '03',
     label: 'Review',
-    caption: 'Audits readability, keyword density, and factual alignment for 1-click editor sign-off.',
-    detail: 'SEO 94/100 · Readability Grade 8.4 · Human-in-the-loop gate',
     hudMetric: 'SEO 94/100 · Grade 8.4 · Approved',
   },
   {
     id: 'publish',
     num: '04',
     label: 'Publish',
-    caption: 'Dispatches formatted Gutenberg blocks and taxonomy metadata directly to WordPress.',
-    detail: 'AES-256-GCM encrypted REST push · Safe Draft-first policy',
     hudMetric: 'WP Post #4892 · Draft Synced (1.2s)',
   },
 ];
@@ -513,16 +311,7 @@ function HeroSection({
   activeDeskStage: DeskStage;
   onSelectDeskStage: (stage: DeskStage) => void;
 }) {
-  // 'center' (0.0s -> 0.85s): Giant centered keynote stage
-  // 'split'  (0.85s+): Smoothly morphs into the left column while 3D Desk & Chapter Index glide in
   const [heroStage, setHeroStage] = useState<'center' | 'split'>('center');
-  const [activePresetId, setActivePresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
-  const [loupeState, setLoupeState] = useState<{ x: number; y: number; active: boolean }>({
-    x: 210,
-    y: 96,
-    active: false,
-  });
-  const [xrayPinned, setXrayPinned] = useState(false);
 
   useEffect(() => {
     const prefersReduced =
@@ -544,23 +333,6 @@ function HeroSection({
   const isSplit = heroStage === 'split';
   const activeChapter =
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
-  const activePreset =
-    HERO_TOPIC_PRESETS.find((p) => p.id === activePresetId) || HERO_TOPIC_PRESETS[0];
-
-  const handleProofMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setLoupeState({
-      x: Math.round(e.clientX - rect.left),
-      y: Math.round(e.clientY - rect.top),
-      active: true,
-    });
-  };
-
-  const handleProofMouseLeave = () => {
-    setLoupeState((prev) => ({ ...prev, active: false }));
-  };
-
-  const showXrayLens = loupeState.active || xrayPinned;
 
   return (
     <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
@@ -625,7 +397,6 @@ function HeroSection({
                 </span>
               </motion.div>
 
-              {/* Brushed-Brass Keynote Seam that slices across before the split morph */}
               <motion.div
                 className="lp-hero-center-seam"
                 initial={{ scaleX: 0, opacity: 0 }}
@@ -637,11 +408,11 @@ function HeroSection({
         )}
       </AnimatePresence>
 
-      {/* ACT II: Split-Column Studio Layout (Headline glides left, 3D Desk slides in right) */}
+      {/* ACT II: Split-Column Studio Layout (Clean Editorial Copy Left, 3D Desk Right) */}
       <div className="lp-container">
         <div className="lp-hero-inner">
 
-          {/* Left: Editorial Copy + Chapter Index + Interactive X-Ray Loupe & Brief Switcher */}
+          {/* Left: Uncluttered Editorial Copy + CTAs + Social Proof */}
           <div className="lp-hero-left">
             {isSplit ? (
               <motion.div
@@ -683,7 +454,6 @@ function HeroSection({
               </h1>
             )}
 
-            {/* Subtitle cascades in as the headline docks into the left column */}
             <motion.p
               className="lp-hero-desc"
               initial={false}
@@ -695,91 +465,201 @@ function HeroSection({
               transition={{ duration: 0.62, delay: isSplit ? 0.22 : 0, ease: HERO_REVEAL_EASE }}
             >
               BlogFlow AI transforms any website, topic, or brief into citation-grounded,
-              SEO-optimized articles — orchestrating web research, long-form drafting, editorial
-              sign-off, and WordPress publishing in one quiet studio.
+              SEO-optimized articles — orchestrating live web research, long-form drafting,
+              human editorial sign-off, and WordPress publishing in one quiet studio.
             </motion.p>
 
-            {/* The Hairline Chapter Index with Left-to-Right Hairline Draw */}
-            <div className="lp-chapter-index" aria-label="Editorial studio stage index">
-              <div className="lp-chapter-tabs" role="tablist" aria-label="3D Studio Chapters">
-                {HERO_CHAPTER_INDEX.map((chapter, idx) => {
-                  const isActive = chapter.id === activeDeskStage;
-                  return (
-                    <motion.button
-                      key={chapter.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      onClick={() => onSelectDeskStage(chapter.id)}
-                      className={`lp-chapter-tab${isActive ? ' active' : ''}`}
-                      initial={false}
-                      animate={
-                        isSplit
-                          ? { opacity: 1, y: 0 }
-                          : { opacity: 0, y: 12 }
-                      }
-                      transition={{
-                        duration: 0.52,
-                        delay: isSplit ? 0.3 + idx * 0.055 : 0,
-                        ease: HERO_REVEAL_EASE,
-                      }}
-                    >
-                      <span className="lp-chapter-num tabular-nums">{chapter.num}</span>
-                      <span className="lp-chapter-label">{chapter.label}</span>
-                      {isActive && isSplit && (
-                        <motion.span
-                          layoutId="hero-chapter-brass-line"
-                          className="lp-chapter-active-bar"
-                          transition={{ duration: 0.32, ease: HERO_REVEAL_EASE }}
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
-
-                {/* Animated 1px Hairline Divider Drawing Left-to-Right */}
-                <motion.span
-                  aria-hidden="true"
-                  className="lp-chapter-hairline-draw"
-                  initial={false}
-                  animate={isSplit ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
-                  transition={{ duration: 0.78, delay: isSplit ? 0.26 : 0, ease: HERO_REVEAL_EASE }}
-                />
-              </div>
-
-              <motion.div
-                className="lp-chapter-caption-wrap"
-                role="tabpanel"
-                initial={false}
-                animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                transition={{ duration: 0.55, delay: isSplit ? 0.44 : 0, ease: HERO_REVEAL_EASE }}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeChapter.id}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.18, ease: HERO_REVEAL_EASE }}
-                    className="lp-chapter-caption-inner"
-                  >
-                    <p className="lp-chapter-caption">{activeChapter.caption}</p>
-                    <span className="lp-chapter-meta">{activeChapter.detail}</span>
-                  </motion.div>
-                </AnimatePresence>
-              </motion.div>
-            </div>
-
-            {/* INTERACTIVE X-RAY OPTICAL LOUPE & 3-BRIEF SWITCHER */}
+            {/* Primary & Secondary CTAs */}
             <motion.div
-              className="lp-xray-workbench"
+              className="lp-hero-ctas"
               initial={false}
               animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.48 : 0, ease: HERO_REVEAL_EASE }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.34 : 0, ease: HERO_REVEAL_EASE }}
             >
+              <Link
+                href="/generator"
+                className="lp-btn-primary"
+                id="hero-cta-primary"
+              >
+                Start creating
+                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
+              </Link>
+              <a href="#product" className="lp-btn-secondary" id="hero-cta-secondary">
+                <Search size={14} />
+                Inspect Live Galley Proof
+              </a>
+            </motion.div>
+
+            {/* Social Proof Reveal */}
+            <motion.div
+              className="lp-hero-social"
+              initial={false}
+              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.58, delay: isSplit ? 0.44 : 0, ease: HERO_REVEAL_EASE }}
+            >
+              <AvatarCircles
+                avatarUrls={CREATOR_AVATARS}
+                numPeople={2400}
+                avatarSize={36}
+              />
+              <div className="lp-hero-social-info">
+                <div className="lp-hero-stars">
+                  <span className="lp-hero-stars-icon" aria-hidden="true">★★★★★</span>
+                  <span>4.9 / 5 rating</span>
+                </div>
+                <span className="lp-hero-social-text">
+                  Loved by <strong>2,400+</strong> creators &amp; editorial teams
+                </span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right: 3D FloatingEditorialDesk */}
+          <motion.div
+            className="lp-hero-right-3d"
+            initial={false}
+            animate={
+              isSplit
+                ? { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
+                : { opacity: 0, x: 56, scale: 0.94, filter: 'blur(12px)' }
+            }
+            transition={{ duration: 0.92, delay: isSplit ? 0.08 : 0, ease: HERO_MORPH_EASE }}
+          >
+            <FloatingEditorialDesk
+              currentStage={activeDeskStage}
+              onStageChange={onSelectDeskStage}
+              interactive={true}
+              activeTopicTitle={`${activeChapter.num}. ${activeChapter.label}`}
+              activeTopicMetric={activeChapter.hudMetric}
+            />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Quiet Editorial Principles Strip */}
+      <motion.div
+        className="lp-trust"
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
+        initial={false}
+        animate={isSplit ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ duration: 0.65, delay: isSplit ? 0.56 : 0, ease: HERO_REVEAL_EASE }}
+      >
+        <div className="lp-trust-inner">
+          {[
+            'Research before writing.',
+            'Structure before polish.',
+            'Review before publishing.',
+            'Your content, your final approval.',
+          ].map((t) => (
+            <div className="lp-trust-item" key={t}>
+              <span className="lp-trust-dot" aria-hidden="true" />
+              {t}
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+/* ============================================================
+   2. PRODUCT SHOWCASE (#product — Interactive X-Ray Optical Loupe & 3-Brief Studio)
+   ============================================================ */
+function ProductXRaySection() {
+  const [activePresetId, setActivePresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
+  const [loupeState, setLoupeState] = useState<{ x: number; y: number; active: boolean }>({
+    x: 240,
+    y: 120,
+    active: false,
+  });
+  const [xrayPinned, setXrayPinned] = useState(false);
+
+  const activePreset =
+    HERO_TOPIC_PRESETS.find((p) => p.id === activePresetId) || HERO_TOPIC_PRESETS[0];
+
+  const handleProofMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setLoupeState({
+      x: Math.round(e.clientX - rect.left),
+      y: Math.round(e.clientY - rect.top),
+      active: true,
+    });
+  };
+
+  const handleProofMouseLeave = () => {
+    setLoupeState((prev) => ({ ...prev, active: false }));
+  };
+
+  const showXrayLens = loupeState.active || xrayPinned;
+
+  return (
+    <section id="product" className="lp-preview-section" aria-labelledby="preview-heading">
+      <div className="lp-container">
+        <div className="lp-preview-inner">
+          {/* Left Column: Editorial Framing + 3 Clickable Topic Briefs */}
+          <div>
+            <div className="lp-section-label">Interactive Galley Proof · X-Ray Loupe</div>
+            <h2 className="lp-section-heading" id="preview-heading">
+              From live citations to a considered <em>first draft.</em>
+            </h2>
+            <p className="lp-section-desc">
+              Switch between three real editorial briefs below and move your cursor across the
+              galley proof to engage the <strong>2.4× Brass Optical Loupe</strong> — revealing
+              the verified primary sources and semantic SEO telemetry underneath every paragraph.
+            </p>
+
+            {/* 3 Clickable Topic Briefs */}
+            <div style={{ marginTop: 24 }}>
+              <div className="lp-xray-kicker" style={{ marginBottom: 10 }}>
+                SELECT EDITORIAL BRIEF TO INSPECT
+              </div>
+              <div className="lp-brief-switcher" role="tablist" aria-label="Sample Editorial Briefs">
+                {HERO_TOPIC_PRESETS.map((preset, idx) => {
+                  const isSelected = preset.id === activePreset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      onClick={() => setActivePresetId(preset.id)}
+                      className={`lp-brief-tab${isSelected ? ' active' : ''}`}
+                    >
+                      <span className="lp-brief-idx">0{idx + 1}</span>
+                      <span>{preset.shortLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 28, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              <Link
+                href={`/generator?topic=${encodeURIComponent(activePreset.articleTitle)}`}
+                className="lp-btn-primary"
+              >
+                Generate &ldquo;{activePreset.shortLabel}&rdquo;
+                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={14} /></span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setXrayPinned((v) => !v)}
+                className="lp-btn-secondary"
+              >
+                <Search size={14} />
+                {xrayPinned ? 'Unlock X-Ray Layer' : 'Lock Full X-Ray View'}
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: Spacious Galley Proof Surface with Interactive X-Ray Optical Loupe */}
+          <div>
+            <div className="lp-xray-workbench" style={{ margin: 0 }}>
               <div className="lp-xray-header">
                 <div className="lp-xray-title-cluster">
-                  <span className="lp-xray-kicker">LIVE GALLEY PROOF · X-RAY LOUPE</span>
+                  <span className="lp-xray-kicker">
+                    GALLEY PROOF · {activePreset.category.toUpperCase()}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setXrayPinned((v) => !v)}
@@ -789,56 +669,45 @@ function HeroSection({
                     {xrayPinned ? 'X-Ray Locked On' : 'Hover Proof or Click to Lock X-Ray'}
                   </button>
                 </div>
-
-                {/* 3 Clickable Topic Briefs */}
-                <div className="lp-brief-switcher" role="tablist" aria-label="Sample Editorial Briefs">
-                  {HERO_TOPIC_PRESETS.map((preset, idx) => {
-                    const isSelected = preset.id === activePreset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={isSelected}
-                        onClick={() => setActivePresetId(preset.id)}
-                        className={`lp-brief-tab${isSelected ? ' active' : ''}`}
-                      >
-                        <span className="lp-brief-idx">0{idx + 1}</span>
-                        <span>{preset.shortLabel}</span>
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
 
-              {/* Galley Proof Surface with Interactive X-Ray Optical Loupe */}
               <div
                 className={`lp-xray-proof-card${showXrayLens ? ' loupe-engaged' : ''}`}
                 onMouseMove={handleProofMouseMove}
                 onMouseLeave={handleProofMouseLeave}
+                style={{ padding: '24px 26px', minHeight: 250 }}
               >
                 {/* Layer A: Finished Editorial Galley Prose */}
-                <div className="lp-xray-layer-prose">
+                <div className="lp-xray-layer-prose" style={{ gap: 10 }}>
                   <div className="lp-xray-proof-meta-row">
                     <span className="lp-xray-proof-cat">{activePreset.category}</span>
                     <span className="lp-xray-proof-stats">
                       {activePreset.wordCount} · {activePreset.readTime} · SEO {activePreset.seoScore}/100 ({activePreset.seoRating})
                     </span>
                   </div>
-                  <h3 className="lp-xray-proof-title">{activePreset.articleTitle}</h3>
-                  <div className="lp-xray-proof-h2">{activePreset.h2Heading}</div>
-                  <p className="lp-xray-proof-p">{activePreset.excerptParagraphs[0]}</p>
-                  <p className="lp-xray-proof-p">{activePreset.excerptParagraphs[1]}</p>
+                  <h3 className="lp-xray-proof-title" style={{ fontSize: '1.35rem' }}>
+                    {activePreset.articleTitle}
+                  </h3>
+                  <div className="lp-xray-proof-h2" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+                    {activePreset.h2Heading}
+                  </div>
+                  <p className="lp-xray-proof-p" style={{ fontSize: '0.88rem', lineHeight: 1.65 }}>
+                    {activePreset.excerptParagraphs[0]}
+                  </p>
+                  <p className="lp-xray-proof-p" style={{ fontSize: '0.88rem', lineHeight: 1.65 }}>
+                    {activePreset.excerptParagraphs[1]}
+                  </p>
                 </div>
 
-                {/* Layer B: Sub-Surface X-Ray Citation & Telemetry Blueprint (Clipped by Optical Loupe) */}
+                {/* Layer B: Sub-Surface X-Ray Citation & Telemetry Blueprint */}
                 <div
                   className="lp-xray-layer-blueprint"
                   style={{
+                    padding: '22px 26px',
                     clipPath: xrayPinned
                       ? 'circle(140% at 50% 50%)'
                       : loupeState.active
-                        ? `circle(96px at ${loupeState.x}px ${loupeState.y}px)`
+                        ? `circle(110px at ${loupeState.x}px ${loupeState.y}px)`
                         : 'circle(0px at 50% 50%)',
                   }}
                   aria-hidden={!showXrayLens}
@@ -872,7 +741,9 @@ function HeroSection({
                   <div
                     className="lp-xray-loupe-ring"
                     style={{
-                      transform: `translate(${loupeState.x - 96}px, ${loupeState.y - 96}px)`,
+                      width: 220,
+                      height: 220,
+                      transform: `translate(${loupeState.x - 110}px, ${loupeState.y - 110}px)`,
                     }}
                     aria-hidden="true"
                   >
@@ -880,97 +751,10 @@ function HeroSection({
                   </div>
                 )}
               </div>
-            </motion.div>
-
-            {/* CTAs Reveal */}
-            <motion.div
-              className="lp-hero-ctas"
-              initial={false}
-              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.54 : 0, ease: HERO_REVEAL_EASE }}
-            >
-              <Link
-                href={`/generator?topic=${encodeURIComponent(activePreset.articleTitle)}`}
-                className="lp-btn-primary"
-                id="hero-cta-primary"
-              >
-                Generate &ldquo;{activePreset.shortLabel}&rdquo;
-                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
-              </Link>
-              <a href="#workflow" className="lp-btn-secondary" id="hero-cta-secondary">
-                <Play size={14} />
-                Inspect 5-Agent Pipeline
-              </a>
-            </motion.div>
-
-            {/* Social Proof Reveal */}
-            <motion.div
-              className="lp-hero-social"
-              initial={false}
-              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.6 : 0, ease: HERO_REVEAL_EASE }}
-            >
-              <AvatarCircles
-                avatarUrls={CREATOR_AVATARS}
-                numPeople={2400}
-                avatarSize={36}
-              />
-              <div className="lp-hero-social-info">
-                <div className="lp-hero-stars">
-                  <span className="lp-hero-stars-icon" aria-hidden="true">★★★★★</span>
-                  <span>4.9 / 5 rating</span>
-                </div>
-                <span className="lp-hero-social-text">
-                  Loved by <strong>2,400+</strong> creators &amp; editorial teams
-                </span>
-              </div>
-            </motion.div>
+            </div>
           </div>
-
-          {/* Right: 3D FloatingEditorialDesk glides in from the right as headline morphs left */}
-          <motion.div
-            className="lp-hero-right-3d"
-            initial={false}
-            animate={
-              isSplit
-                ? { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
-                : { opacity: 0, x: 56, scale: 0.94, filter: 'blur(12px)' }
-            }
-            transition={{ duration: 0.92, delay: isSplit ? 0.08 : 0, ease: HERO_MORPH_EASE }}
-          >
-            <FloatingEditorialDesk
-              currentStage={activeDeskStage}
-              onStageChange={onSelectDeskStage}
-              interactive={true}
-              activeTopicTitle={`${activeChapter.num}. ${activePreset.shortLabel}`}
-              activeTopicMetric={`${activePreset.wordCount} · SEO ${activePreset.seoScore}/100 · ${activeChapter.label}`}
-            />
-          </motion.div>
         </div>
       </div>
-
-      {/* Trust strip */}
-      <motion.div
-        className="lp-trust"
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
-        initial={false}
-        animate={isSplit ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.65, delay: isSplit ? 0.66 : 0, ease: HERO_REVEAL_EASE }}
-      >
-        <div className="lp-trust-inner">
-          {[
-            'Research before writing.',
-            'Structure before polish.',
-            'Review before publishing.',
-            'Your content, your final approval.',
-          ].map((t) => (
-            <div className="lp-trust-item" key={t}>
-              <span className="lp-trust-dot" aria-hidden="true" />
-              {t}
-            </div>
-          ))}
-        </div>
-      </motion.div>
     </section>
   );
 }
@@ -1558,134 +1342,6 @@ function WorkflowSection({
 }
 
 /* ============================================================
-   PHILOSOPHY SECTION (#creators — AI vs Human Governance)
-   ============================================================ */
-function AutomationSection({
-  activeDeskStage,
-  onSelectDeskStage,
-}: {
-  activeDeskStage: DeskStage;
-  onSelectDeskStage: (stage: DeskStage) => void;
-}) {
-  const detail = STAGE_DETAILS[activeDeskStage];
-
-  const stageOrder: { id: DeskStage; num: string; name: string; role: string }[] = [
-    { id: 'research', num: '01', name: 'Research', role: 'Sources & Loupe' },
-    { id: 'draft', num: '02', name: 'Draft', role: 'Manuscript & Pen' },
-    { id: 'review', num: '03', name: 'Review', role: 'Telemetry & Seal' },
-    { id: 'publish', num: '04', name: 'Publish', role: 'Hardcover Folio' },
-  ];
-
-  return (
-    <section id="creators" className="lp-automation" aria-labelledby="automation-heading">
-      <div className="lp-container">
-        <div className="lp-studio-header">
-          <div>
-            <div className="lp-section-label">Editorial Philosophy · Governance</div>
-            <h2 className="lp-section-heading" id="automation-heading">
-              Automation should move the work forward,{' '}
-              not take the <em>editor</em> out of it.
-            </h2>
-          </div>
-          <div>
-            <p className="lp-section-desc">
-              Every stage of BlogFlow AI separates mechanical synthesis from human editorial
-              judgment — select any stage below to see how autonomous preparation pairs with
-              human sign-off.
-            </p>
-          </div>
-        </div>
-
-        {/* Stage Switcher Bar */}
-        <div className="lp-studio-stage-bar" role="tablist" aria-label="Editorial Governance Stage">
-          {stageOrder.map((st) => {
-            const active = activeDeskStage === st.id;
-            return (
-              <button
-                key={st.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => onSelectDeskStage(st.id)}
-                className={`lp-studio-stage-tab${active ? ' active' : ''}`}
-              >
-                <span className="lp-studio-tab-num">{st.num}.</span>
-                <div className="lp-studio-tab-text">
-                  <span className="lp-studio-tab-name">{st.name}</span>
-                  <span className="lp-studio-tab-role">{st.role}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="lp-inspector-card">
-          <div className="lp-inspector-kicker">
-            <span>STAGE {detail.stepNum} GOVERNANCE</span>
-            <span aria-hidden="true">·</span>
-            <span>{detail.artifactLabel}</span>
-          </div>
-
-          <h3 className="lp-inspector-title">{detail.title}</h3>
-          <p className="lp-inspector-subtitle">{detail.subtitle}</p>
-
-          <div className="lp-inspector-artifact">
-            <div className="lp-inspector-artifact-header">
-              <Sparkles size={15} />
-              <span>Stage Deliverable</span>
-            </div>
-            <p className="lp-inspector-artifact-body">{detail.artifactPreview}</p>
-            <div className="lp-inspector-deliverables">
-              {detail.deliverables.map((d, idx) => (
-                <React.Fragment key={d}>
-                  <span>{d}</span>
-                  {idx < detail.deliverables.length - 1 && <span aria-hidden="true">·</span>}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-
-          <div className="lp-inspector-split">
-            <div className="lp-inspector-panel lp-inspector-panel-auto">
-              <div className="lp-inspector-panel-heading">AI Agent Prepares</div>
-              <ul className="lp-inspector-list">
-                {detail.automatedTasks.map((task) => (
-                  <li key={task}>
-                    <CheckCircle2 size={14} className="lp-inspector-icon-auto" />
-                    <span>{task}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="lp-inspector-panel lp-inspector-panel-human">
-              <div className="lp-inspector-panel-heading">Human Editor Decides</div>
-              <ul className="lp-inspector-list">
-                {detail.humanDecisions.map((dec) => (
-                  <li key={dec}>
-                    <ShieldCheck size={14} className="lp-inspector-icon-human" />
-                    <span>{dec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="lp-inspector-footer">
-            <a href="#hero" className="lp-inspector-cta">
-              ↑ Inspect Stage {detail.stepNum} in the 3D Hero Desk
-            </a>
-            <Link href="/generator" className="lp-inspector-cta">
-              Launch Full Studio <ArrowRight size={14} />
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
    FEATURES SECTION
    ============================================================ */
 function FeatureSection() {
@@ -1735,8 +1391,8 @@ function FeatureSection() {
             <div className="lp-feat-label">SEO Optimised</div>
             <h3 className="lp-feat-title">Built-in SEO checks before publishing.</h3>
             <div className="lp-feat-preview" style={{ textAlign: 'center' }}>
-              <div className="lp-feat-score-big">87</div>
-              <div className="lp-feat-score-label">Excellent</div>
+              <div className="lp-feat-score-big">94</div>
+              <div className="lp-feat-score-label">Optimal</div>
             </div>
           </div>
 
@@ -1776,150 +1432,6 @@ function FeatureSection() {
             <div className="lp-feat-icon"><FileText size={22} /></div>
             <div className="lp-feat-label">Analytics &amp; Insights</div>
             <h3 className="lp-feat-title">Track performance, engagement and what works best.</h3>
-          </div>
-
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   EDITORIAL PREVIEW SECTION (#product)
-   ============================================================ */
-function EditorialPreviewSection() {
-  return (
-    <section id="product" className="lp-preview-section" aria-labelledby="preview-heading">
-      <div className="lp-container">
-        <div className="lp-preview-inner">
-
-          {/* Doc */}
-          <div style={{ position: 'relative' }}>
-            <div className="lp-article-doc">
-              <div className="lp-article-doc-topbar">
-                <div className="lp-screen-dot" />
-                <div className="lp-screen-dot" />
-                <div className="lp-screen-dot" />
-              </div>
-              <h3 className="lp-article-doc-title">
-                How AI is reshaping the developer toolkit
-              </h3>
-              <div className="lp-article-doc-meta">
-                <span>Draft · 1,240 words</span>
-                <span>·</span>
-                <span>SEO 87 · Excellent</span>
-              </div>
-              <div className="lp-article-doc-h2">Introduction</div>
-              <div className="lp-article-doc-lines">
-                <div className="lp-article-doc-line" />
-                <div className="lp-article-doc-line" />
-                <div className="lp-article-doc-line" />
-              </div>
-              <div className="lp-article-doc-h2">Key Insights</div>
-              <div className="lp-article-doc-lines">
-                <div className="lp-article-doc-line" />
-                <div className="lp-article-doc-line" />
-              </div>
-            </div>
-
-            {/* Content health glass card */}
-            <div className="lp-article-health" aria-label="Content health check">
-              <div className="lp-health-title">Content Health</div>
-              {['Structure', 'Readability', 'SEO', 'Sources'].map((h) => (
-                <div className="lp-health-item" key={h}>
-                  <div className="lp-health-check" aria-hidden="true">✓</div>
-                  {h}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Copy */}
-          <div>
-            <div className="lp-section-label">Editorial Preview</div>
-            <h2 className="lp-section-heading" id="preview-heading">
-              From research to a considered <em>first draft.</em>
-            </h2>
-            <p className="lp-section-desc">
-              The editor shows the article title, heading hierarchy, excerpt, and a quick review
-              panel — all within a clean, paper-like interface that feels like a real document,
-              not a form.
-            </p>
-            <div style={{ marginTop: 32 }}>
-              <Link href="/generator" className="lp-btn-primary">
-                Start your first draft
-                <span className="btn-arrow" aria-hidden="true"><ArrowRight size={14} /></span>
-              </Link>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   CMS SECTION
-   ============================================================ */
-function CMSSection() {
-  const steps = [
-    { label: 'BlogFlow AI', title: 'Article researched & drafted', primary: true, icon: <FileText size={20} /> },
-    { label: 'Human review', title: 'Approved by editor', primary: false, icon: <UserCheck size={20} /> },
-    { label: 'WordPress', title: 'Published or saved as draft', primary: false, icon: <Rss size={20} /> },
-  ];
-
-  return (
-    <section className="lp-cms" aria-labelledby="cms-heading">
-      <div className="lp-container">
-        <div className="lp-cms-inner">
-
-          {/* Copy */}
-          <div>
-            <div className="lp-section-label">Publishing</div>
-            <h2 className="lp-section-heading" id="cms-heading">
-              Finish the work where your audience reads it.
-            </h2>
-            <p className="lp-section-desc" style={{ marginBottom: 32 }}>
-              Approved articles can be sent directly to your CMS.
-              Currently supported: WordPress. Save as draft or publish immediately.
-            </p>
-
-            {/* Flow */}
-            <div className="lp-cms-flow" aria-label="Publishing workflow">
-              {steps.map((s, i) => (
-                <div key={s.title}>
-                  <div className="lp-cms-step">
-                    <div className={`lp-cms-step-icon ${s.primary ? 'lp-cms-step-icon-primary' : 'lp-cms-step-icon-light'}`} aria-hidden="true">
-                      {s.icon}
-                    </div>
-                    <div className="lp-cms-step-content">
-                      <div className="lp-cms-step-label">{s.label}</div>
-                      <div className="lp-cms-step-title">{s.title}</div>
-                    </div>
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className="lp-cms-connector" aria-hidden="true" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Visual card */}
-          <div>
-            <div className="lp-publish-card">
-              <div className="lp-wp-icon" aria-hidden="true">W</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--lp-text)' }}>WordPress</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--lp-text-muted)', marginTop: 2 }}>
-                  Direct CMS integration · Encrypted REST API
-                </div>
-                <div className="lp-publish-status-text">
-                  Draft &amp; Live Publishing Ready
-                </div>
-              </div>
-            </div>
           </div>
 
         </div>
@@ -2002,7 +1514,6 @@ function LandingFooter() {
               <li><a href="#product">Product</a></li>
               <li><a href="#workflow">Workflow</a></li>
               <li><a href="#features">Features</a></li>
-              <li><a href="#creators">Philosophy</a></li>
             </ul>
           </div>
 
@@ -2051,14 +1562,9 @@ export default function LandingPage() {
           activeDeskStage={activeDeskStage}
           onSelectDeskStage={setActiveDeskStage}
         />
+        <ProductXRaySection />
         <WorkflowSection onSyncDeskStage={setActiveDeskStage} />
-        <AutomationSection
-          activeDeskStage={activeDeskStage}
-          onSelectDeskStage={setActiveDeskStage}
-        />
         <FeatureSection />
-        <EditorialPreviewSection />
-        <CMSSection />
         <FinalCTA />
       </main>
       <LandingFooter />

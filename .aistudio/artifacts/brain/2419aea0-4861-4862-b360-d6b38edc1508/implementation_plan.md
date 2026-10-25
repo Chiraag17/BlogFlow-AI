@@ -1,57 +1,53 @@
-# 3D Gutenberg Movable-Type Brass Block Logo & Spatial Animations
+# Landing Page Editorial De-Cluttering & Spatial Refinement
 
-This plan introduces a bespoke **3D Gutenberg Movable-Type Brass Block Logo** and reactive 3D mechanical animations across BlogFlow AI, replacing flat 2D icons with a physical cast-brass and deep-forest letterpress type-block that responds to hover, click, scroll velocity, and route transitions.
+This plan eliminates visual congestion and section repetition on the BlogFlow AI landing page, giving the **3D Editorial Desk**, **Headline**, and **Interactive X-Ray Galley Proof** generous museum-grade breathing room while reducing the page from 7 overlapping sections down to 4 focused, high-impact chapters.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following design and interaction choices were confirmed during our planning interview and govern the implementation:
+> All three architectural de-cluttering decisions were confirmed during our planning interview:
 
-- **Confirmed Decision 1 (3D Logo Concept)**: **3D Gutenberg Movable-Type Brass Block (`B·F` Letterpress Cube)** — a true 6-faced 3D cast-brass and deep-forest enamel movable-type block with raised relief glyphs on its faces (`B` serif monogram on the front, Fountain Nib on the right, Optical Loupe on the top, Wax Seal on the left, and Editorial Section Mark `§` on the back).
-- **Confirmed Decision 2 (Placement & Integration)**: Integrated across the **Landing Page Navbar**, the **App Sidebar Header** (expanding and collapsing gracefully with the sidebar), and the **Login & Signup 3D Press Pass Crest**.
-- **Confirmed Decision 3 (Interactive Choreography)**: Reactive to **hover, click, scroll velocity, and route transitions**, including a mechanical `90°` face-indexing tumble, a downward letterpress ink-stamping plunge (`translateZ`), and a live brass specular sheen.
+- **Confirmed Decision 1 (Hero De-Cluttering)**: Remove the 4-Tab Chapter Index (`01 Research · 02 Draft · 03 Review · 04 Publish`) and move the **Interactive X-Ray Optical Loupe & 3-Brief Workbench** out of the Hero left column into the dedicated **`#product` section**. The Hero left column now focuses cleanly on **Kicker → Headline → Subtitle → Primary CTAs → Social Proof** alongside the **3D Floating Editorial Desk**.
+- **Confirmed Decision 2 (Remove Redundant Page Sections)**:
+  1. Remove the outdated wireframe **`EditorialPreviewSection`** skeleton and replace `#product` with a spacious 2-column **Interactive X-Ray Galley Proof & 3-Brief Showcase**.
+  2. Remove the duplicate 4-stage **`AutomationSection` (`#creators`)** switcher (which repeated the same stages already shown in the 3D Desk and `#workflow`).
+  3. Remove the standalone **`CMSSection`** (since WordPress REST publishing is already interactively demonstrated in Stage 05 of `#workflow` and in `#features`).
+- **Confirmed Decision 3 (Streamlined Top Navigation Bar)**: Keep only the **3D Gutenberg Movable-Type Block Logo**, **clean typography navigation links** (`Product`, `Workflow`, `Features`), theme toggle / CTA actions, and a **subtle 2px brass scroll-progress hairline** along the bottom edge—removing the `VOL. IV` badge, `SEC 0X` link prefixes, telemetry readout pill, hanging percentage tag, and hover drawer.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Replaces static brand icons with a tactile, six-sided 3D movable-type printing block crafted in CSS `preserve-3d` and SVG relief plates. Each face of the 3D cube represents a pillar of the BlogFlow AI editorial pipeline:
-  - **Front Face (`0°`)**: Raised Brushed-Brass `B` Editorial Serif Monogram with alignment nicks (the signature notch on physical Gutenberg metal type).
-  - **Right Face (`90° Y`)**: Engraved Fountain Pen Nib (`Drafting & Synthesis`).
-  - **Back Face (`180° Y`)**: Typographic Section Sign `§` (`Semantic Structure`).
-  - **Left Face (`-90° Y`)**: Calibration Optical Loupe (`Citation Research`).
-  - **Top Face (`90° X`)**: Fluted Brass Approval Seal (`Editorial Sign-Off`).
-  - **Bottom Face (`-90° X`)**: Machined Cast-Iron Foundry Base with serial stamp.
-- **Target Audience / Persona**: Editorial directors, technical writers, and SaaS founders who appreciate tactile archival craftsmanship and Swiss-watch mechanical responsiveness.
-- **Key Value**: Gives BlogFlow AI an unmistakable, memorable spatial brand signature that physically embodies the transition from classical movable-type craftsmanship to autonomous AI publishing.
+- **What It Does**: Transforms the landing page from a dense stack of competing widgets into a calm, four-part editorial narrative:
+  1. **Hero (`#hero`)**: Uncluttered split-stage introduction pairing the `Research. Think. Publish.` typography and primary CTAs on the left with the interactive **3D Floating Editorial Desk** on the right.
+  2. **Interactive Galley Proof & X-Ray Loupe (`#product`)**: A dedicated, spacious two-column showcase where visitors switch between 3 real topic briefs (*AI Search Architecture*, *Usage-Based SaaS Pricing*, *Zero-Trust Cloud Security*) and sweep the **2.4× Brass Optical Loupe** across a full-scale manuscript proof to inspect live primary-source citations and SEO telemetry.
+  3. **5-Agent Autonomous Pipeline (`#workflow`)**: The single definitive workflow explorer (`01 Discover → 02 Research → 03 Think → 04 Review → 05 Publish`) with interactive Human-in-the-Loop approval and WordPress REST dispatch consoles.
+  4. **Capabilities Grid (`#features`) & Final CTA**: Clean architectural summary of core platform capabilities followed by the closing call-to-action and footer.
+- **Target Audience / Persona**: Content leads, technical editors, and SaaS founders evaluating BlogFlow AI who want immediate clarity without cognitive overload.
+- **Key Value**: Every interactive element now has its own dedicated stage and generous whitespace, eliminating 3× stage-tab duplication and making the page faster to scan.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Landing Navbar Masthead**: As the visitor scrolls down the page, the 3D Gutenberg Type-Block subtly pitches and indexes its faces proportional to scroll velocity, while hovering tilts the cube toward the cursor and reveals a miniature brass foundry tooltip (`INDEX FACE · CLICK TO STAMP`). Clicking triggers a crisp 3D letterpress downward stamp (`translateZ(-8px)`) with an expanding brass ink-ring ripple.
-  2. **App Sidebar Header (`/dashboard`, `/generator`, `/research`, etc.)**: Navigating between routes automatically rotates the 3D Type-Block to the face matching the active workspace mode (e.g., Loupe face on *Research*, Nib face on *Generator*, Seal face on *Approval Center*, and `B` Monogram on *Overview*). Clicking the logo or collapsing the sidebar smoothly animates the 3D cube and its adjacent foundry wordmark.
-  3. **Login & Signup 3D Press Pass Crest**: Embeds the 3D Gutenberg Type-Block into the top crest of the 3D Editorial Press Pass so typing in form fields or flipping the pass to the password vault causes the 3D type-block to rotate and lock into its cryptographic seal face.
+  1. **Top Masthead Navigation**: Visitors see the 3D Gutenberg Type-Block Logo on the left, three clean single-word links (`Product`, `Workflow`, `Features`) in the center, and `Sign in` / `Start creating` on the right, underscored by a quiet 2px brushed-brass scroll progress line.
+  2. **Hero Experience**: With the Chapter Index tabs and X-Ray card removed from the Hero left column, the headline, subtitle, and primary CTA buttons sit vertically centered against the 3D Editorial Desk—eliminating vertical overflow and visual crowding.
+  3. **`#product` X-Ray Galley Proof Section**: Scrolling down from the Hero reveals a two-column editorial spread: editorial copy and the **3-Brief Selector** on the left, and a larger, breathable **Interactive X-Ray Galley Proof Canvas** on the right.
 - **Visual Identity & Theme**:
-  - *Aesthetic Direction*: Tactile Gutenberg Foundry meets High-Craft Editorial Studio.
-  - *Color Palette & Mood*: Deep Forest Lacquer (`#163F32`), Brushed Brass (`#C8A15A`), Polished Gold Specular Highlights (`#E5C98B`), Warm Archival Paper (`#F7F4EC`), and Cast-Iron Shadow (`#0D1612`).
-  - *Typography & Hierarchy*: High-contrast editorial serif (`Fraunces` / `Playfair Display`) for the raised relief `B` and `§` glyphs paired with monospaced foundry registration marks (`JetBrains Mono`, `tabular-nums`).
-- **Interactive Feedback & Motion**:
-  - Spring-damped 3D gimbal rotation (`rotateX`, `rotateY`, `rotateZ`, `translateZ`) using compositor-friendly transforms.
-  - Respects `prefers-reduced-motion` by providing instant face switching without rapid spinning.
+  - *Aesthetic Direction*: High-Craft Archival Editorial Studio with generous paper whitespace (`60%` Warm Paper `#F7F4EC` / Dark Studio `#0D1612`, `30%` Deep Forest `#163F32`, `10%` Brushed Brass `#C8A15A`).
+  - *Typography & Hierarchy*: Uncluttered serif display headings (`Fraunces` / `Playfair Display`), relaxed body prose (`65ch` measure), and quiet unboxed metadata with middle-dot (`·`) separators.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: True 6-Faced CSS 3D Volumetric Geometry (`preserve-3d`) vs. Heavy WebGL Canvas per Icon**
-  - *Chosen Approach*: Build the reusable 3D Gutenberg Movable-Type Block using hardware-accelerated CSS 3D volumetric planes (`transform-style: preserve-3d`), recessed bevel layers, and precision SVG relief plates.
-  - *Why*: Since the logo appears simultaneously in persistent chrome (Navbar, Sidebar, and inside the 3D Press Pass), CSS `preserve-3d` delivers zero-latency instant rendering on page load, razor-sharp vector typography at any DPI, and zero WebGL context-limit conflicts with the existing Three.js 3D Desk on the landing page.
-  - *Alternatives Considered*: Spawning multiple `<Canvas>` instances for small navbar/sidebar logos would add unnecessary GPU memory overhead and WebGL context pressure.
-- **Decision 2: Route-Aware & Scroll-Velocity Reactive Choreography**
-  - *Chosen Approach*: Connect the 3D Type-Block to both scroll velocity (on the landing page) and Next.js `usePathname()` (in the dashboard sidebar) plus direct pointer hover/click stamping.
-  - *Why*: Ensures the 3D animation feels purposefully wired to the user's workflow rather than a disconnected looping gimmick.
+- **Decision 1: Consolidating 7 Sections into 4 Distinct Chapters**
+  - *Chosen Approach*: Keep `HeroSection` (`#hero`), `ProductXRaySection` (`#product`), `WorkflowSection` (`#workflow`), and `FeatureSection` (`#features`) + `FinalCTA`.
+  - *Why*: Previously, the user encountered four different places explaining the 4/5 pipeline stages (`Hero Chapter Tabs`, `3D Desk Tabs`, `Workflow 5-Stage Pipeline`, and `Governance 4-Stage Switcher`) plus two separate WordPress sections. Consolidating to one definitive section per concept cuts scroll fatigue by 40% while increasing visual impact.
+- **Decision 2: Whisper-Quiet Navbar Chrome**
+  - *Chosen Approach*: Remove all decorative telemetry badges, hanging percentage needles, and hover drawers from the navbar, retaining the 3D Gutenberg Type-Block Logo and a flush 2px brass scroll line.
+  - *Why*: Respects the Top Bar Contract—keeping navigation effortless and distraction-free while preserving the tactile 3D brand emblem.
 
 ---
 
@@ -61,27 +57,31 @@ This plan introduces a bespoke **3D Gutenberg Movable-Type Brass Block Logo** an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│             GutenbergTypeBlock3D (Reusable 3D Brand Emblem)             │
-│  ┌───────────────────────────────────────────────────────────────────┐  │
-│  │  6-Faced preserve-3d Cube + Recessed Brass Relief & Ink Ripple    │  │
-│  │  • Front (0°):   Raised 'B' Serif Relief + Gutenberg Type Nick    │  │
-│  │  • Right (90°):  Engraved Fountain Pen Nib (Draft / Generator)    │  │
-│  │  • Back (180°):  Section Sign '§' (Content / Architecture)        │  │
-│  │  • Left (-90°):  Brass Optical Loupe (Research & Citations)       │  │
-│  │  • Top (+90°X):  Editorial Approval Seal (Approvals / Security)   │  │
-│  └───────────────────────────────────────────────────────────────────┘  │
-└───────────────┬─────────────────────────┬───────────────────────────────┘
-                │                         │
-   ┌────────────▼────────────┐ ┌──────────▼─────────────┐ ┌───────────────▼──────────────┐
-   │  LandingNavbar Masthead │ │   App Sidebar Header   │ │  EditorialPressPass3D Crest  │
-   │  • Scroll-velocity tilt │ │  • Route-synced face   │ │  • Synced with keystrokes &  │
-   │  • Hover 3D gimbal      │ │    indexing on nav     │ │    password vault 180° flip  │
-   │  • Click ink-stamp      │ │  • Collapsed state     │ │  • Clearance seal lock       │
-   └─────────────────────────┘ └────────────────────────┘ └──────────────────────────────┘
+│                        Streamlined LandingPage                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│  LandingNavbar                                                          │
+│  • 3D GutenbergTypeBlock3D Logo + Brand Wordmark                        │
+│  • Clean Nav Links: Product (#product) | Workflow (#workflow) | Features│
+│  • Flush 2px Brushed-Brass Scroll Progress Line (no badges/drawers)     │
+├───────────────────────────────────┬─────────────────────────────────────┤
+│  1. HeroSection (#hero)           │  Right Column:                      │
+│  • Kicker + Kinetic Headline      │  • FloatingEditorialDesk (3D WebGL) │
+│  • Concise Editorial Subtitle     │  • Built-in 4-Stage 3D Switcher     │
+│  • Primary & Secondary CTAs       │                                     │
+│  • Avatar Social Proof            │                                     │
+├───────────────────────────────────┴─────────────────────────────────────┤
+│  2. ProductXRaySection (#product — Replaces wireframe skeleton)         │
+│  • Left Column: Editorial framing + 3 Clickable Topic Briefs + CTA      │
+│  • Right Column: Full-size Galley Proof + 2.4× Interactive X-Ray Loupe  │
+├─────────────────────────────────────────────────────────────────────────┤
+│  3. WorkflowSection (#workflow)                                         │
+│  • 5-Stage Agent Pipeline + Interactive Review & WordPress Console      │
+├─────────────────────────────────────────────────────────────────────────┤
+│  4. FeatureSection (#features) + FinalCTA + LandingFooter               │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Interactive Component & State Mapping**:
-  - `faceIndex` (`'monogram' | 'nib' | 'section' | 'loupe' | 'seal'`): Maps to target `(rotateX, rotateY)` angles in 3D space.
-  - `scrollVelocity` (Landing Navbar): Applies dynamic pitch/yaw offset as the user scrolls and settles smoothly back to the active section face.
-  - `isStamping` (Click handler): Animates `translateZ(-7px) scale(0.94)` followed by a spring rebound and a radial brass ink-impression ring.
-  - `pathname` (App Sidebar): Automatically indexes the 3D block to `'loupe'` on `/research`, `'nib'` on `/generator`, `'seal'` on `/approvals`, `'section'` on `/content`, and `'monogram'` on `/dashboard`.
+  - `LandingNavbar`: Tracks `scrollPct` (`0`–`100`) to drive the 2px `.lp-nav-vernier-fill` bar and gently rotate the `GutenbergTypeBlock3D` logo.
+  - `HeroSection`: Syncs `activeDeskStage` directly with `FloatingEditorialDesk` without duplicate left-column chapter tabs.
+  - `ProductXRaySection`: Owns `activePresetId` (`'ai-search' | 'saas-pricing' | 'zero-trust'`), `loupeState` (`{ x, y, active }`), and `xrayPinned` toggle, updating both the full-size Galley Proof card and the direct `Generate "<Topic>"` CTA link.
