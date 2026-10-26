@@ -1,53 +1,53 @@
-# Landing Page Editorial De-Cluttering & Spatial Refinement
+# Apple-Caliber Scroll & Spatial Transitions for Landing Page
 
-This plan eliminates visual congestion and section repetition on the BlogFlow AI landing page, giving the **3D Editorial Desk**, **Headline**, and **Interactive X-Ray Galley Proof** generous museum-grade breathing room while reducing the page from 7 overlapping sections down to 4 focused, high-impact chapters.
+This plan introduces four interconnected, GPU-accelerated scroll-scrubbed transitions across the BlogFlow AI landing page—combining Framer Motion `useScroll`, `useSpring`, and `useTransform` choreography so every section handoff feels like an Apple Pro keynote reveal while remaining fast, native-scrolling, and responsive to direct cursor/click overrides.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> All three architectural de-cluttering decisions were confirmed during our planning interview:
+> The following transition mechanics and performance boundaries were confirmed in our planning interview:
 
-- **Confirmed Decision 1 (Hero De-Cluttering)**: Remove the 4-Tab Chapter Index (`01 Research · 02 Draft · 03 Review · 04 Publish`) and move the **Interactive X-Ray Optical Loupe & 3-Brief Workbench** out of the Hero left column into the dedicated **`#product` section**. The Hero left column now focuses cleanly on **Kicker → Headline → Subtitle → Primary CTAs → Social Proof** alongside the **3D Floating Editorial Desk**.
-- **Confirmed Decision 2 (Remove Redundant Page Sections)**:
-  1. Remove the outdated wireframe **`EditorialPreviewSection`** skeleton and replace `#product` with a spacious 2-column **Interactive X-Ray Galley Proof & 3-Brief Showcase**.
-  2. Remove the duplicate 4-stage **`AutomationSection` (`#creators`)** switcher (which repeated the same stages already shown in the 3D Desk and `#workflow`).
-  3. Remove the standalone **`CMSSection`** (since WordPress REST publishing is already interactively demonstrated in Stage 05 of `#workflow` and in `#features`).
-- **Confirmed Decision 3 (Streamlined Top Navigation Bar)**: Keep only the **3D Gutenberg Movable-Type Block Logo**, **clean typography navigation links** (`Product`, `Workflow`, `Features`), theme toggle / CTA actions, and a **subtle 2px brass scroll-progress hairline** along the bottom edge—removing the `VOL. IV` badge, `SEC 0X` link prefixes, telemetry readout pill, hanging percentage tag, and hover drawer.
+- **Confirmed Decision 1 (4 Bespoke Spatial Transitions)**:
+  1. **Hero-to-Product 3D Manuscript Dive & Unfold**: Scrolling out of `#hero` smoothly pitches and zooms the Hero stage in 3D space (`rotateX`, `scale`, `y`) while unfolding the `#product` Galley Proof card from a tilted 3D manuscript plane (`rotateX(24deg) scale(0.90)` → `rotateX(0deg) scale(1)`).
+  2. **Scroll-Driven Automated X-Ray Loupe Sweep**: Scrolling through `#product` automatically glides the **2.4× Brass Optical Loupe** along a calibrated S-curve across the Galley Proof—revealing primary citations and SEO telemetry hands-free—while immediately handing control over to the user's cursor on hover or locking on click.
+  3. **Architectural Aperture Scale & Midnight Studio Shift**: `#workflow` and `#features` expand through a precision camera-aperture frame (`scale: 0.92 → 1.0`, `borderRadius: 36px → 16px`), with `#features` shifting the atmosphere into a high-contrast **Midnight Forest Studio Vault** (`#0D1B15` with brushed-brass rim lighting) before returning to warm archival vellum.
+  4. **Optical Camera Rack-Focus & Specular Brass Light Sweep**: Section transitions apply a subtle optical depth-of-field rack-focus (`blur(5px) → blur(0px)`) and sweep a diagonal brushed-brass specular light beam across card bevels and display headings in sync with scroll progress.
+- **Confirmed Decision 2 (Interaction Model)**: Continuous scroll-position scrubbing (`useScroll` + spring damping) paired with instant hover and click overrides.
+- **Confirmed Decision 3 (Performance Budget)**: Lightweight GPU-composited transforms (`transform`, `opacity`, `clip-path`, subtle `filter`) with zero scroll-jacking traps and automatic `prefers-reduced-motion` fallback.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Transforms the landing page from a dense stack of competing widgets into a calm, four-part editorial narrative:
-  1. **Hero (`#hero`)**: Uncluttered split-stage introduction pairing the `Research. Think. Publish.` typography and primary CTAs on the left with the interactive **3D Floating Editorial Desk** on the right.
-  2. **Interactive Galley Proof & X-Ray Loupe (`#product`)**: A dedicated, spacious two-column showcase where visitors switch between 3 real topic briefs (*AI Search Architecture*, *Usage-Based SaaS Pricing*, *Zero-Trust Cloud Security*) and sweep the **2.4× Brass Optical Loupe** across a full-scale manuscript proof to inspect live primary-source citations and SEO telemetry.
-  3. **5-Agent Autonomous Pipeline (`#workflow`)**: The single definitive workflow explorer (`01 Discover → 02 Research → 03 Think → 04 Review → 05 Publish`) with interactive Human-in-the-Loop approval and WordPress REST dispatch consoles.
-  4. **Capabilities Grid (`#features`) & Final CTA**: Clean architectural summary of core platform capabilities followed by the closing call-to-action and footer.
-- **Target Audience / Persona**: Content leads, technical editors, and SaaS founders evaluating BlogFlow AI who want immediate clarity without cognitive overload.
-- **Key Value**: Every interactive element now has its own dedicated stage and generous whitespace, eliminating 3× stage-tab duplication and making the page faster to scan.
+- **What It Does**: Replaces static vertical section stacking with a continuous optical and spatial camera journey through the BlogFlow AI studio:
+  - **Act I (`#hero` → `#product`)**: The camera recedes from the Hero headline and dives toward the 3D Editorial Desk, unfolding the live Galley Proof sheet into a flat, inspectable surface.
+  - **Act II (`#product`)**: As the visitor scrolls past the Galley Proof, the Brass Optical Loupe autonomously scans across the article paragraphs along an S-curve, exposing the underlying verified sources (`MIT Technology Review`, `Stanford HAI`, `NIST`) even on touch devices or without mouse movement. Hovering immediately enslaves the loupe to the pointer; clicking locks the full X-Ray blueprint.
+  - **Act III (`#workflow` → `#features`)**: Each major chapter opens like a precision optical aperture, culminating in the **Midnight Forest Studio** shift for `#features` where brushed-brass specular beams sweep across the capability cards as you scroll.
+- **Target Audience / Persona**: Visitors who expect flagship Apple-grade polish, fluid physics, and tactile visual storytelling without sluggish heavy video embeds.
+- **Key Value**: Elevates the landing page into an interactive product film driven entirely by the user's natural scroll wheel and cursor.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Top Masthead Navigation**: Visitors see the 3D Gutenberg Type-Block Logo on the left, three clean single-word links (`Product`, `Workflow`, `Features`) in the center, and `Sign in` / `Start creating` on the right, underscored by a quiet 2px brushed-brass scroll progress line.
-  2. **Hero Experience**: With the Chapter Index tabs and X-Ray card removed from the Hero left column, the headline, subtitle, and primary CTA buttons sit vertically centered against the 3D Editorial Desk—eliminating vertical overflow and visual crowding.
-  3. **`#product` X-Ray Galley Proof Section**: Scrolling down from the Hero reveals a two-column editorial spread: editorial copy and the **3-Brief Selector** on the left, and a larger, breathable **Interactive X-Ray Galley Proof Canvas** on the right.
+  1. **Hero Exit & Product Unfold**: Between `0%` and `100%` of the Hero-to-Product transition zone, the Hero container scales gently (`1 → 0.95`) with a subtle optical rack-out while the `#product` Galley Proof card unfolds from a `22°` 3D tilt into a crisp, flat editorial spread.
+  2. **Autonomous + Interactive X-Ray Loupe**: When the user is not hovering over the Galley Proof card, the loupe coordinates `(x, y)` are driven by a smooth parametric curve mapped to `#product` scroll progress (`0.15 → 0.85`), accompanied by a subtle `SCROLL-SCRUBBING X-RAY · HOVER TO TAKE CONTROL` indicator. Moving the mouse onto the proof card instantaneously switches to 1:1 cursor tracking.
+  3. **Midnight Studio Aperture (`#features`)**: As `#features` enters the viewport, its outer architectural vault container expands from `scale(0.92)` with `36px` rounded corners into a full-bleed dark-emerald studio showcase (`#0D1B15`), while a diagonal brushed-brass specular glint sweeps across the bento cards.
 - **Visual Identity & Theme**:
-  - *Aesthetic Direction*: High-Craft Archival Editorial Studio with generous paper whitespace (`60%` Warm Paper `#F7F4EC` / Dark Studio `#0D1612`, `30%` Deep Forest `#163F32`, `10%` Brushed Brass `#C8A15A`).
-  - *Typography & Hierarchy*: Uncluttered serif display headings (`Fraunces` / `Playfair Display`), relaxed body prose (`65ch` measure), and quiet unboxed metadata with middle-dot (`·`) separators.
+  - *Aesthetic Direction*: Apple Pro Hardware Keynote meets High-Craft Archival Editorial Studio.
+  - *Color Palette & Mood*: Alternates rhythmically between Warm Archival Paper (`#F7F4EC`) and Deep Midnight Forest Studio (`#0D1B15`), unified by Brushed Brass (`#C8A15A`) specular highlights.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Consolidating 7 Sections into 4 Distinct Chapters**
-  - *Chosen Approach*: Keep `HeroSection` (`#hero`), `ProductXRaySection` (`#product`), `WorkflowSection` (`#workflow`), and `FeatureSection` (`#features`) + `FinalCTA`.
-  - *Why*: Previously, the user encountered four different places explaining the 4/5 pipeline stages (`Hero Chapter Tabs`, `3D Desk Tabs`, `Workflow 5-Stage Pipeline`, and `Governance 4-Stage Switcher`) plus two separate WordPress sections. Consolidating to one definitive section per concept cuts scroll fatigue by 40% while increasing visual impact.
-- **Decision 2: Whisper-Quiet Navbar Chrome**
-  - *Chosen Approach*: Remove all decorative telemetry badges, hanging percentage needles, and hover drawers from the navbar, retaining the 3D Gutenberg Type-Block Logo and a flush 2px brass scroll line.
-  - *Why*: Respects the Top Bar Contract—keeping navigation effortless and distraction-free while preserving the tactile 3D brand emblem.
+- **Decision 1: Parametric Scroll-Scrubbed Loupe + Instant Pointer Takeover**
+  - *Chosen Approach*: Compute scroll-driven loupe coordinates `(scrollLoupeX, scrollLoupeY)` from the `#product` section's scroll progress whenever `!loupeState.active && !xrayPinned`. The moment `onMouseMove` fires, `loupeState.active` becomes `true` and overrides the scroll path with exact cursor coordinates.
+  - *Why*: Many visitors scroll down a landing page without deliberately hovering over every card; autonomous scroll-scrubbing guarantees 100% of visitors witness the X-Ray citation reveal while preserving full manual control.
+- **Decision 2: Native Scroll with Spring-Damped `useScroll` Transforms (Zero Scroll-Jacking)**
+  - *Chosen Approach*: Use Framer Motion's `useScroll({ target, offset })` and `useSpring(..., { stiffness: 120, damping: 24 })` on section wrappers rather than hijacking `window.onwheel`.
+  - *Why*: Preserves native trackpad momentum, scrollbar dragging, and anchor-link jumps (`#product`, `#workflow`, `#features`) with zero lag.
 
 ---
 
@@ -57,31 +57,32 @@ This plan eliminates visual congestion and section repetition on the BlogFlow AI
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        Streamlined LandingPage                          │
+│                Apple-Caliber Scroll & Spatial Choreography              │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  LandingNavbar                                                          │
-│  • 3D GutenbergTypeBlock3D Logo + Brand Wordmark                        │
-│  • Clean Nav Links: Product (#product) | Workflow (#workflow) | Features│
-│  • Flush 2px Brushed-Brass Scroll Progress Line (no badges/drawers)     │
-├───────────────────────────────────┬─────────────────────────────────────┤
-│  1. HeroSection (#hero)           │  Right Column:                      │
-│  • Kicker + Kinetic Headline      │  • FloatingEditorialDesk (3D WebGL) │
-│  • Concise Editorial Subtitle     │  • Built-in 4-Stage 3D Switcher     │
-│  • Primary & Secondary CTAs       │                                     │
-│  • Avatar Social Proof            │                                     │
-├───────────────────────────────────┴─────────────────────────────────────┤
-│  2. ProductXRaySection (#product — Replaces wireframe skeleton)         │
-│  • Left Column: Editorial framing + 3 Clickable Topic Briefs + CTA      │
-│  • Right Column: Full-size Galley Proof + 2.4× Interactive X-Ray Loupe  │
+│  1. HeroSection (#hero)                                                 │
+│     • useScroll(heroRef) -> Hero receding scale (1 -> 0.94),            │
+│       perspective rotateX (0° -> 8°), & optical rack-focus blur         │
+├─────────────────────────────────────────────────────────────────────────┤
+│  2. ProductXRaySection (#product)                                       │
+│     • 3D Manuscript Unfold: rotateX(22° -> 0°), scale(0.9 -> 1.0),      │
+│       blur(5px -> 0px) + Specular Brass Glint Sweep                     │
+│     • Autonomous Scroll-Scrubbed Loupe S-Curve (when !hover && !pinned) │
+│     • Instant Cursor Override onPointerMove + Click-to-Lock Toggle      │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  3. WorkflowSection (#workflow)                                         │
-│  • 5-Stage Agent Pipeline + Interactive Review & WordPress Console      │
+│     • Optical Rack-Focus Entrance + Scroll-Linked Brass Progress Beam   │
+│     • Interactive 5-Stage Agent Pipeline + Click Override               │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  4. FeatureSection (#features) + FinalCTA + LandingFooter               │
+│  4. FeatureSection (#features — Architectural Aperture & Studio Shift)  │
+│     • Aperture Expansion: scale(0.92 -> 1.0), radius(36px -> 20px)      │
+│     • Chromatic Shift into Midnight Forest Vault (#0D1B15)              │
+│     • Scroll-Scrubbed Specular Brass Rim Sweep across Bento Cards       │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Interactive Component & State Mapping**:
-  - `LandingNavbar`: Tracks `scrollPct` (`0`–`100`) to drive the 2px `.lp-nav-vernier-fill` bar and gently rotate the `GutenbergTypeBlock3D` logo.
-  - `HeroSection`: Syncs `activeDeskStage` directly with `FloatingEditorialDesk` without duplicate left-column chapter tabs.
-  - `ProductXRaySection`: Owns `activePresetId` (`'ai-search' | 'saas-pricing' | 'zero-trust'`), `loupeState` (`{ x, y, active }`), and `xrayPinned` toggle, updating both the full-size Galley Proof card and the direct `Generate "<Topic>"` CTA link.
+  - `HeroSection`: Uses `heroRef` with `useScroll({ target: heroRef, offset: ['start start', 'end start'] })` to drive receding 3D perspective and rack-focus as the user scrolls toward `#product`.
+  - `ProductXRaySection`: Uses `productRef` with `useScroll({ target: productRef, offset: ['start end', 'end start'] })` to:
+    1. Unfold the 3D Galley Proof card (`rotateX`, `scale`, `y`, `filter`).
+    2. Drive `autoLoupePos` (`{ x, y, active }`) along a smooth sinusoidal path across the proof card during the central scroll window (`scrollYProgress` `0.22` → `0.78`), automatically yielding to `loupeState` when hovered or `xrayPinned` when locked.
+  - `WorkflowSection` & `FeatureSection`: Use section-scoped `useScroll` hooks to drive the **Architectural Aperture** container (`scale`, `borderRadius`), **Optical Rack-Focus**, and **Specular Brass Light Sweep** (`--brass-sweep-pos` / motion overlay).

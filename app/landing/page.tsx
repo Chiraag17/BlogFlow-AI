@@ -1,10 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import './landing.css';
 import Link from 'next/link';
-import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
 import {
   Globe, Search, Lightbulb, Send,
   ArrowRight, Play, ChevronRight, BookOpen,
@@ -312,6 +319,24 @@ function HeroSection({
   onSelectDeskStage: (stage: DeskStage) => void;
 }) {
   const [heroStage, setHeroStage] = useState<'center' | 'split'>('center');
+  const heroSectionRef = useRef<HTMLElement | null>(null);
+
+  const { scrollYProgress: heroScrollProgress } = useScroll({
+    target: heroSectionRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const smoothHeroScroll = useSpring(heroScrollProgress, {
+    stiffness: 120,
+    damping: 26,
+    mass: 0.35,
+  });
+
+  // Apple-style 3D spatial recession as user scrolls down toward #product
+  const heroStageScale = useTransform(smoothHeroScroll, [0, 0.85], [1, 0.93]);
+  const heroStageRotateX = useTransform(smoothHeroScroll, [0, 0.85], [0, 9]);
+  const heroStageY = useTransform(smoothHeroScroll, [0, 0.85], [0, 54]);
+  const heroStageOpacity = useTransform(smoothHeroScroll, [0, 0.88], [1, 0.68]);
 
   useEffect(() => {
     const prefersReduced =
@@ -335,7 +360,12 @@ function HeroSection({
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
 
   return (
-    <section id="hero" className="lp-hero" aria-labelledby="hero-headline">
+    <section
+      ref={heroSectionRef}
+      id="hero"
+      className="lp-hero lp-perspective-stage"
+      aria-labelledby="hero-headline"
+    >
       <div className="lp-hero-bg" aria-hidden="true" />
 
       {/* ACT I: Center-Stage Keynote Reveal Overlay (0.0s -> 0.85s) */}
@@ -409,7 +439,16 @@ function HeroSection({
       </AnimatePresence>
 
       {/* ACT II: Split-Column Studio Layout (Clean Editorial Copy Left, 3D Desk Right) */}
-      <div className="lp-container">
+      <motion.div
+        className="lp-container lp-hero-dive-stage"
+        style={{
+          scale: heroStageScale,
+          rotateX: heroStageRotateX,
+          y: heroStageY,
+          opacity: heroStageOpacity,
+          transformPerspective: 1400,
+        }}
+      >
         <div className="lp-hero-inner">
 
           {/* Left: Uncluttered Editorial Copy + CTAs + Social Proof */}
@@ -534,7 +573,7 @@ function HeroSection({
             />
           </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Quiet Editorial Principles Strip */}
       <motion.div
@@ -563,7 +602,7 @@ function HeroSection({
 }
 
 /* ============================================================
-   2. PRODUCT SHOWCASE (#product — Interactive X-Ray Optical Loupe & 3-Brief Studio)
+   2. PRODUCT SHOWCASE (#product — 3D Manuscript Unfold & Scroll-Driven X-Ray Loupe)
    ============================================================ */
 function ProductXRaySection() {
   const [activePresetId, setActivePresetId] = useState<string>(HERO_TOPIC_PRESETS[0].id);
@@ -572,7 +611,56 @@ function ProductXRaySection() {
     y: 120,
     active: false,
   });
+  const [autoLoupe, setAutoLoupe] = useState<{ x: number; y: number; active: boolean }>({
+    x: 160,
+    y: 110,
+    active: false,
+  });
   const [xrayPinned, setXrayPinned] = useState(false);
+
+  const productSectionRef = useRef<HTMLElement | null>(null);
+  const proofCardRef = useRef<HTMLDivElement | null>(null);
+
+  const { scrollYProgress: productScrollProgress } = useScroll({
+    target: productSectionRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const smoothProductScroll = useSpring(productScrollProgress, {
+    stiffness: 110,
+    damping: 26,
+    mass: 0.35,
+  });
+
+  // 1. Hero-to-Product 3D Manuscript Dive & Unfold transforms
+  const manuscriptRotateX = useTransform(smoothProductScroll, [0.06, 0.36], [22, 0]);
+  const manuscriptScale = useTransform(smoothProductScroll, [0.06, 0.36], [0.9, 1]);
+  const manuscriptY = useTransform(smoothProductScroll, [0.06, 0.36], [48, 0]);
+  const copyBlurPx = useTransform(smoothProductScroll, [0.05, 0.28], [5, 0]);
+  const copyFilter = useTransform(copyBlurPx, (v) => `blur(${v.toFixed(2)}px)`);
+  const copyOpacity = useTransform(smoothProductScroll, [0.05, 0.26], [0.35, 1]);
+  const copyY = useTransform(smoothProductScroll, [0.05, 0.28], [28, 0]);
+
+  // Specular Brass Light Sweep across the Galley Proof
+  const brassSheenX = useTransform(smoothProductScroll, [0.12, 0.65], ['-120%', '220%']);
+
+  // 2. Scroll-Driven Automated X-Ray Loupe S-Curve Sweep
+  useMotionValueEvent(smoothProductScroll, 'change', (v) => {
+    if (v >= 0.20 && v <= 0.82) {
+      const t = (v - 0.20) / 0.62; // normalized 0 -> 1 across active viewport window
+      const cardEl = proofCardRef.current;
+      const width = cardEl ? cardEl.clientWidth : 540;
+      const height = cardEl ? cardEl.clientHeight : 270;
+
+      // Smooth S-curve across H2 heading, inline citations [1] & [2], and source chips
+      const x = Math.round(width * (0.18 + 0.64 * t));
+      const y = Math.round(height * (0.52 + 0.24 * Math.sin(t * Math.PI * 2)));
+
+      setAutoLoupe({ x, y, active: true });
+    } else {
+      setAutoLoupe((prev) => (prev.active ? { ...prev, active: false } : prev));
+    }
+  });
 
   const activePreset =
     HERO_TOPIC_PRESETS.find((p) => p.id === activePresetId) || HERO_TOPIC_PRESETS[0];
@@ -590,22 +678,45 @@ function ProductXRaySection() {
     setLoupeState((prev) => ({ ...prev, active: false }));
   };
 
-  const showXrayLens = loupeState.active || xrayPinned;
+  // Manual pointer hover takes immediate priority over scroll-driven auto-loupe
+  const effectiveLoupeX = loupeState.active ? loupeState.x : autoLoupe.x;
+  const effectiveLoupeY = loupeState.active ? loupeState.y : autoLoupe.y;
+  const isLoupeActive = loupeState.active || autoLoupe.active;
+  const showXrayLens = isLoupeActive || xrayPinned;
+
+  const loupeModeLabel = xrayPinned
+    ? 'X-RAY LOCKED ON'
+    : loupeState.active
+      ? 'MANUAL CURSOR · 2.4×'
+      : autoLoupe.active
+        ? 'SCROLL AUTO-SWEEP · 2.4×'
+        : 'OPTICAL STANDBY';
 
   return (
-    <section id="product" className="lp-preview-section" aria-labelledby="preview-heading">
+    <section
+      ref={productSectionRef}
+      id="product"
+      className="lp-preview-section lp-perspective-stage"
+      aria-labelledby="preview-heading"
+    >
       <div className="lp-container">
         <div className="lp-preview-inner">
-          {/* Left Column: Editorial Framing + 3 Clickable Topic Briefs */}
-          <div>
+          {/* Left Column: Optical Camera Rack-Focus + 3 Clickable Topic Briefs */}
+          <motion.div
+            style={{
+              filter: copyFilter,
+              opacity: copyOpacity,
+              y: copyY,
+            }}
+          >
             <div className="lp-section-label">Interactive Galley Proof · X-Ray Loupe</div>
             <h2 className="lp-section-heading" id="preview-heading">
               From live citations to a considered <em>first draft.</em>
             </h2>
             <p className="lp-section-desc">
-              Switch between three real editorial briefs below and move your cursor across the
-              galley proof to engage the <strong>2.4× Brass Optical Loupe</strong> — revealing
-              the verified primary sources and semantic SEO telemetry underneath every paragraph.
+              Scroll to watch the <strong>2.4× Brass Optical Loupe</strong> automatically sweep
+              across the galley proof — or move your cursor over the manuscript to take manual
+              control and inspect verified primary sources underneath every paragraph.
             </p>
 
             {/* 3 Clickable Topic Briefs */}
@@ -650,32 +761,54 @@ function ProductXRaySection() {
                 {xrayPinned ? 'Unlock X-Ray Layer' : 'Lock Full X-Ray View'}
               </button>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Right Column: Spacious Galley Proof Surface with Interactive X-Ray Optical Loupe */}
-          <div>
-            <div className="lp-xray-workbench" style={{ margin: 0 }}>
+          {/* Right Column: 3D Unfolding Manuscript Surface with Scroll + Cursor X-Ray Optical Loupe */}
+          <motion.div
+            className="lp-manuscript-unfold-wrap"
+            style={{
+              rotateX: manuscriptRotateX,
+              scale: manuscriptScale,
+              y: manuscriptY,
+              transformPerspective: 1400,
+            }}
+          >
+            <div className="lp-xray-workbench lp-brass-rim-card" style={{ margin: 0 }}>
+              {/* Diagonal Brushed-Brass Specular Light Sweep */}
+              <motion.div
+                className="lp-specular-brass-sweep"
+                style={{ x: brassSheenX }}
+                aria-hidden="true"
+              />
+
               <div className="lp-xray-header">
                 <div className="lp-xray-title-cluster">
                   <span className="lp-xray-kicker">
                     GALLEY PROOF · {activePreset.category.toUpperCase()}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setXrayPinned((v) => !v)}
-                    className={`lp-xray-pin-btn${xrayPinned ? ' active' : ''}`}
-                  >
-                    <Search size={11} />
-                    {xrayPinned ? 'X-Ray Locked On' : 'Hover Proof or Click to Lock X-Ray'}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="lp-xray-mode-pill" aria-hidden="true">
+                      <span className={`lp-xray-mode-dot${showXrayLens ? ' is-live' : ''}`} />
+                      {loupeModeLabel}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setXrayPinned((v) => !v)}
+                      className={`lp-xray-pin-btn${xrayPinned ? ' active' : ''}`}
+                    >
+                      <Search size={11} />
+                      {xrayPinned ? 'X-Ray Locked On' : 'Lock Full X-Ray'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div
+                ref={proofCardRef}
                 className={`lp-xray-proof-card${showXrayLens ? ' loupe-engaged' : ''}`}
                 onMouseMove={handleProofMouseMove}
                 onMouseLeave={handleProofMouseLeave}
-                style={{ padding: '24px 26px', minHeight: 250 }}
+                style={{ padding: '24px 26px', minHeight: 260 }}
               >
                 {/* Layer A: Finished Editorial Galley Prose */}
                 <div className="lp-xray-layer-prose" style={{ gap: 10 }}>
@@ -706,8 +839,8 @@ function ProductXRaySection() {
                     padding: '22px 26px',
                     clipPath: xrayPinned
                       ? 'circle(140% at 50% 50%)'
-                      : loupeState.active
-                        ? `circle(110px at ${loupeState.x}px ${loupeState.y}px)`
+                      : isLoupeActive
+                        ? `circle(112px at ${effectiveLoupeX}px ${effectiveLoupeY}px)`
                         : 'circle(0px at 50% 50%)',
                   }}
                   aria-hidden={!showXrayLens}
@@ -736,23 +869,25 @@ function ProductXRaySection() {
                   </div>
                 </div>
 
-                {/* Brass Optical Loupe Ring */}
-                {loupeState.active && !xrayPinned && (
+                {/* Brass Optical Loupe Ring (Active during Scroll Sweep OR Cursor Hover) */}
+                {isLoupeActive && !xrayPinned && (
                   <div
-                    className="lp-xray-loupe-ring"
+                    className={`lp-xray-loupe-ring${loupeState.active ? ' is-manual' : ' is-auto'}`}
                     style={{
-                      width: 220,
-                      height: 220,
-                      transform: `translate(${loupeState.x - 110}px, ${loupeState.y - 110}px)`,
+                      width: 224,
+                      height: 224,
+                      transform: `translate(${effectiveLoupeX - 112}px, ${effectiveLoupeY - 112}px)`,
                     }}
                     aria-hidden="true"
                   >
-                    <span className="lp-xray-loupe-label">OPTICAL LOUPE · 2.4×</span>
+                    <span className="lp-xray-loupe-label">
+                      {loupeState.active ? 'OPTICAL LOUPE · 2.4×' : 'AUTO-SWEEP LOUPE · 2.4×'}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -770,12 +905,32 @@ function WorkflowSection({
   onSyncDeskStage: (stage: DeskStage) => void;
 }) {
   const [selectedStage, setSelectedStage] = useState<PipelineStageId>('discover');
+  const [manualOverride, setManualOverride] = useState<boolean>(false);
+  const workflowRef = useRef<HTMLElement | null>(null);
 
   // Interactive states inside Stage 04 (Review) and Stage 05 (Publish)
   const [reviewDecision, setReviewDecision] = useState<'pending' | 'approved' | 'revision' | 'rejected'>('pending');
   const [reviewerNote, setReviewerNote] = useState<string>('Strong primary citations in Section 02. Approved for WordPress staging.');
   const [wpPublishMode, setWpPublishMode] = useState<'draft' | 'schedule'>('draft');
   const [wpPushSimulated, setWpPushSimulated] = useState<boolean>(false);
+
+  const { scrollYProgress: wfScrollProgress } = useScroll({
+    target: workflowRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const smoothWfScroll = useSpring(wfScrollProgress, {
+    stiffness: 110,
+    damping: 26,
+    mass: 0.35,
+  });
+
+  // Optical Camera Rack-Focus & Aperture Scale on entry
+  const wfScale = useTransform(smoothWfScroll, [0.04, 0.26], [0.94, 1]);
+  const wfY = useTransform(smoothWfScroll, [0.04, 0.26], [36, 0]);
+  const wfBlurPx = useTransform(smoothWfScroll, [0.04, 0.24], [4.5, 0]);
+  const wfFilter = useTransform(wfBlurPx, (v) => `blur(${v.toFixed(2)}px)`);
+  const wfBeamWidth = useTransform(smoothWfScroll, [0.18, 0.78], ['12%', '100%']);
 
   const stages: {
     id: PipelineStageId;
@@ -833,14 +988,43 @@ function WorkflowSection({
     },
   ];
 
+  // Scroll-scrubbed stage progression (yields immediately when user clicks a stage)
+  useMotionValueEvent(smoothWfScroll, 'change', (v) => {
+    if (manualOverride) return;
+    if (v < 0.28) {
+      setSelectedStage('discover');
+    } else if (v < 0.41) {
+      setSelectedStage('research');
+    } else if (v < 0.54) {
+      setSelectedStage('think');
+    } else if (v < 0.67) {
+      setSelectedStage('review');
+    } else if (v <= 0.85) {
+      setSelectedStage('publish');
+    }
+  });
+
   const handleStageClick = (stage: (typeof stages)[number]) => {
+    setManualOverride(true);
     setSelectedStage(stage.id);
     onSyncDeskStage(stage.deskStage);
   };
 
   return (
-    <section id="workflow" className="lp-workflow" aria-labelledby="workflow-heading">
-      <div className="lp-container">
+    <section
+      ref={workflowRef}
+      id="workflow"
+      className="lp-workflow"
+      aria-labelledby="workflow-heading"
+    >
+      <motion.div
+        className="lp-container"
+        style={{
+          scale: wfScale,
+          y: wfY,
+          filter: wfFilter,
+        }}
+      >
         <div className="lp-workflow-header">
           <div>
             <div className="lp-section-label">The complete 5-agent workflow</div>
@@ -858,11 +1042,16 @@ function WorkflowSection({
           </div>
           <div>
             <p className="lp-section-desc">
-              Click any of the 5 pipeline stages below to inspect what happens under the hood —
+              Scroll to scrub through the 5-agent pipeline or click any stage below to lock focus —
               from live competitor gap discovery and Tavily citation extraction to human editorial
               sign-off and encrypted WordPress REST publishing.
             </p>
           </div>
+        </div>
+
+        {/* Scroll-Scrubbed Brushed-Brass Optical Pipeline Rail */}
+        <div className="lp-wf-scroll-rail" aria-hidden="true">
+          <motion.div className="lp-wf-scroll-rail-fill" style={{ width: wfBeamWidth }} />
         </div>
 
         {/* 5 Interactive Pipeline Cards */}
@@ -1336,118 +1525,185 @@ function WorkflowSection({
             </motion.div>
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
 
 /* ============================================================
-   FEATURES SECTION
+   4. FEATURES SECTION (Architectural Aperture Scale & Midnight Forest Studio Shift)
    ============================================================ */
 function FeatureSection() {
+  const featuresRef = useRef<HTMLElement | null>(null);
+
+  const { scrollYProgress: featScrollProgress } = useScroll({
+    target: featuresRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const smoothFeatScroll = useSpring(featScrollProgress, {
+    stiffness: 110,
+    damping: 26,
+    mass: 0.35,
+  });
+
+  // Apple Pro-Style Architectural Aperture Expansion + Optical Rack-Focus
+  const apertureScale = useTransform(smoothFeatScroll, [0.04, 0.32, 0.78, 0.96], [0.91, 1, 1, 0.95]);
+  const apertureRadius = useTransform(smoothFeatScroll, [0.04, 0.32, 0.78, 0.96], [40, 22, 22, 36]);
+  const apertureBlurPx = useTransform(smoothFeatScroll, [0.03, 0.22], [5, 0]);
+  const apertureFilter = useTransform(apertureBlurPx, (v) => `blur(${v.toFixed(2)}px)`);
+  const studioSheenX = useTransform(smoothFeatScroll, [0.12, 0.74], ['-110%', '210%']);
+
   return (
-    <section id="features" className="lp-features" aria-labelledby="features-heading">
-      <div className="lp-container">
-        <div className="lp-features-header">
-          <div className="lp-section-label">Why BlogFlow AI</div>
-          <h2 className="lp-section-heading" id="features-heading">
-            Built for creators, marketers and teams.
-          </h2>
-          <p className="lp-section-desc">
-            Everything you need to create high-quality, SEO-friendly content — without the manual work.
-          </p>
-        </div>
+    <section
+      ref={featuresRef}
+      id="features"
+      className="lp-features lp-features-aperture-outer"
+      aria-labelledby="features-heading"
+    >
+      <motion.div
+        className="lp-features-midnight-vault"
+        style={{
+          scale: apertureScale,
+          borderRadius: apertureRadius,
+          filter: apertureFilter,
+        }}
+      >
+        {/* Scroll-Scrubbed Specular Brass Light Sweep across the Midnight Vault */}
+        <motion.div
+          className="lp-vault-specular-sweep"
+          style={{ x: studioSheenX }}
+          aria-hidden="true"
+        />
 
-        <div className="lp-feature-grid">
-
-          {/* Large: AI Research */}
-          <div className="lp-feat-card lp-feat-card-large">
-            <div className="lp-feat-icon"><BookOpen size={22} /></div>
-            <div className="lp-feat-label">AI-Powered Research</div>
-            <h3 className="lp-feat-title">Find the most relevant and credible sources, automatically.</h3>
-            <p className="lp-feat-desc">
-              BlogFlow searches across websites, academic papers, and news to surface the most
-              meaningful insights for your topic. Every article begins with real research —
-              not hallucinations.
+        <div className="lp-container">
+          <div className="lp-features-header">
+            <div className="lp-section-label lp-vault-kicker">
+              Why BlogFlow AI · Midnight Studio Vault
+            </div>
+            <h2 className="lp-section-heading lp-vault-heading" id="features-heading">
+              Built for creators, marketers and <em>editorial teams.</em>
+            </h2>
+            <p className="lp-section-desc lp-vault-desc">
+              Everything you need to create high-quality, citation-backed content — engineered
+              with precision typography, SEO telemetry, and human governance.
             </p>
-            <div className="lp-feat-preview">
-              <div className="gc-title" style={{ marginBottom: 10 }}>Analysing Sources</div>
-              {[
-                { label: 'MIT Technology Review', color: '#c41e3a', initial: 'M' },
-                { label: 'Nature', color: '#1a6b2f', initial: 'N' },
-                { label: 'TechCrunch', color: '#006747', initial: 'T' },
-              ].map((s) => (
-                <div className="lp-feat-source" key={s.label}>
-                  <div className="lp-feat-source-icon" style={{ background: s.color }}>{s.initial}</div>
-                  <div className="lp-feat-source-name">{s.label}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* SEO Optimised */}
-          <div className="lp-feat-card">
-            <div className="lp-feat-icon"><BarChart2 size={22} /></div>
-            <div className="lp-feat-label">SEO Optimised</div>
-            <h3 className="lp-feat-title">Built-in SEO checks before publishing.</h3>
-            <div className="lp-feat-preview" style={{ textAlign: 'center' }}>
-              <div className="lp-feat-score-big">94</div>
-              <div className="lp-feat-score-label">Optimal</div>
-            </div>
-          </div>
+          <div className="lp-feature-grid">
 
-          {/* CMS Integration */}
-          <div className="lp-feat-card">
-            <div className="lp-feat-icon"><Rss size={22} /></div>
-            <div className="lp-feat-label">CMS Integration</div>
-            <h3 className="lp-feat-title">Publish directly to WordPress or save as draft.</h3>
-          </div>
-
-          {/* Human in the Loop */}
-          <div className="lp-feat-card">
-            <div className="lp-feat-icon"><UserCheck size={22} /></div>
-            <div className="lp-feat-label">Human in the Loop</div>
-            <h3 className="lp-feat-title">Get approval before publishing. Stay in control.</h3>
-            <div className="lp-feat-preview">
-              <div className="lp-check-list">
-                {['Structure', 'Readability', 'SEO', 'Sources'].map((c) => (
-                  <div className="lp-check-item" key={c}>
-                    <div className="lp-check-icon">✓</div>
-                    {c} reviewed
+            {/* Large: AI Research */}
+            <div className="lp-feat-card lp-feat-card-large">
+              <div className="lp-feat-icon"><BookOpen size={22} /></div>
+              <div className="lp-feat-label">AI-Powered Research</div>
+              <h3 className="lp-feat-title">Find the most relevant and credible sources, automatically.</h3>
+              <p className="lp-feat-desc">
+                BlogFlow searches across websites, academic papers, and news to surface the most
+                meaningful insights for your topic. Every article begins with real research —
+                not hallucinations.
+              </p>
+              <div className="lp-feat-preview">
+                <div className="gc-title" style={{ marginBottom: 10 }}>Analysing Sources</div>
+                {[
+                  { label: 'MIT Technology Review', color: '#c41e3a', initial: 'M' },
+                  { label: 'Nature', color: '#1a6b2f', initial: 'N' },
+                  { label: 'TechCrunch', color: '#006747', initial: 'T' },
+                ].map((s) => (
+                  <div className="lp-feat-source" key={s.label}>
+                    <div className="lp-feat-source-icon" style={{ background: s.color }}>{s.initial}</div>
+                    <div className="lp-feat-source-name">{s.label}</div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Customisable Workflow */}
-          <div className="lp-feat-card">
-            <div className="lp-feat-icon"><Layers size={22} /></div>
-            <div className="lp-feat-label">Customisable Workflow</div>
-            <h3 className="lp-feat-title">Adapt the process to your content strategy and brand voice.</h3>
-          </div>
+            {/* SEO Optimised */}
+            <div className="lp-feat-card">
+              <div className="lp-feat-icon"><BarChart2 size={22} /></div>
+              <div className="lp-feat-label">SEO Optimised</div>
+              <h3 className="lp-feat-title">Built-in SEO checks before publishing.</h3>
+              <div className="lp-feat-preview" style={{ textAlign: 'center' }}>
+                <div className="lp-feat-score-big">94</div>
+                <div className="lp-feat-score-label">Optimal</div>
+              </div>
+            </div>
 
-          {/* Analytics */}
-          <div className="lp-feat-card">
-            <div className="lp-feat-icon"><FileText size={22} /></div>
-            <div className="lp-feat-label">Analytics &amp; Insights</div>
-            <h3 className="lp-feat-title">Track performance, engagement and what works best.</h3>
-          </div>
+            {/* CMS Integration */}
+            <div className="lp-feat-card">
+              <div className="lp-feat-icon"><Rss size={22} /></div>
+              <div className="lp-feat-label">CMS Integration</div>
+              <h3 className="lp-feat-title">Publish directly to WordPress or save as draft.</h3>
+            </div>
 
+            {/* Human in the Loop */}
+            <div className="lp-feat-card">
+              <div className="lp-feat-icon"><UserCheck size={22} /></div>
+              <div className="lp-feat-label">Human in the Loop</div>
+              <h3 className="lp-feat-title">Get approval before publishing. Stay in control.</h3>
+              <div className="lp-feat-preview">
+                <div className="lp-check-list">
+                  {['Structure', 'Readability', 'SEO', 'Sources'].map((c) => (
+                    <div className="lp-check-item" key={c}>
+                      <div className="lp-check-icon">✓</div>
+                      {c} reviewed
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Customisable Workflow */}
+            <div className="lp-feat-card">
+              <div className="lp-feat-icon"><Layers size={22} /></div>
+              <div className="lp-feat-label">Customisable Workflow</div>
+              <h3 className="lp-feat-title">Adapt the process to your content strategy and brand voice.</h3>
+            </div>
+
+            {/* Analytics */}
+            <div className="lp-feat-card">
+              <div className="lp-feat-icon"><FileText size={22} /></div>
+              <div className="lp-feat-label">Analytics &amp; Insights</div>
+              <h3 className="lp-feat-title">Track performance, engagement and what works best.</h3>
+            </div>
+
+          </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
 
 /* ============================================================
-   FINAL CTA
+   FINAL CTA (3D Aperture Unfold)
    ============================================================ */
 function FinalCTA() {
+  const ctaRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress: ctaScrollProgress } = useScroll({
+    target: ctaRef,
+    offset: ['start end', 'center center'],
+  });
+  const smoothCtaScroll = useSpring(ctaScrollProgress, {
+    stiffness: 110,
+    damping: 26,
+    mass: 0.35,
+  });
+
+  const ctaScale = useTransform(smoothCtaScroll, [0, 1], [0.92, 1]);
+  const ctaRotateX = useTransform(smoothCtaScroll, [0, 1], [12, 0]);
+  const ctaY = useTransform(smoothCtaScroll, [0, 1], [36, 0]);
+
   return (
-    <section className="lp-final-cta" aria-labelledby="cta-heading">
+    <section ref={ctaRef} className="lp-final-cta lp-perspective-stage" aria-labelledby="cta-heading">
       <div className="lp-container">
-        <div className="lp-cta-panel">
+        <motion.div
+          className="lp-cta-panel"
+          style={{
+            scale: ctaScale,
+            rotateX: ctaRotateX,
+            y: ctaY,
+            transformPerspective: 1400,
+          }}
+        >
           <div className="lp-cta-highlight" aria-hidden="true" />
           <div className="lp-cta-grain" aria-hidden="true" />
           <div className="lp-cta-inner">
@@ -1484,7 +1740,7 @@ function FinalCTA() {
               </a>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

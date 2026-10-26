@@ -4483,12 +4483,232 @@
 }
 
 /* ============================================================
+   APPLE-CALIBER SPATIAL, OPTICAL & APERTURE TRANSITIONS
+   ============================================================ */
+.lp-perspective-stage {
+  perspective: 1400px;
+}
+
+.lp-hero-dive-stage,
+.lp-manuscript-unfold-wrap {
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+/* Brushed-Brass Rim & Specular Light Sweep on Galley Proof */
+.lp-brass-rim-card {
+  position: relative;
+  border: 1px solid rgba(200, 161, 90, 0.38) !important;
+  box-shadow:
+    0 24px 56px rgba(16, 23, 20, 0.12),
+    0 0 0 1px rgba(200, 161, 90, 0.14) inset !important;
+}
+
+.dark .lp-brass-rim-card {
+  border-color: rgba(212, 175, 103, 0.42) !important;
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(212, 175, 103, 0.18) inset !important;
+}
+
+.lp-specular-brass-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(200, 161, 90, 0.03) 35%,
+    rgba(212, 175, 103, 0.18) 50%,
+    rgba(255, 248, 231, 0.22) 54%,
+    rgba(200, 161, 90, 0.04) 70%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+}
+
+/* Loupe Mode Telemetry Pill */
+.lp-xray-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: rgba(22, 63, 50, 0.06);
+  border: 1px solid var(--lp-border);
+  color: var(--lp-text-muted);
+}
+
+.dark .lp-xray-mode-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(200, 161, 90, 0.22);
+}
+
+.lp-xray-mode-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lp-text-muted);
+}
+
+.lp-xray-mode-dot.is-live {
+  background: #C8A15A;
+  box-shadow: 0 0 8px rgba(200, 161, 90, 0.85);
+}
+
+.lp-xray-loupe-ring.is-auto {
+  transition: transform 0.08s linear;
+  border-color: rgba(212, 175, 103, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(22, 63, 50, 0.45),
+    0 12px 32px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(200, 161, 90, 0.25) inset;
+}
+
+/* Scroll-Scrubbed Optical Pipeline Rail (#workflow) */
+.lp-wf-scroll-rail {
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(22, 63, 50, 0.1);
+  margin: 0 0 22px;
+  overflow: hidden;
+}
+
+.dark .lp-wf-scroll-rail {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.lp-wf-scroll-rail-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #163F32 0%, #C8A15A 65%, #F3E3B8 100%);
+  box-shadow: 0 0 12px rgba(200, 161, 90, 0.5);
+}
+
+/* Architectural Aperture Scale & Midnight Forest Studio Vault (#features) */
+.lp-features-aperture-outer {
+  padding: 40px 20px !important;
+  background: var(--lp-bg);
+}
+
+.lp-features-midnight-vault {
+  position: relative;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 96px 0;
+  background: radial-gradient(circle at 20% 15%, #163327 0%, #0D1B15 58%, #09130F 100%);
+  color: #F3F0E8;
+  border: 1px solid rgba(212, 175, 103, 0.34);
+  box-shadow:
+    0 36px 90px rgba(10, 18, 14, 0.36),
+    0 1px 0 rgba(255, 248, 228, 0.2) inset;
+  overflow: hidden;
+  will-change: transform, border-radius, filter;
+}
+
+.lp-vault-specular-sweep {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 36%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(212, 175, 103, 0.02) 30%,
+    rgba(212, 175, 103, 0.11) 50%,
+    rgba(255, 248, 228, 0.14) 53%,
+    transparent 100%
+  );
+  transform: skewX(-16deg);
+}
+
+.lp-features-midnight-vault .lp-container {
+  position: relative;
+  z-index: 2;
+}
+
+.lp-features-midnight-vault .lp-vault-kicker {
+  color: #D4AF67 !important;
+}
+
+.lp-features-midnight-vault .lp-vault-heading {
+  color: #F7F4EC !important;
+}
+
+.lp-features-midnight-vault .lp-vault-heading em {
+  color: #D4AF67 !important;
+}
+
+.lp-features-midnight-vault .lp-vault-desc {
+  color: #C4D1CA !important;
+}
+
+.lp-features-midnight-vault .lp-feat-card {
+  background: rgba(21, 37, 30, 0.86) !important;
+  border: 1px solid rgba(212, 175, 103, 0.22) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset !important;
+  color: #F3F0E8 !important;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease !important;
+}
+
+.lp-features-midnight-vault .lp-feat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 103, 0.55) !important;
+}
+
+.lp-features-midnight-vault .lp-feat-title {
+  color: #F7F4EC !important;
+}
+
+.lp-features-midnight-vault .lp-feat-desc {
+  color: #B9C8C0 !important;
+}
+
+.lp-features-midnight-vault .lp-feat-label {
+  color: #D4AF67 !important;
+}
+
+.lp-features-midnight-vault .lp-feat-icon {
+  background: rgba(212, 175, 103, 0.14) !important;
+  color: #D4AF67 !important;
+  border: 1px solid rgba(212, 175, 103, 0.3);
+}
+
+.lp-features-midnight-vault .lp-feat-preview {
+  background: rgba(11, 20, 16, 0.72) !important;
+  border-color: rgba(212, 175, 103, 0.2) !important;
+}
+
+.lp-features-midnight-vault .lp-feat-source-name,
+.lp-features-midnight-vault .lp-check-item {
+  color: #E2EBE6 !important;
+}
+
+.lp-features-midnight-vault .lp-feat-score-big {
+  color: #D4AF67 !important;
+}
+
+/* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .gc-research,.gc-sources,.gc-article,.gc-seo,.lp-laptop,.lp-notebook,.lp-books,
   .lp-hero-bg::before,.lp-hero-bg::after,.lp-pipeline-signal,.gc-dot-progress,.lp-hero-badge-dot,
-  .kinetic-char {
+  .kinetic-char, .lp-specular-brass-sweep, .lp-vault-specular-sweep {
     animation: none !important;
     transition: none !important;
   }
