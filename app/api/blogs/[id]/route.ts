@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DbBlogService } from '@/services/db/blog.service';
-import { countWords, calculateReadingTime } from '@/lib/utils';
+import { DbWebsiteService } from '@/services/db/website.service';
+import { calculateReadingTime } from '@/lib/utils';
 import { headers } from 'next/headers';
-import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
@@ -10,16 +10,22 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const userId = (await headers()).get('x-user-id') || undefined;
     const blog = await DbBlogService.getBlogById(id);
 
     if (!blog) {
       return NextResponse.json({ success: false, error: 'Blog not found' }, { status: 404 });
     }
 
+    const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
+    if (accessibleIds.length > 0 && !accessibleIds.includes(blog.websiteId)) {
+      return NextResponse.json({ success: false, error: 'Forbidden: You do not have access to this article' }, { status: 403 });
+    }
+
     return NextResponse.json({ success: true, data: blog });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('[API /blogs/[id] GET Error]:', err);
+    return NextResponse.json({ success: false, error: 'Failed to load blog' }, { status: 500 });
   }
 }
 
@@ -36,10 +42,21 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Blog not found' }, { status: 404 });
     }
 
-    // Check user ownership if authenticated userId is available
-    const userId = (await headers()).get('x-user-id');
-    if (userId && existingBlog.website?.userId && existingBlog.website.userId !== userId) {
+    const userId = (await headers()).get('x-user-id') || undefined;
+    const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
+    if (accessibleIds.length > 0 && !accessibleIds.includes(existingBlog.websiteId)) {
       return NextResponse.json({ success: false, error: 'Forbidden: You do not own this website' }, { status: 403 });
+    }
+
+    // Prevent arbitrary elevation to APPROVED or PUBLISHED via PUT
+    let targetStatus = existingBlog.status;
+    if (body.status !== undefined) {
+      const requestedStatus = String(body.status);
+      if (requestedStatus === 'DRAFT' || requestedStatus === 'PENDING_APPROVAL') {
+        targetStatus = requestedStatus as any;
+      } else if (requestedStatus === existingBlog.status) {
+        targetStatus = existingBlog.status;
+      }
     }
 
     const content = body.content !== undefined ? body.content : existingBlog.content;
@@ -60,7 +77,7 @@ export async function PUT(
       tags: body.tags !== undefined ? body.tags : (existingBlog.tags as any),
       category: body.category !== undefined ? body.category : existingBlog.category,
       estimatedReadingTime: readingTime,
-      status: body.status !== undefined ? body.status : existingBlog.status,
+      status: targetStatus,
     });
 
     return NextResponse.json({
@@ -69,7 +86,7 @@ export async function PUT(
       data: updatedBlog,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('[API /blogs/[id] PUT Error]:', err);
+    return NextResponse.json({ success: false, error: 'Failed to update article' }, { status: 500 });
   }
 }

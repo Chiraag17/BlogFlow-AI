@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DbBlogService } from '@/services/db/blog.service';
+import { DbWebsiteService } from '@/services/db/website.service';
+import { headers } from 'next/headers';
 
 export async function GET(req: NextRequest) {
   try {
+    const userId = (await headers()).get('x-user-id') || undefined;
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || undefined;
     const status = (searchParams.get('status') as any) || undefined;
     const websiteId = searchParams.get('websiteId') || undefined;
 
     const data = await DbBlogService.getBlogs({
+      userId,
       search,
       status,
       websiteId,
@@ -16,13 +20,14 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, data });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('[API /blogs GET Error]:', err);
+    return NextResponse.json({ success: false, error: 'Failed to load blogs' }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = (await headers()).get('x-user-id') || undefined;
     const body = await req.json();
     const {
       websiteId,
@@ -51,6 +56,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
+    if (accessibleIds.length > 0 && !accessibleIds.includes(websiteId)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: You do not have access to this website' },
+        { status: 403 }
+      );
+    }
+
+    // Prevent direct creation of APPROVED/PUBLISHED blogs to enforce governance
+    const allowedInitialStatus = status === 'PENDING_APPROVAL' ? 'PENDING_APPROVAL' : 'DRAFT';
+
     const blog = await DbBlogService.createBlog({
       websiteId,
       title,
@@ -67,7 +83,7 @@ export async function POST(req: NextRequest) {
       tags,
       category,
       estimatedReadingTime: estimatedReadingTime || 5,
-      status: status || 'DRAFT',
+      status: allowedInitialStatus,
       researchReportId,
     });
 
@@ -77,8 +93,8 @@ export async function POST(req: NextRequest) {
       data: blog,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('[API /blogs POST Error]:', err);
+    return NextResponse.json({ success: false, error: 'Failed to save article' }, { status: 500 });
   }
 }
 

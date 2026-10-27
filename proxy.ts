@@ -12,31 +12,42 @@ import { getToken } from "next-auth/jwt";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const sanitizedHeaders = new Headers(request.headers);
+  sanitizedHeaders.delete("x-user-id");
+  sanitizedHeaders.delete("x-user-role");
+
   // Allow public auth routes and nextjs static files
   if (pathname.startsWith("/api/auth") || pathname.startsWith("/_next") || pathname.startsWith("/api/health")) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: {
+        headers: sanitizedHeaders,
+      },
+    });
   }
 
   // Only protect API routes – other routes (pages) can handle auth client‑side.
   if (pathname.startsWith("/api")) {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token) {
+    if (!token || !token.sub) {
       return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
     }
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-user-id", token.sub ?? "");
-    requestHeaders.set("x-user-role", (token as any).role ?? "");
+    sanitizedHeaders.set("x-user-id", String(token.sub));
+    sanitizedHeaders.set("x-user-role", String((token as any).role ?? "USER"));
     return NextResponse.next({
       request: {
-        headers: requestHeaders,
+        headers: sanitizedHeaders,
       },
     });
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: sanitizedHeaders,
+    },
+  });
 }
 
 export const config = {

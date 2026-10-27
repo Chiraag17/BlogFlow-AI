@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WordPressService } from '@/services/cms/wordpress.service';
+import { DbWebsiteService } from '@/services/db/website.service';
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
 
@@ -10,13 +11,13 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
-    const userId = (await headers()).get('x-user-id');
+    const userId = (await headers()).get('x-user-id') || undefined;
 
     // Retrieve blog with website and existing integrations
     const blog = await prisma.blog.findUnique({
       where: { id },
       include: {
-        website: { include: { cmsIntegrations: true } },
+        website: { include: { cmsIntegrations: { select: { id: true, connectionStatus: true } } } },
         approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
       },
     });
@@ -25,8 +26,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Article not found.' }, { status: 404 });
     }
 
-    // Verify user ownership if authenticated
-    if (userId && blog.website?.userId && blog.website.userId !== userId) {
+    // Verify user ownership / accessible website
+    const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
+    if (accessibleIds.length > 0 && !accessibleIds.includes(blog.websiteId)) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: You do not own this website.' },
         { status: 403 }
@@ -50,10 +52,21 @@ export async function POST(
       );
     }
 
-    // If integrationId not specified in body, find website's primary integration
-    let integrationId = body.integrationId;
-    if (!integrationId) {
-      integrationId = blog.website.cmsIntegrations.find((c) => c.connectionStatus === 'CONNECTED')?.id;
+    // Verify integrationId belongs to this website's integrations
+    const validIntegrations = blog.website.cmsIntegrations;
+    let integrationId: string | undefined;
+
+    if (body.integrationId) {
+      const matched = validIntegrations.find((c) => c.id === body.integrationId);
+      if (!matched) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Specified CMS integration does not belong to this website.' },
+          { status: 403 }
+        );
+      }
+      integrationId = matched.id;
+    } else {
+      integrationId = validIntegrations.find((c) => c.connectionStatus === 'CONNECTED')?.id;
     }
 
     if (!integrationId) {
@@ -88,7 +101,7 @@ export async function POST(
       data: result,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('[API /blogs/[id]/publish POST Error]:', err);
+    return NextResponse.json({ success: false, error: 'Failed to publish article' }, { status: 500 });
   }
 }

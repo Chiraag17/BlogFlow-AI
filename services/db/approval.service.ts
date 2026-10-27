@@ -1,15 +1,18 @@
 import { prisma } from '@/lib/prisma';
 import { BlogStatus, ApprovalStatus } from '@prisma/client';
 import { resumeWorkflowDecision } from '../langgraph/workflow.graph';
+import { DbWebsiteService } from './website.service';
 
 export class DbApprovalService {
   /**
-   * Retrieves all blogs awaiting human review.
+   * Retrieves all blogs awaiting human review for the user's accessible websites.
    */
-  public static async getPendingApprovals() {
+  public static async getPendingApprovals(userId?: string | null) {
     try {
+      const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
       return await prisma.blog.findMany({
         where: {
+          ...(accessibleWebsiteIds.length > 0 ? { websiteId: { in: accessibleWebsiteIds } } : {}),
           status: {
             in: [BlogStatus.PENDING_APPROVAL, BlogStatus.CHANGES_REQUESTED],
           },
@@ -34,11 +37,16 @@ export class DbApprovalService {
   }
 
   /**
-   * Retrieves review history across all articles.
+   * Retrieves review history across accessible articles.
    */
-  public static async getApprovalHistory() {
+  public static async getApprovalHistory(userId?: string | null) {
     try {
+      const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
       return await prisma.approval.findMany({
+        where:
+          accessibleWebsiteIds.length > 0
+            ? { blog: { websiteId: { in: accessibleWebsiteIds } } }
+            : {},
         include: {
           blog: {
             include: {
@@ -69,7 +77,18 @@ export class DbApprovalService {
     comments?: string;
     reviewerId?: string;
   }) {
-    const { blogId, decision, comments, reviewerId } = params;
+    const { blogId, decision, comments } = params;
+
+    let verifiedUserId = params.reviewerId;
+    try {
+      const { headers } = await import('next/headers');
+      const headerUserId = (await headers()).get('x-user-id');
+      if (headerUserId) {
+        verifiedUserId = headerUserId;
+      }
+    } catch {
+      // Outside request context
+    }
 
     // 1. Fetch blog and active workflow execution thread
     const blog = await prisma.blog.findUnique({
@@ -84,7 +103,14 @@ export class DbApprovalService {
     });
 
     if (!blog) {
-      throw new Error(`Blog with ID ${blogId} not found.`);
+      throw new Error('Blog not found.');
+    }
+
+    if (verifiedUserId) {
+      const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(verifiedUserId);
+      if (accessibleWebsiteIds.length > 0 && !accessibleWebsiteIds.includes(blog.websiteId)) {
+        throw new Error('Forbidden: You do not have permission to review this article.');
+      }
     }
 
     let newBlogStatus: BlogStatus = BlogStatus.PENDING_APPROVAL;
@@ -101,6 +127,18 @@ export class DbApprovalService {
       approvalStatus = ApprovalStatus.REVISION_REQUESTED;
     }
 
+    // Verify reviewer exists in User table if verifiedUserId is provided
+    let validReviewerId: string | undefined = undefined;
+    if (verifiedUserId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: verifiedUserId },
+        select: { id: true },
+      });
+      if (userExists) {
+        validReviewerId = userExists.id;
+      }
+    }
+
     // 2. Update PostgreSQL database records
     const [updatedBlog, approvalRecord] = await prisma.$transaction([
       prisma.blog.update({
@@ -110,7 +148,7 @@ export class DbApprovalService {
       prisma.approval.create({
         data: {
           blogId,
-          reviewerId,
+          reviewerId: validReviewerId,
           status: approvalStatus,
           comments: comments || `Human decision recorded: ${decision}`,
           reviewedAt: new Date(),
@@ -128,7 +166,7 @@ export class DbApprovalService {
           threadId,
           decision,
           comments,
-          reviewerId,
+          reviewerId: validReviewerId,
         });
       } catch (graphErr) {
         console.warn(`[Approval Service] Graph resumption notice:`, graphErr);

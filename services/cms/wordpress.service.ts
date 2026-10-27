@@ -1,5 +1,8 @@
 import { decryptCredential } from '../security/encryption.service';
+import { validateExternalUrl } from '../security/url-validator';
 import { prisma } from '@/lib/prisma';
+
+const REQUEST_TIMEOUT_MS = 15000;
 
 export interface WordPressAuth {
   siteUrl: string;
@@ -45,10 +48,11 @@ export interface WordPressPublishResult {
 
 export class WordPressService {
   /**
-   * Normalizes WordPress site URL to remove trailing slashes.
+   * Validates and normalizes WordPress site URL against SSRF and removes trailing slashes.
    */
   public static normalizeUrl(url: string): string {
-    return url.trim().replace(/\/+$/, '');
+    const parsed = validateExternalUrl(url);
+    return parsed.toString().replace(/\/+$/, '');
   }
 
   /**
@@ -94,6 +98,7 @@ export class WordPressService {
           Authorization: authHeader,
           'User-Agent': 'BlogFlow-AI/1.0',
         },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
       if (!res.ok) {
@@ -138,6 +143,7 @@ export class WordPressService {
     const endpoint = `${normalizedUrl}/wp-json/wp/v2/categories?per_page=100`;
     const res = await fetch(endpoint, {
       headers: { Authorization: authHeader, 'User-Agent': 'BlogFlow-AI/1.0' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -164,6 +170,7 @@ export class WordPressService {
     const endpoint = `${normalizedUrl}/wp-json/wp/v2/tags?per_page=100`;
     const res = await fetch(endpoint, {
       headers: { Authorization: authHeader, 'User-Agent': 'BlogFlow-AI/1.0' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -194,6 +201,7 @@ export class WordPressService {
       const endpoint = `${normalizedUrl}/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&status=any`;
       const res = await fetch(endpoint, {
         headers: { Authorization: authHeader, 'User-Agent': 'BlogFlow-AI/1.0' },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
       if (res.ok) {
@@ -237,7 +245,7 @@ export class WordPressService {
     } catch (dbErr: any) {
       return {
         success: false,
-        error: `Database check failed: unable to verify human approval status in PostgreSQL (${dbErr.message}).`,
+        error: `Database check failed: unable to verify human approval status in PostgreSQL.`,
       };
     }
 
@@ -259,13 +267,13 @@ export class WordPressService {
       };
     }
 
-    // 2. Retrieve CMS integration credentials
+    // 2. Retrieve CMS integration credentials and verify website match
     const integration = await prisma.cMSIntegration.findUnique({
       where: { id: integrationId },
     });
 
-    if (!integration || integration.connectionStatus !== 'CONNECTED') {
-      return { success: false, error: 'WordPress CMS integration is inactive or not found.' };
+    if (!integration || integration.connectionStatus !== 'CONNECTED' || integration.websiteId !== blog.websiteId) {
+      return { success: false, error: 'WordPress CMS integration is inactive, mismatched, or not found.' };
     }
 
     const auth: WordPressAuth = {
@@ -357,6 +365,7 @@ export class WordPressService {
           'User-Agent': 'BlogFlow-AI/1.0',
         },
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
       if (!res.ok) {

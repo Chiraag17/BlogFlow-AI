@@ -7,6 +7,9 @@
  */
 
 import { Blog, PublishingRecord } from '@/types';
+import { validateExternalUrl } from '../security/url-validator';
+
+const REQUEST_TIMEOUT_MS = 15000;
 
 export interface WordPressConfig {
   siteUrl: string;
@@ -46,7 +49,18 @@ export class WordPressService {
       };
     }
 
-    const cleanSiteUrl = config.siteUrl.replace(/\/+$/, '');
+    let cleanSiteUrl: string;
+    try {
+      cleanSiteUrl = validateExternalUrl(config.siteUrl).toString().replace(/\/+$/, '');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        success: false,
+        status: 'failed',
+        error: message,
+      };
+    }
+
     const endpoint = `${cleanSiteUrl}/wp-json/wp/v2/posts`;
 
     // Attempt live REST API dispatch if real application password provided
@@ -72,6 +86,7 @@ export class WordPressService {
             Authorization: authHeader,
           },
           body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
 
         if (response.ok) {
@@ -102,9 +117,22 @@ export class WordPressService {
    * Verifies connectivity to the target WordPress site's REST API.
    */
   async testConnection(config: WordPressConfig): Promise<{ success: boolean; siteName?: string; error?: string }> {
+    let cleanSiteUrl: string;
     try {
-      const cleanSiteUrl = config.siteUrl.replace(/\/+$/, '');
-      const response = await fetch(`${cleanSiteUrl}/wp-json`, { method: 'GET' });
+      cleanSiteUrl = validateExternalUrl(config.siteUrl).toString().replace(/\/+$/, '');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        success: false,
+        error: message,
+      };
+    }
+
+    try {
+      const response = await fetch(`${cleanSiteUrl}/wp-json`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
       if (response.ok) {
         const data = await response.json();
         return {

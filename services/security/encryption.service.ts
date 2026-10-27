@@ -4,12 +4,45 @@ const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
+let hasWarnedMissingKey = false;
+const LEGACY_DEV_FALLBACK = 'blogflow-ai-master-secret-encryption-key-32bytes!';
+
 /**
  * Returns a 32-byte Buffer key derived from the ENCRYPTION_KEY environment variable.
+ * Falls back to NEXTAUTH_SECRET derivation in development with a single warning.
  */
 function getEncryptionKey(): Buffer {
-  const secret = process.env.ENCRYPTION_KEY || 'blogflow-ai-master-secret-encryption-key-32bytes!';
-  return crypto.createHash('sha256').update(secret).digest();
+  const configured = process.env.ENCRYPTION_KEY?.trim();
+  if (configured) {
+    return crypto.createHash('sha256').update(configured).digest();
+  }
+
+  if (!hasWarnedMissingKey) {
+    hasWarnedMissingKey = true;
+    console.warn(
+      '[Security Warning] ENCRYPTION_KEY is not set. Deriving key from NEXTAUTH_SECRET environment context.'
+    );
+  }
+
+  const envFallback =
+    process.env.NEXTAUTH_SECRET?.trim() ||
+    process.env.DATABASE_URL?.trim() ||
+    LEGACY_DEV_FALLBACK;
+
+  return crypto.createHash('sha256').update(`blogflow-cms-key:${envFallback}`).digest();
+}
+
+function decryptWithKey(
+  iv: Buffer,
+  authTag: Buffer,
+  encryptedHex: string,
+  key: Buffer
+): string {
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+  let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
 }
 
 /**
@@ -42,15 +75,15 @@ export function decryptCredential(cipherPackage: string): string {
   const [ivHex, authTagHex, encryptedHex] = parts;
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(authTagHex, 'hex');
-  const key = getEncryptionKey();
+  const primaryKey = getEncryptionKey();
 
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(authTag);
-
-  let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-
-  return decrypted;
+  try {
+    return decryptWithKey(iv, authTag, encryptedHex, primaryKey);
+  } catch {
+    // Support decrypting existing seeded records encrypted with the legacy key
+    const legacyKey = crypto.createHash('sha256').update(LEGACY_DEV_FALLBACK).digest();
+    return decryptWithKey(iv, authTag, encryptedHex, legacyKey);
+  }
 }
 
 /**

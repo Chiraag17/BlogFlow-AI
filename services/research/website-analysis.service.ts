@@ -10,6 +10,7 @@ import { WebsiteAnalysis, WebsiteFormData } from '@/types';
 import { geminiService } from '@/services/ai/gemini.service';
 import { promptService } from '@/services/ai/prompt.service';
 import { outputValidatorService } from '@/services/ai/output-validator.service';
+import { validateExternalUrl } from '@/services/security/url-validator';
 
 export interface WebsiteAnalysisInput {
   websiteId?: string;
@@ -25,48 +26,10 @@ export interface WebsiteAnalysisInput {
 
 export class WebsiteAnalysisService {
   /**
-   * SSRF protection: verifies that the URL uses HTTP/HTTPS and does not target internal/private hosts.
+   * SSRF protection: verifies that the URL uses HTTP/HTTPS and does not target internal/private/metadata hosts.
    */
   private validateUrlSafety(rawUrl: string): URL {
-    let parsed: URL;
-    try {
-      parsed = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`);
-    } catch {
-      throw new Error(`Invalid website URL format: "${rawUrl}"`);
-    }
-
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      throw new Error('Only HTTP and HTTPS protocols are permitted for website analysis.');
-    }
-
-    const host = parsed.hostname.toLowerCase();
-
-    // Check for loopback, local, and private network addresses
-    const forbiddenPatterns = [
-      'localhost',
-      '127.',
-      '0.0.0.0',
-      '10.',
-      '192.168.',
-      '172.16.',
-      '172.17.',
-      '172.18.',
-      '172.19.',
-      '172.2',
-      '172.30.',
-      '172.31.',
-      '::1',
-      '.local',
-      '.internal',
-    ];
-
-    for (const pattern of forbiddenPatterns) {
-      if (host === pattern || host.startsWith(pattern) || host.endsWith(pattern)) {
-        throw new Error(`Security restriction: Analysis of internal or private network hosts (${host}) is blocked.`);
-      }
-    }
-
-    return parsed;
+    return validateExternalUrl(rawUrl);
   }
 
   /**

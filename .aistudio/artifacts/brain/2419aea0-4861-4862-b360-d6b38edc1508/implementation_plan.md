@@ -1,88 +1,56 @@
-# Apple-Caliber Scroll & Spatial Transitions for Landing Page
+# Security & Bug Remediation Plan — BlogFlow AI
 
-This plan introduces four interconnected, GPU-accelerated scroll-scrubbed transitions across the BlogFlow AI landing page—combining Framer Motion `useScroll`, `useSpring`, and `useTransform` choreography so every section handoff feels like an Apple Pro keynote reveal while remaining fast, native-scrolling, and responsive to direct cursor/click overrides.
-
-## User Review & Critical Decisions
-
-> [!IMPORTANT]
-> The following transition mechanics and performance boundaries were confirmed in our planning interview:
-
-- **Confirmed Decision 1 (4 Bespoke Spatial Transitions)**:
-  1. **Hero-to-Product 3D Manuscript Dive & Unfold**: Scrolling out of `#hero` smoothly pitches and zooms the Hero stage in 3D space (`rotateX`, `scale`, `y`) while unfolding the `#product` Galley Proof card from a tilted 3D manuscript plane (`rotateX(24deg) scale(0.90)` → `rotateX(0deg) scale(1)`).
-  2. **Scroll-Driven Automated X-Ray Loupe Sweep**: Scrolling through `#product` automatically glides the **2.4× Brass Optical Loupe** along a calibrated S-curve across the Galley Proof—revealing primary citations and SEO telemetry hands-free—while immediately handing control over to the user's cursor on hover or locking on click.
-  3. **Architectural Aperture Scale & Midnight Studio Shift**: `#workflow` and `#features` expand through a precision camera-aperture frame (`scale: 0.92 → 1.0`, `borderRadius: 36px → 16px`), with `#features` shifting the atmosphere into a high-contrast **Midnight Forest Studio Vault** (`#0D1B15` with brushed-brass rim lighting) before returning to warm archival vellum.
-  4. **Optical Camera Rack-Focus & Specular Brass Light Sweep**: Section transitions apply a subtle optical depth-of-field rack-focus (`blur(5px) → blur(0px)`) and sweep a diagonal brushed-brass specular light beam across card bevels and display headings in sync with scroll progress.
-- **Confirmed Decision 2 (Interaction Model)**: Continuous scroll-position scrubbing (`useScroll` + spring damping) paired with instant hover and click overrides.
-- **Confirmed Decision 3 (Performance Budget)**: Lightweight GPU-composited transforms (`transform`, `opacity`, `clip-path`, subtle `filter`) with zero scroll-jacking traps and automatic `prefers-reduced-motion` fallback.
+## Overview
+This plan addresses the security vulnerabilities and functional bugs identified during the codebase audit. It hardens authentication, enforces tenant isolation across API routes, prevents credential leakage, blocks Server-Side Request Forgery (SSRF), enforces database-verified editorial approvals before publishing, and adds rate limiting and HTTP security headers.
 
 ---
 
-## 1. Overview & Core Concept
-
-- **What It Does**: Replaces static vertical section stacking with a continuous optical and spatial camera journey through the BlogFlow AI studio:
-  - **Act I (`#hero` → `#product`)**: The camera recedes from the Hero headline and dives toward the 3D Editorial Desk, unfolding the live Galley Proof sheet into a flat, inspectable surface.
-  - **Act II (`#product`)**: As the visitor scrolls past the Galley Proof, the Brass Optical Loupe autonomously scans across the article paragraphs along an S-curve, exposing the underlying verified sources (`MIT Technology Review`, `Stanford HAI`, `NIST`) even on touch devices or without mouse movement. Hovering immediately enslaves the loupe to the pointer; clicking locks the full X-Ray blueprint.
-  - **Act III (`#workflow` → `#features`)**: Each major chapter opens like a precision optical aperture, culminating in the **Midnight Forest Studio** shift for `#features` where brushed-brass specular beams sweep across the capability cards as you scroll.
-- **Target Audience / Persona**: Visitors who expect flagship Apple-grade polish, fluid physics, and tactile visual storytelling without sluggish heavy video embeds.
-- **Key Value**: Elevates the landing page into an interactive product film driven entirely by the user's natural scroll wheel and cursor.
-
----
-
-## 2. User Experience & Visual Design
-
-- **Key User Flows**:
-  1. **Hero Exit & Product Unfold**: Between `0%` and `100%` of the Hero-to-Product transition zone, the Hero container scales gently (`1 → 0.95`) with a subtle optical rack-out while the `#product` Galley Proof card unfolds from a `22°` 3D tilt into a crisp, flat editorial spread.
-  2. **Autonomous + Interactive X-Ray Loupe**: When the user is not hovering over the Galley Proof card, the loupe coordinates `(x, y)` are driven by a smooth parametric curve mapped to `#product` scroll progress (`0.15 → 0.85`), accompanied by a subtle `SCROLL-SCRUBBING X-RAY · HOVER TO TAKE CONTROL` indicator. Moving the mouse onto the proof card instantaneously switches to 1:1 cursor tracking.
-  3. **Midnight Studio Aperture (`#features`)**: As `#features` enters the viewport, its outer architectural vault container expands from `scale(0.92)` with `36px` rounded corners into a full-bleed dark-emerald studio showcase (`#0D1B15`), while a diagonal brushed-brass specular glint sweeps across the bento cards.
-- **Visual Identity & Theme**:
-  - *Aesthetic Direction*: Apple Pro Hardware Keynote meets High-Craft Archival Editorial Studio.
-  - *Color Palette & Mood*: Alternates rhythmically between Warm Archival Paper (`#F7F4EC`) and Deep Midnight Forest Studio (`#0D1B15`), unified by Brushed Brass (`#C8A15A`) specular highlights.
+## 1. Access Control (IDOR) & Credential Leakage Prevention
+- **Header Spoofing Prevention (`proxy.ts`)**:
+  - Explicitly delete any incoming client-supplied `x-user-id`, `x-user-role`, and `x-user-email` headers before injecting verified JWT session claims so unauthenticated or malicious requests cannot spoof identity headers.
+- **Tenant Isolation with Demo Seed Fallback (`services/db/website.service.ts`, `services/db/blog.service.ts`, `services/db/approval.service.ts`)**:
+  - Scope queries to the authenticated user's websites (`userId`), while permitting read access to demo/seeded records where appropriate if the user has no personal websites yet, and enforcing strict ownership on mutations (`POST`, `PUT`, `PATCH`, `DELETE`).
+  - Enforce ownership verification in `/api/blogs` (`GET`, `POST`), `/api/blogs/[id]` (`GET`, `PUT`), `/api/websites/[id]` (`GET`, `PATCH`, `DELETE`), and `/api/approvals` (`GET`).
+- **Strip `encryptedCredentials` from API Responses**:
+  - Update Prisma `include`/`select` projections in `DbWebsiteService.getWebsiteById`, `DbBlogService.getBlogById`, and `/api/websites/[id]` so `cmsIntegrations` never returns the `encryptedCredentials` column to the client.
 
 ---
 
-## 3. Key Product Decisions & Trade-Offs
-
-- **Decision 1: Parametric Scroll-Scrubbed Loupe + Instant Pointer Takeover**
-  - *Chosen Approach*: Compute scroll-driven loupe coordinates `(scrollLoupeX, scrollLoupeY)` from the `#product` section's scroll progress whenever `!loupeState.active && !xrayPinned`. The moment `onMouseMove` fires, `loupeState.active` becomes `true` and overrides the scroll path with exact cursor coordinates.
-  - *Why*: Many visitors scroll down a landing page without deliberately hovering over every card; autonomous scroll-scrubbing guarantees 100% of visitors witness the X-Ray citation reveal while preserving full manual control.
-- **Decision 2: Native Scroll with Spring-Damped `useScroll` Transforms (Zero Scroll-Jacking)**
-  - *Chosen Approach*: Use Framer Motion's `useScroll({ target, offset })` and `useSpring(..., { stiffness: 120, damping: 24 })` on section wrappers rather than hijacking `window.onwheel`.
-  - *Why*: Preserves native trackpad momentum, scrollbar dragging, and anchor-link jumps (`#product`, `#workflow`, `#features`) with zero lag.
+## 2. SSRF Protection & Outbound Request Hardening
+- **External URL Validator (`services/security/url-validator.ts`)**:
+  - Create `validateExternalUrl(rawUrl: string)` that:
+    - Enforces `http:` or `https:` protocol only.
+    - Blocks `localhost`, `.local`, `.internal`, and IPv6 loopback (`::1`).
+    - Blocks private, loopback, and link-local IPv4 ranges (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16` cloud metadata service, `0.0.0.0/8`).
+- **Apply SSRF Guard & Timeouts**:
+  - Integrate `validateExternalUrl()` and `AbortSignal.timeout(15000)` across `WordPressService` (`services/cms/wordpress.service.ts` and `services/cms/wordpress-service.ts`), website registration (`/api/websites`), and website analysis routes.
 
 ---
 
-## 4. Technical Architecture & Data Strategy *(Technical Reference)*
+## 3. Database-Verified Approval Enforcement in `/api/publish`
+- **Eliminate Client-Trusted Approval Bypass (`app/api/publish/route.ts`)**:
+  - When a `blog.id` is provided, query PostgreSQL via `DbBlogService.getBlogById(blog.id)` to verify:
+    1. The blog belongs to a website owned by the authenticated user (or valid demo workspace).
+    2. The blog's server-side status in PostgreSQL is `APPROVED` (or has an `APPROVED` record in `BlogApproval`), rather than trusting the client-supplied `blog.status` JSON property.
+  - Validate `config.siteUrl` through the SSRF validator before making outbound WordPress REST API calls.
 
-- **Architecture & Component Diagram**:
+---
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                Apple-Caliber Scroll & Spatial Choreography              │
-├─────────────────────────────────────────────────────────────────────────┤
-│  1. HeroSection (#hero)                                                 │
-│     • useScroll(heroRef) -> Hero receding scale (1 -> 0.94),            │
-│       perspective rotateX (0° -> 8°), & optical rack-focus blur         │
-├─────────────────────────────────────────────────────────────────────────┤
-│  2. ProductXRaySection (#product)                                       │
-│     • 3D Manuscript Unfold: rotateX(22° -> 0°), scale(0.9 -> 1.0),      │
-│       blur(5px -> 0px) + Specular Brass Glint Sweep                     │
-│     • Autonomous Scroll-Scrubbed Loupe S-Curve (when !hover && !pinned) │
-│     • Instant Cursor Override onPointerMove + Click-to-Lock Toggle      │
-├─────────────────────────────────────────────────────────────────────────┤
-│  3. WorkflowSection (#workflow)                                         │
-│     • Optical Rack-Focus Entrance + Scroll-Linked Brass Progress Beam   │
-│     • Interactive 5-Stage Agent Pipeline + Click Override               │
-├─────────────────────────────────────────────────────────────────────────┤
-│  4. FeatureSection (#features — Architectural Aperture & Studio Shift)  │
-│     • Aperture Expansion: scale(0.92 -> 1.0), radius(36px -> 20px)      │
-│     • Chromatic Shift into Midnight Forest Vault (#0D1B15)              │
-│     • Scroll-Scrubbed Specular Brass Rim Sweep across Bento Cards       │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+## 4. Authentication, Encryption & Input Validation Hardening
+- **Email Normalization & Password Bounds (`app/api/auth/register/route.ts`, `lib/authOptions.ts`)**:
+  - Normalize emails with `.trim().toLowerCase()` during both registration and login to prevent case-variant duplicate accounts and login failures.
+  - Cap password length at 72 characters in Zod schemas (`z.string().min(8).max(72)`) to prevent bcrypt truncation bugs and CPU exhaustion attacks.
+- **Encryption Key Hardening (`services/security/encryption.service.ts`)**:
+  - Replace the static plaintext fallback string with a fallback derived via SHA-256 from `NEXTAUTH_SECRET` / environment context if `ENCRYPTION_KEY` is not explicitly configured, and log a single clear startup warning in production if `ENCRYPTION_KEY` is missing.
 
-- **Interactive Component & State Mapping**:
-  - `HeroSection`: Uses `heroRef` with `useScroll({ target: heroRef, offset: ['start start', 'end start'] })` to drive receding 3D perspective and rack-focus as the user scrolls toward `#product`.
-  - `ProductXRaySection`: Uses `productRef` with `useScroll({ target: productRef, offset: ['start end', 'end start'] })` to:
-    1. Unfold the 3D Galley Proof card (`rotateX`, `scale`, `y`, `filter`).
-    2. Drive `autoLoupePos` (`{ x, y, active }`) along a smooth sinusoidal path across the proof card during the central scroll window (`scrollYProgress` `0.22` → `0.78`), automatically yielding to `loupeState` when hovered or `xrayPinned` when locked.
-  - `WorkflowSection` & `FeatureSection`: Use section-scoped `useScroll` hooks to drive the **Architectural Aperture** container (`scale`, `borderRadius`), **Optical Rack-Focus**, and **Specular Brass Light Sweep** (`--brass-sweep-pos` / motion overlay).
+---
+
+## 5. In-Memory Rate Limiting & Security Headers
+- **Sliding-Window Rate Limiter (`services/security/rate-limiter.ts`)**:
+  - Implement a lightweight in-memory rate limiter keyed by client IP / user ID.
+  - Apply rate limits to:
+    - `/api/auth/register` (e.g., 10 requests / 15 minutes per IP)
+    - AI generation & research endpoints (`/api/generate`, `/api/ai/*` — e.g., 20 requests / minute per user/IP)
+- **HTTP Security Headers & Error Sanitization (`next.config.ts`)**:
+  - Configure `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-DNS-Prefetch-Control: on`, and `Permissions-Policy: camera=(), microphone=(), geolocation=()` (while keeping iframe embedding enabled for the preview environment).
+  - Sanitize unhandled database errors in API routes so raw SQL/Prisma stack traces are not leaked to clients.

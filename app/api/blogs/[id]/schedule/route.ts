@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WordPressService } from '@/services/cms/wordpress.service';
+import { DbWebsiteService } from '@/services/db/website.service';
 import { prisma } from '@/lib/prisma';
+import { headers } from 'next/headers';
 
 export async function POST(
   req: NextRequest,
@@ -9,6 +11,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
+    const userId = (await headers()).get('x-user-id') || undefined;
 
     if (!body.scheduledDate) {
       return NextResponse.json(
@@ -17,13 +20,56 @@ export async function POST(
       );
     }
 
-    let integrationId = body.integrationId;
-    if (!integrationId) {
-      const blog = await prisma.blog.findUnique({
-        where: { id },
-        include: { website: { include: { cmsIntegrations: true } } },
-      });
-      integrationId = blog?.website.cmsIntegrations.find((c) => c.connectionStatus === 'CONNECTED')?.id;
+    const blog = await prisma.blog.findUnique({
+      where: { id },
+      include: {
+        website: { include: { cmsIntegrations: { select: { id: true, connectionStatus: true } } } },
+        approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
+
+    if (!blog) {
+      return NextResponse.json({ success: false, error: 'Article not found.' }, { status: 404 });
+    }
+
+    const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
+    if (accessibleIds.length > 0 && !accessibleIds.includes(blog.websiteId)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: You do not own this website.' },
+        { status: 403 }
+      );
+    }
+
+    const latestApproval = blog.approvals[0];
+    const isApproved =
+      blog.status === 'APPROVED' ||
+      blog.status === 'SCHEDULED' ||
+      latestApproval?.status === 'APPROVED';
+
+    if (!isApproved) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Scheduling rejected: Article has not been approved in the Approval Center.',
+        },
+        { status: 403 }
+      );
+    }
+
+    const validIntegrations = blog.website.cmsIntegrations;
+    let integrationId: string | undefined;
+
+    if (body.integrationId) {
+      const matched = validIntegrations.find((c) => c.id === body.integrationId);
+      if (!matched) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Specified CMS integration does not belong to this website.' },
+          { status: 403 }
+        );
+      }
+      integrationId = matched.id;
+    } else {
+      integrationId = validIntegrations.find((c) => c.connectionStatus === 'CONNECTED')?.id;
     }
 
     if (!integrationId) {
@@ -50,7 +96,7 @@ export async function POST(
       data: result,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('[API /blogs/[id]/schedule POST Error]:', err);
+    return NextResponse.json({ success: false, error: 'Failed to schedule article' }, { status: 500 });
   }
 }

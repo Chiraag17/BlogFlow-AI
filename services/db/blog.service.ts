@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { BlogStatus, Prisma } from '@prisma/client';
+import { DbWebsiteService } from '@/services/db/website.service';
 
 export class DbBlogService {
   public static async getBlogs(params?: {
+    userId?: string | null;
     websiteId?: string;
     status?: BlogStatus;
     search?: string;
@@ -11,7 +13,17 @@ export class DbBlogService {
   }) {
     const where: Prisma.BlogWhereInput = {};
 
-    if (params?.websiteId) where.websiteId = params.websiteId;
+    const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(params?.userId);
+
+    if (params?.websiteId) {
+      if (accessibleWebsiteIds.length > 0 && !accessibleWebsiteIds.includes(params.websiteId)) {
+        return { blogs: [], total: 0 };
+      }
+      where.websiteId = params.websiteId;
+    } else if (accessibleWebsiteIds.length > 0) {
+      where.websiteId = { in: accessibleWebsiteIds };
+    }
+
     if (params?.status) where.status = params.status;
     if (params?.search) {
       where.OR = [
@@ -26,14 +38,14 @@ export class DbBlogService {
         prisma.blog.findMany({
           where,
           include: {
-            website: { select: { id: true, name: true, url: true } },
+            website: { select: { id: true, name: true, url: true, userId: true } },
             qualityReports: { orderBy: { createdAt: 'desc' }, take: 1 },
             approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
             publishingRecords: { orderBy: { createdAt: 'desc' }, take: 1 },
           },
           orderBy: { createdAt: 'desc' },
-          take: params?.limit || 50,
-          skip: params?.offset || 0,
+          take: Math.min(Math.max(params?.limit || 50, 1), 100),
+          skip: Math.max(params?.offset || 0, 0),
         }),
         prisma.blog.count({ where }),
       ]);
@@ -42,7 +54,7 @@ export class DbBlogService {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('[DbBlogService] Database query error:', message);
-      throw new Error(`Failed to load blogs from database: ${message}`);
+      throw new Error('Failed to load blogs from database');
     }
   }
 
@@ -55,14 +67,30 @@ export class DbBlogService {
           researchReport: true,
           qualityReports: { orderBy: { createdAt: 'desc' } },
           approvals: { orderBy: { createdAt: 'desc' } },
-          publishingRecords: { include: { integration: true } },
+          publishingRecords: {
+            include: {
+              integration: {
+                select: {
+                  id: true,
+                  websiteId: true,
+                  provider: true,
+                  cmsUrl: true,
+                  username: true,
+                  connectionStatus: true,
+                  lastConnectedAt: true,
+                  lastSyncAt: true,
+                  lastErrorMessage: true,
+                },
+              },
+            },
+          },
           workflowExecutions: { orderBy: { createdAt: 'desc' } },
         },
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[DbBlogService] Failed to load blog ${id}:`, message);
-      throw new Error(`Database error loading blog: ${message}`);
+      throw new Error('Database error loading blog');
     }
   }
 

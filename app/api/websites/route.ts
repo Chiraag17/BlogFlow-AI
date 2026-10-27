@@ -64,6 +64,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    if (message.startsWith('Invalid URL') || message.startsWith('Restricted URL')) {
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
+    }
+    console.error('[API /websites POST Error]:', message);
+    return NextResponse.json({ success: false, error: 'Failed to create website.' }, { status: 500 });
   }
 }
