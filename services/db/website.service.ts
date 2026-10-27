@@ -9,8 +9,6 @@ const SAFE_CMS_INTEGRATION_SELECT = {
   username: true,
   connectionStatus: true,
   lastConnectedAt: true,
-  lastSyncAt: true,
-  lastErrorMessage: true,
   createdAt: true,
   updatedAt: true,
 } as const;

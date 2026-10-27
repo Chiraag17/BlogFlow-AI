@@ -1,6 +1,6 @@
 {
-  "summary":  "Comprehensive security and bug remediation plan covering IDOR/tenant isolation, credential ciphertext stripping, SSRF protection, DB-backed approval verification, authentication & encryption hardening, in-memory rate limiting, and HTTP security headers.",
-  "updatedAt":  "2026-10-27T14:27:12.738391074Z",
+  "summary":  "Plan to fix the 3 Vercel TypeScript build errors caused by non-existent CMSIntegration select fields (lastSyncAt, lastErrorMessage) and restore relational return type inference on DbBlogService.getBlogById.",
+  "updatedAt":  "2026-10-27T15:32:15.193401851Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
