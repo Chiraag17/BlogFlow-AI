@@ -4,7 +4,7 @@
 
 ---
 
-## 🌟 Architecture & Multi-Agent Intelligence (Part 2)
+## ⭐ Architecture & Multi-Agent Intelligence (Part 2)
 
 BlogFlow AI uses Google Gemini API and Tavily Search API organized into modular server-side agent services:
 
