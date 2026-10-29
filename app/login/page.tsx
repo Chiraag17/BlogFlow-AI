@@ -7,8 +7,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Eye,
-  EyeOff,
   AlertCircle,
   Loader2,
   ArrowLeft,
@@ -16,9 +14,12 @@ import {
   Sun,
   Moon,
   CheckCircle2,
+  Mail,
+  KeyRound,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import EditorialPressPass3D from '@/components/auth/EditorialPressPass3D';
+import ArchivalLedgerInput from '@/components/auth/ArchivalLedgerInput';
 import GutenbergTypeBlock3D from '@/components/brand/GutenbergTypeBlock3D';
 
 const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -30,7 +31,6 @@ function LoginForm() {
   const { isDark, toggleTheme, mounted } = useTheme();
 
   const [form, setForm] = useState({ email: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [doorsOpening, setDoorsOpening] = useState(false);
@@ -137,7 +137,7 @@ function LoginForm() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE_OUT }}
-          className="w-full max-w-[420px] mx-auto my-10"
+          className="w-full max-w-[430px] mx-auto my-8"
         >
           {/* Editorial Wordmark Lockup */}
           <Link
@@ -159,7 +159,7 @@ function LoginForm() {
           </Link>
 
           {/* Serif Display Heading */}
-          <div className="mb-7">
+          <div className="mb-6">
             <p className="text-xs font-medium text-[#C8A15A] dark:text-[#D4AF67] mb-1.5">
               Editorial Studio Access · Interactive 3D Credential
             </p>
@@ -192,69 +192,49 @@ function LoginForm() {
 
           {/* Credentials Form */}
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8] mb-2"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="editor@publication.com"
-                value={form.email}
-                onFocus={() => {
-                  setIsPasswordFocused(false);
-                  setActiveStageIdx(0);
-                }}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                disabled={loading || doorsOpening}
-                required
-                className="w-full px-4 py-3 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
-              />
-            </div>
+            <ArchivalLedgerInput
+              id="email"
+              folioCode="FOLIO 01"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              placeholder="editor@publication.com"
+              value={form.email}
+              icon={<Mail size={14} />}
+              enableDomainChips={true}
+              statusHint={form.email.length > 0 ? 'Engraving Front Plate' : undefined}
+              onFocus={() => {
+                setIsPasswordFocused(false);
+                setActiveStageIdx(0);
+              }}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onValueChange={(nextEmail) => setForm({ ...form, email: nextEmail })}
+              disabled={loading || doorsOpening}
+              required
+            />
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8]"
-                >
-                  Password
-                </label>
-                <span className="text-[11px] font-mono text-[#C8A15A] dark:text-[#D4AF67]">
-                  {isPasswordFocused ? '180° Seal Active' : 'Focus to flip 3D Pass'}
-                </span>
-              </div>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  value={form.password}
-                  onFocus={() => {
-                    setIsPasswordFocused(true);
-                    setActiveStageIdx(2);
-                  }}
-                  onBlur={() => setIsPasswordFocused(false)}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  disabled={loading || doorsOpening}
-                  required
-                  className="w-full px-4 py-3 pr-11 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#68736D] dark:text-[#8E9E95] hover:text-[#18211D] dark:hover:text-[#F3F0E8] transition-colors cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
+            <ArchivalLedgerInput
+              id="password"
+              folioCode="FOLIO 02"
+              label="Password"
+              type="password"
+              isPassword={true}
+              showStrengthTumbler={true}
+              compactStrengthTumbler={true}
+              autoComplete="current-password"
+              placeholder="Enter your studio cipher"
+              value={form.password}
+              icon={<KeyRound size={14} />}
+              statusHint={isPasswordFocused ? '180° Seal Active' : 'Focus to flip 3D Pass'}
+              onFocus={() => {
+                setIsPasswordFocused(true);
+                setActiveStageIdx(2);
+              }}
+              onBlur={() => setIsPasswordFocused(false)}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              disabled={loading || doorsOpening}
+              required
+            />
 
             <button
               type="submit"

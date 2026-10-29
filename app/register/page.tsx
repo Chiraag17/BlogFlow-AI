@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Eye,
-  EyeOff,
   AlertCircle,
   CheckCircle2,
   Loader2,
@@ -15,9 +13,14 @@ import {
   ArrowRight,
   Sun,
   Moon,
+  User,
+  Mail,
+  KeyRound,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import EditorialPressPass3D from '@/components/auth/EditorialPressPass3D';
+import ArchivalLedgerInput from '@/components/auth/ArchivalLedgerInput';
 import GutenbergTypeBlock3D from '@/components/brand/GutenbergTypeBlock3D';
 
 const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -48,8 +51,6 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<Errors>({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -170,7 +171,7 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE_OUT }}
-          className="w-full max-w-[420px] mx-auto my-6"
+          className="w-full max-w-[430px] mx-auto my-5"
         >
           {/* Editorial Wordmark Lockup */}
           <Link
@@ -220,131 +221,82 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8] mb-1.5"
-              >
-                Full name
-              </label>
-              <input
-                id="name"
-                type="text"
-                autoComplete="name"
-                placeholder="Alex Rivera"
-                onFocus={() => {
-                  setIsPasswordFocused(false);
-                  setActiveStageIdx(0);
-                }}
-                {...field('name')}
-                className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
-              />
-              {errors.name && (
-                <span className="block text-xs text-red-600 dark:text-red-400 mt-1">{errors.name}</span>
-              )}
-            </div>
+          <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+            <ArchivalLedgerInput
+              id="name"
+              folioCode="FOLIO 01"
+              label="Full name"
+              type="text"
+              autoComplete="name"
+              placeholder="Alex Rivera"
+              icon={<User size={14} />}
+              statusHint={form.name.trim().length > 0 ? 'Byline Engraved' : undefined}
+              error={errors.name}
+              onFocus={() => {
+                setIsPasswordFocused(false);
+                setActiveStageIdx(0);
+              }}
+              {...field('name')}
+            />
 
-            <div>
-              <label
-                htmlFor="register-email"
-                className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8] mb-1.5"
-              >
-                Email address
-              </label>
-              <input
-                id="register-email"
-                type="email"
-                autoComplete="email"
-                placeholder="editor@publication.com"
-                onFocus={() => {
-                  setIsPasswordFocused(false);
-                  setActiveStageIdx(1);
-                }}
-                {...field('email')}
-                className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
-              />
-              {errors.email && (
-                <span className="block text-xs text-red-600 dark:text-red-400 mt-1">{errors.email}</span>
-              )}
-            </div>
+            <ArchivalLedgerInput
+              id="register-email"
+              folioCode="FOLIO 02"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              placeholder="editor@publication.com"
+              icon={<Mail size={14} />}
+              enableDomainChips={true}
+              error={errors.email}
+              onFocus={() => {
+                setIsPasswordFocused(false);
+                setActiveStageIdx(1);
+              }}
+              onValueChange={(nextEmail) =>
+                setForm((prev) => ({ ...prev, email: nextEmail }))
+              }
+              {...field('email')}
+            />
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label
-                  htmlFor="register-password"
-                  className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8]"
-                >
-                  Password
-                </label>
-                <span className="text-[11px] font-mono text-[#C8A15A] dark:text-[#D4AF67]">
-                  {isPasswordFocused ? '180° Tumbler Active' : 'Flips Pass 180°'}
-                </span>
-              </div>
-              <div className="relative">
-                <input
-                  id="register-password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="At least 8 characters"
-                  onFocus={() => {
-                    setIsPasswordFocused(true);
-                    setActiveStageIdx(2);
-                  }}
-                  onBlur={() => setIsPasswordFocused(false)}
-                  {...field('password')}
-                  className="w-full px-4 py-2.5 pr-11 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#68736D] dark:text-[#8E9E95] hover:text-[#18211D] dark:hover:text-[#F3F0E8] transition-colors cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.password && (
-                <span className="block text-xs text-red-600 dark:text-red-400 mt-1">{errors.password}</span>
-              )}
-            </div>
+            <ArchivalLedgerInput
+              id="register-password"
+              folioCode="FOLIO 03"
+              label="Password"
+              type="password"
+              isPassword={true}
+              showStrengthTumbler={true}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              icon={<KeyRound size={14} />}
+              statusHint={isPasswordFocused ? '180° Tumbler Active' : 'Flips Pass 180°'}
+              error={errors.password}
+              onFocus={() => {
+                setIsPasswordFocused(true);
+                setActiveStageIdx(2);
+              }}
+              onBlur={() => setIsPasswordFocused(false)}
+              {...field('password')}
+            />
 
-            <div>
-              <label
-                htmlFor="confirm-password"
-                className="block text-xs font-semibold text-[#18211D] dark:text-[#F3F0E8] mb-1.5"
-              >
-                Confirm password
-              </label>
-              <div className="relative">
-                <input
-                  id="confirm-password"
-                  type={showConfirm ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="Re-enter your password"
-                  onFocus={() => {
-                    setIsPasswordFocused(true);
-                    setActiveStageIdx(3);
-                  }}
-                  onBlur={() => setIsPasswordFocused(false)}
-                  {...field('confirmPassword')}
-                  className="w-full px-4 py-2.5 pr-11 rounded-lg bg-white dark:bg-[#17211D] border border-[#163F32]/15 dark:border-[#F3F0E8]/15 text-sm text-[#18211D] dark:text-[#F3F0E8] placeholder:text-[#68736D]/60 dark:placeholder:text-[#8E9E95]/60 focus:outline-none focus:border-[#163F32] dark:focus:border-[#B8D5C5] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#68736D] dark:text-[#8E9E95] hover:text-[#18211D] dark:hover:text-[#F3F0E8] transition-colors cursor-pointer"
-                  aria-label={showConfirm ? 'Hide password' : 'Show password'}
-                >
-                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <span className="block text-xs text-red-600 dark:text-red-400 mt-1">
-                  {errors.confirmPassword}
-                </span>
-              )}
-            </div>
+            <ArchivalLedgerInput
+              id="confirm-password"
+              folioCode="FOLIO 04"
+              label="Confirm password"
+              type="password"
+              isPassword={true}
+              matchComparisonValue={form.password}
+              autoComplete="new-password"
+              placeholder="Re-enter your password"
+              icon={<ShieldCheck size={14} />}
+              error={errors.confirmPassword}
+              onFocus={() => {
+                setIsPasswordFocused(true);
+                setActiveStageIdx(3);
+              }}
+              onBlur={() => setIsPasswordFocused(false)}
+              {...field('confirmPassword')}
+            />
 
             <button
               type="submit"

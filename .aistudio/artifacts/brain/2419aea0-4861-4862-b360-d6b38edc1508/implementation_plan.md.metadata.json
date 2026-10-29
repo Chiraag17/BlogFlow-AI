@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan to fix the 3 Vercel TypeScript build errors caused by non-existent CMSIntegration select fields (lastSyncAt, lastErrorMessage) and restore relational return type inference on DbBlogService.getBlogById.",
-  "updatedAt":  "2026-10-27T15:32:15.193401851Z",
+  "summary":  "Architectural and visual design plan to upgrade both the Login and Register experiences with Tactile Archival Ledger Inputs, Animated Brass Caliper Focus Brackets, Live Keystroke Physics, Optical Engraving Bridge, and a synchronized 3D Press Pass Stage.",
+  "updatedAt":  "2026-10-29T13:30:45.818949234Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
