@@ -1,56 +1,35 @@
-# Implementation Plan: Interactive 3D Morphing Auth Portal & Multi-Step Password Recovery
+# Implementation Plan: 3D Gutenberg Type-Block Cube & Editorial Auth UI/UX Redesign
 
-## 1. Aesthetic & Creative Direction (Zero Workflow Elements)
-We will completely replace the archival press-pass/folio UI and remove **all** workflow, dashboard, or pipeline elements. In their place, `/login` and `/register` will share an **Interactive 3D Glassmorphic Morphing Portal** experience built with `motion/react` spring physics:
+## 1. Visual & Spatial Architecture (Aligned to the 3D Cube)
+- **Replace the 3D Prism with `GutenbergTypeBlock3D`**:
+  - Remove the previous blue/cyan `BF·I PRISM` sculpture and floating pill capsules from the Login/Signup portal.
+  - Embed the signature **`GutenbergTypeBlock3D`** component from `/components/brand/GutenbergTypeBlock3D.tsx` in two coordinated places:
+    1. **Top Header Brand Mark (`size={32}`)**: Paired with the `BlogFlow AI` serif wordmark (`Fraunces`), matching the landing page lockup.
+    2. **Left Interactive 3D Cube Stage (`size={148}`)**: Mounted on a warm brass-and-forest-green archival pedestal with subtle concentric brass calibration rings and cursor-reactive tilt.
+- **Warm Archival Paper, Deep Forest Green & Brushed Brass Palette**:
+  - **Primary Canvas**: Warm Archival Paper (`#F7F4EC`) in light mode and Deep Forest Obsidian (`#0B1612`) in dark mode, with subtle architectural grid hairlines and warm radial brass/emerald lighting.
+  - **High-Contrast Typography**: Deep Charcoal Ink (`#18211D`) headlines and prose on Warm Archival Paper (eliminating the previous white-on-light contrast issue), paired with Muted Sage-Ink (`#4A5A52`) subtitles and Brushed Brass (`#B88E44` / `#C8A15A`) accents.
+  - **Zero-Pill & Anti-Slop Discipline**: Clean unboxed typographic metadata separated by `·` dividers instead of floating pill badges, and zero workflow/pipeline/SEO dashboard clutter.
 
-- **Cursor-Reactive Aurora & Prismatic Mesh Canvas**:
-  - A full-viewport dark obsidian canvas (`#06070B`) illuminated by dynamic, cursor-tracked bioluminescent aurora ribbons (indigo, violet, cyan, and warm rose-gold accents) that shift smoothly using `useMotionValue` and `useSpring` as the user moves their mouse or types.
-  - Interactive keystroke resonance: typing into inputs sends subtle chromatic ripples and light pulses across the glass portal border.
-- **Floating Kinetic Typography Sculpture (Artistic Showcase)**:
-  - Instead of product workflow widgets or SEO gauges, the ambient space features floating, depth-layered kinetic typography and refractive glass prism rings that tilt in 3D perspective (`rotateX`, `rotateY`, `translateZ`) in response to cursor movement.
-  - Smoothly morphs its visual mood and color temperature depending on the active mode:
-    - **Sign In Mode**: Deep electric indigo & cyan aura.
-    - **Sign Up Mode**: Vibrant emerald-teal & violet creative aura.
-    - **Forgot Password / Recovery Mode**: Warm amber-gold & magenta security vault aura.
-- **3D Glassmorphic Morphing Portal Card**:
-  - A central/split refractive glass portal (`backdrop-blur-2xl`, specular border highlights, subtle 3D tilt with toggleable/gentle perspective) that fluidly morphs height, layout, and header states using Framer Motion `AnimatePresence` and `layoutId` shared element transitions—allowing instant, zero-flicker switching between **Sign In**, **Create Account**, and **Forgot Password** without full page reloads.
+## 2. Interactive 3D Cube Choreography & Form Coupling
+- **Dynamic Face Rotation per Auth Mode & Focused Input**:
+  - **Sign In Mode (Default)**: Cube rotates to the **`monogram`** face (`B` movable-type block).
+  - **Create Account Mode**: Cube rotates to the **`nib`** face (Fountain Nib / authorship).
+  - **Email / Name Input Focused**: Cube rotates to the **`loupe`** face (Optical Lens) or **`section`** face (`§` Editorial Silcrow).
+  - **Password / OTP / Security Step**: Cube rotates to the **`seal`** face (Verified Stamp).
+  - **Interactive Face Switcher & Click-to-Stamp**: Users can also click the 3D cube directly (or select any of the 5 faces—`Monogram`, `Loupe`, `Nib`, `Seal`, `Silcrow`—via a quiet typographic index below the stage) to inspect each carved brass/forest-green face and trigger an expanding brass ripple.
+- **Live Keystroke Physics (`activityPulse`)**:
+  - Every keystroke inside Email, Name, Password, or the 6-digit OTP boxes increments `activityPulse` and drives `scrollPct` based on form completion, giving the 3D Gutenberg Type-Block a crisp mechanical press impulse as the user types.
 
----
+## 3. Authentication & Multi-Step Password Recovery UX (Restyled to Match Cube)
+- **Editorial Auth Card**:
+  - Tailored in Warm Cream (`#FCFBF7`) with `1px` Brushed Brass / Forest hairlines (`rgba(22, 63, 50, 0.14)`), Deep Forest Green primary CTA buttons (`#163F32` with `#C8A15A` brass hover highlight), and tactile brass focus rings on inputs.
+- **Complete Auth Capabilities Preserved**:
+  - **Sign In & Create Account**: Smooth segmented toggle with real PostgreSQL + NextAuth authentication, password visibility toggle, live 4-bar brass/emerald password strength meter, and **Instant Demo Studio Access** (`demo@blogflow.ai`).
+  - **3-Step Animated Forgot Password Flow**:
+    1. *Step 1 (Request Code)*: Enter email to generate a 6-digit verification code (with instant on-screen preview banner for demo testing).
+    2. *Step 2 (Verify 6-Digit OTP)*: Interactive 6-box tabular OTP input with auto-advance and paste support (`seal` face active on the 3D cube).
+    3. *Step 3 (New Password)*: Set and confirm new password, updating PostgreSQL via `/api/auth/reset-password` and returning to Sign In.
 
-## 2. Complete Authentication & Multi-Step Forgot Password Architecture
-
-### A. Multi-Step In-Card Forgot Password Flow
-Inside the morphing portal, clicking **"Forgot password?"** transitions smoothly into a 3-step animated recovery wizard:
-1. **Step 1 — Account Lookup (Email Entry)**:
-   - User enters their registered email address.
-   - Calls `POST /api/auth/forgot-password`, which verifies the user in Prisma (or auto-provisions the demo user if testing with the demo email) and generates a 6-digit verification code (with an instant on-screen preview banner for seamless testing in the preview environment, plus copy/auto-fill button).
-2. **Step 2 — 6-Digit OTP Verification**:
-   - Interactive 6-slot OTP input with auto-advance on keypress, backspace navigation, paste support, and animated active-slot glow.
-   - Verifies the 6-digit code before unlocking the password reset step.
-3. **Step 3 — Set New Password & Database Update**:
-   - New Password + Confirm Password inputs with real-time 4-bar strength physics and requirement badges.
-   - Calls `POST /api/auth/reset-password`, which verifies the OTP, hashes the new password with `bcrypt.hash(newPassword, 10)`, updates `user.passwordHash` in Prisma, and offers a one-click auto-sign-in or smooth morph back to Sign In with a confirmed state.
-
-### B. Sign In & Sign Up Enhancements
-- **Sign In**:
-  - Floating-label glass inputs with focus light beams, password visibility toggle, "Remember me" session toggle, and animated error shake feedback on invalid credentials.
-  - **1-Click Instant Studio Demo Access**: A dedicated button that signs into a real database-backed demo account (`demo@blogflow.ai`) and redirects straight to the app.
-  - **Social Auth Buttons**: Google and GitHub OAuth sign-in triggers with graceful toast feedback if OAuth credentials are not configured in `.env`.
-- **Sign Up**:
-  - Real-time password strength meter (length, uppercase, number, symbol) with animated progress bars.
-  - **Auto-Login after Registration**: Creating an account via `POST /api/auth/register` immediately signs the user in via `signIn('credentials')` and transitions straight into the workspace.
-
----
-
-## 3. Planned File Changes
-
-1. **`/components/auth/MorphingAuthPortal.tsx` (New Component)**
-   - Unified interactive 3D/glassmorphic authentication experience supporting `login`, `register`, and `forgot-password` (Steps 1–3) modes, cursor-reactive aurora background, kinetic typography sculpture, and Framer Motion choreographed transitions.
-2. **`/app/api/auth/forgot-password/route.ts` (New API Route)**
-   - Validates email against Prisma `user` table, generates a signed/time-bound 6-digit OTP token, and returns the verification challenge.
-3. **`/app/api/auth/reset-password/route.ts` (New API Route)**
-   - Validates email + 6-digit OTP code + new password, updates `passwordHash` in Prisma using `bcrypt`, and returns success.
-4. **`/lib/authOptions.ts` (Update)**
-   - Add auto-provisioning for the demo account (`demo@blogflow.ai`) so 1-click demo login and password reset always work reliably, plus optional Google/GitHub providers and resilient secret configuration.
-5. **`/app/login/page.tsx` & `/app/register/page.tsx` (Update)**
-   - Replace the old archival press-pass pages with `MorphingAuthPortal` initialized to `initialMode="login"` and `initialMode="register"` respectively.
+## 4. Files to Modify
+- **`/components/auth/MorphingAuthPortal.tsx`**: Replace the 3D prism stage with the interactive `GutenbergTypeBlock3D` stage + header mark, wire form state and keystrokes to `activeFace`, `activityPulse`, and `scrollPct`, and restyle the entire portal in the Warm Archival Paper (`#F7F4EC`), Deep Forest Green (`#163F32`), and Brushed Brass (`#C8A15A`) palette with full WCAG AA contrast.

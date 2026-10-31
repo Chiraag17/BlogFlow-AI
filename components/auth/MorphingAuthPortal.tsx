@@ -12,145 +12,146 @@ import {
   useTransform,
 } from 'framer-motion';
 import {
-  ArrowLeft,
-  ArrowRight,
   Mail,
   Lock,
   User,
+  ArrowRight,
+  ArrowLeft,
   Eye,
   EyeOff,
-  Sparkles,
-  CheckCircle2,
   AlertCircle,
   Loader2,
+  CheckCircle2,
   KeyRound,
-  ShieldCheck,
   RefreshCw,
   Sun,
   Moon,
-  Wand2,
-  Layers,
+  Feather,
   Compass,
-  Fingerprint,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
+import GutenbergTypeBlock3D, { TypeBlockFace } from '@/components/brand/GutenbergTypeBlock3D';
 
-export type PortalMode = 'login' | 'register' | 'forgot';
+export type AuthMode = 'login' | 'register' | 'forgot';
 type ForgotStep = 1 | 2 | 3 | 4;
-type PrismPreset = 'prism' | 'kinetic' | 'zenith';
+type FocusedField = 'name' | 'email' | 'password' | 'confirm' | 'otp' | null;
 
 interface MorphingAuthPortalProps {
-  initialMode: 'login' | 'register';
+  initialMode?: AuthMode;
 }
-
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-const MODE_PALETTES: Record<
-  PortalMode,
-  {
-    primary: string;
-    secondary: string;
-    tertiary: string;
-    badge: string;
-    headlineFirst: string;
-    headlineAccent: string;
-    headlineLast: string;
-    subline: string;
-    kineticWords: string[];
-    ringColor: string;
-  }
-> = {
-  login: {
-    primary: '#6366F1',
-    secondary: '#22D3EE',
-    tertiary: '#818CF8',
-    badge: 'Spatial Identity Portal',
-    headlineFirst: 'Where ideas',
-    headlineAccent: 'take form',
-    headlineLast: 'in light.',
-    subline:
-      'Step through a refractive glass sanctuary designed for pure creative focus and effortless expression.',
-    kineticWords: ['CLARITY', 'DEPTH', 'RESONANCE', 'PERSPECTIVE'],
-    ringColor: 'rgba(34, 211, 238, 0.45)',
-  },
-  register: {
-    primary: '#10B981',
-    secondary: '#A855F7',
-    tertiary: '#34D399',
-    badge: 'Genesis Creative Sanctuary',
-    headlineFirst: 'Shape your',
-    headlineAccent: 'own universe',
-    headlineLast: 'of thought.',
-    subline:
-      'Mint your personal creative identity and unlock an atmospheric space built for original voices.',
-    kineticWords: ['ORIGIN', 'IMAGINATION', 'VOICE', 'LUMINANCE'],
-    ringColor: 'rgba(16, 185, 129, 0.45)',
-  },
-  forgot: {
-    primary: '#F59E0B',
-    secondary: '#EC4899',
-    tertiary: '#FBBF24',
-    badge: 'Cryptographic Key Recovery',
-    headlineFirst: 'Restore your',
-    headlineAccent: 'cipher key',
-    headlineLast: 'in seconds.',
-    subline:
-      'Verify your identity with a time-bound 6-digit cryptographic code and mint a fresh password immediately.',
-    kineticWords: ['RECOVERY', 'CIPHER', ' CONTINUITY', 'TRUST'],
-    ringColor: 'rgba(245, 158, 11, 0.48)',
-  },
-};
 
 const EMAIL_DOMAINS = ['@gmail.com', '@outlook.com', '@blogflow.ai'];
 
-function evaluatePasswordStrength(password: string): {
-  score: number;
+const CUBE_FACE_INDEX: {
+  id: TypeBlockFace;
+  numeral: string;
   label: string;
-  color: string;
-} {
-  if (!password) return { score: 0, label: 'Enter password', color: '#64748B' };
-  let score = 0;
-  if (password.length >= 8) score += 1;
-  if (password.length >= 12) score += 1;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1;
-  if (/\d/.test(password) || /[^A-Za-z0-9]/.test(password)) score += 1;
+  caption: string;
+}[] = [
+  {
+    id: 'monogram',
+    numeral: 'I',
+    label: 'Monogram',
+    caption: 'Movable-Type Matrix · Sign In',
+  },
+  {
+    id: 'loupe',
+    numeral: 'II',
+    label: 'Loupe',
+    caption: 'Optical Calibration · Identity Lookup',
+  },
+  {
+    id: 'nib',
+    numeral: 'III',
+    label: 'Nib',
+    caption: 'Fountain Draught · New Author Press',
+  },
+  {
+    id: 'seal',
+    numeral: 'IV',
+    label: 'Seal',
+    caption: 'Foundry Cipher · Passkey & Verification',
+  },
+  {
+    id: 'section',
+    numeral: 'V',
+    label: 'Silcrow',
+    caption: 'Editorial Folio · Author Attribution',
+  },
+];
 
-  const clamped = Math.max(1, Math.min(4, score));
-  const map: Record<number, { label: string; color: string }> = {
-    1: { label: 'Weak', color: '#F43F5E' },
-    2: { label: 'Fair', color: '#F59E0B' },
-    3: { label: 'Good', color: '#22D3EE' },
-    4: { label: 'Strong', color: '#10B981' },
-  };
-  return { score: clamped, ...map[clamped] };
+const MODE_COPY: Record<
+  AuthMode,
+  {
+    folioTag: string;
+    headlineStart: string;
+    headlineItalic: string;
+    headlineEnd: string;
+    subtext: string;
+    defaultFace: TypeBlockFace;
+  }
+> = {
+  login: {
+    folioTag: 'FOLIO I · ATELIER ENTRY',
+    headlineStart: 'Step to the',
+    headlineItalic: 'movable-type',
+    headlineEnd: 'press.',
+    subtext:
+      'Enter your editorial credentials to unlock your private desk, typography presets, and archival workspace.',
+    defaultFace: 'monogram',
+  },
+  register: {
+    folioTag: 'FOLIO II · AUTHOR COMMISSION',
+    headlineStart: 'Cast your',
+    headlineItalic: 'signature',
+    headlineEnd: 'in brass.',
+    subtext:
+      'Commission a new author imprint with custom voice calibration, long-form drafting tools, and instant press access.',
+    defaultFace: 'nib',
+  },
+  forgot: {
+    folioTag: 'FOLIO III · SEAL RECOVERY',
+    headlineStart: 'Re-strike your',
+    headlineItalic: 'foundry',
+    headlineEnd: 'cipher.',
+    subtext:
+      'Verify your editorial address with a 6-digit security dispatch and mint a fresh cryptographic passkey.',
+    defaultFace: 'seal',
+  },
+};
+
+function computePasswordStrength(pw: string) {
+  if (!pw) return { score: 0, label: 'Unset', color: '#8A8477' };
+  let score = 0;
+  if (pw.length >= 6) score += 1;
+  if (pw.length >= 10) score += 1;
+  if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pw)) score += 1;
+
+  if (score <= 1) return { score: 1, label: 'Fragile Cast', color: '#B85D3B' };
+  if (score === 2) return { score: 2, label: 'Standard Alloy', color: '#C8A15A' };
+  if (score === 3) return { score: 3, label: 'Tempered Brass', color: '#2A6B53' };
+  return { score: 4, label: 'Archival Grade', color: '#163F32' };
 }
 
-export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalProps) {
+export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortalProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
-  const { isDark, toggleTheme, mounted } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  const [mode, setMode] = useState<PortalMode>(initialMode);
-  const [prismPreset, setPrismPreset] = useState<PrismPreset>('prism');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [focusedField, setFocusedField] = useState<FocusedField>(null);
+  const [manualFaceOverride, setManualFaceOverride] = useState<TypeBlockFace | null>(null);
   const [keystrokePulse, setKeystrokePulse] = useState(0);
-  const [portalWarpExit, setPortalWarpExit] = useState(false);
 
-  // Login & Register fields
+  // Login / Register state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
-
-  // Status & errors
-  const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   // Forgot Password multi-step state
   const [forgotStep, setForgotStep] = useState<ForgotStep>(1);
@@ -160,158 +161,183 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
   const [otpPreview, setOtpPreview] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  // Resolve safe callback URL
-  const rawCallbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
-  const callbackUrl = useMemo(() => {
-    if (rawCallbackUrl.startsWith('/')) return rawCallbackUrl;
-    try {
-      const parsed = new URL(rawCallbackUrl);
-      return (parsed.pathname || '/dashboard') + parsed.search;
-    } catch {
-      return '/dashboard';
-    }
-  }, [rawCallbackUrl]);
+  // Status & feedback
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [shakeKey, setShakeKey] = useState(0);
 
-  // Redirect if already authenticated
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Cursor-reactive 3D stage coordinates
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const smoothX = useSpring(mouseX, { stiffness: 65, damping: 24 });
+  const smoothY = useSpring(mouseY, { stiffness: 65, damping: 24 });
+
+  // 3D stage tilt transforms
+  const stageRotateX = useTransform(smoothY, [0, 1], [8, -8]);
+  const stageRotateY = useTransform(smoothX, [0, 1], [-10, 10]);
+  const spotlightX = useTransform(smoothX, [0, 1], ['15%', '85%']);
+  const spotlightY = useTransform(smoothY, [0, 1], ['15%', '85%']);
+
   useEffect(() => {
-    if (status === 'authenticated' && !portalWarpExit) {
-      router.push(callbackUrl);
-    }
-  }, [status, router, callbackUrl, portalWarpExit]);
+    setMounted(true);
+  }, []);
 
-  // Notice if redirected from registration
   useEffect(() => {
-    if (searchParams?.get('registered') === '1') {
-      setInfoMessage('Your account is ready. Sign in below to enter the portal.');
+    const modeParam = searchParams?.get('mode');
+    if (modeParam === 'register' || modeParam === 'login' || modeParam === 'forgot') {
+      setMode(modeParam);
     }
   }, [searchParams]);
 
-  // 3D Cursor-Reactive Motion Values
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothX = useSpring(mouseX, { stiffness: 110, damping: 24, mass: 0.6 });
-  const smoothY = useSpring(mouseY, { stiffness: 110, damping: 24, mass: 0.6 });
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/studio');
+    }
+  }, [status, router]);
 
-  // Card 3D tilt transforms
-  const cardRotateX = useTransform(smoothY, [-0.5, 0.5], [6, -6]);
-  const cardRotateY = useTransform(smoothX, [-0.5, 0.5], [-7, 7]);
-  const glareX = useTransform(smoothX, [-0.5, 0.5], ['15%', '85%']);
-  const glareY = useTransform(smoothY, [-0.5, 0.5], ['10%', '90%']);
+  // Determine active 3D cube face based on focus, mode, or manual inspection
+  const activeCubeFace: TypeBlockFace = useMemo(() => {
+    if (focusedField === 'name') return 'section';
+    if (focusedField === 'email') return 'loupe';
+    if (focusedField === 'password' || focusedField === 'confirm' || focusedField === 'otp') {
+      return 'seal';
+    }
+    if (manualFaceOverride) return manualFaceOverride;
+    if (mode === 'forgot') {
+      if (forgotStep === 1) return 'loupe';
+      return 'seal';
+    }
+    return MODE_COPY[mode].defaultFace;
+  }, [focusedField, manualFaceOverride, mode, forgotStep]);
 
-  // Sculpture 3D parallax transforms
-  const sculptureRotateX = useTransform(smoothY, [-0.5, 0.5], [16, -16]);
-  const sculptureRotateY = useTransform(smoothX, [-0.5, 0.5], [-20, 20]);
-  const auroraOffsetX = useTransform(smoothX, [-0.5, 0.5], ['-12%', '12%']);
-  const auroraOffsetY = useTransform(smoothY, [-0.5, 0.5], ['-12%', '12%']);
+  // Calculate form completion percentage (0..1) to drive subtle cube elevation/rotation
+  const completionPct = useMemo(() => {
+    if (mode === 'login') {
+      let pct = 0;
+      if (email.trim().length > 3) pct += 0.5;
+      if (password.length >= 6) pct += 0.5;
+      return pct;
+    }
+    if (mode === 'register') {
+      let pct = 0;
+      if (name.trim().length >= 2) pct += 0.25;
+      if (email.trim().includes('@')) pct += 0.25;
+      if (password.length >= 6) pct += 0.25;
+      if (confirmPassword.length >= 6 && confirmPassword === password) pct += 0.25;
+      return pct;
+    }
+    return (forgotStep - 1) / 3;
+  }, [mode, name, email, password, confirmPassword, forgotStep]);
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const normX = (e.clientX - rect.left) / rect.width - 0.5;
-    const normY = (e.clientY - rect.top) / rect.height - 0.5;
-    mouseX.set(normX);
-    mouseY.set(normY);
-  };
+  const activeFaceMeta =
+    CUBE_FACE_INDEX.find((f) => f.id === activeCubeFace) || CUBE_FACE_INDEX[0];
 
-  const handlePointerLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
-
-  const triggerKeystrokeWave = () => {
+  const pulseCube = () => {
     setKeystrokePulse((prev) => prev + 1);
   };
 
-  const switchMode = (nextMode: PortalMode) => {
-    setError(null);
-    setInfoMessage(null);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const nx = (e.clientX - rect.left) / rect.width;
+    const ny = (e.clientY - rect.top) / rect.height;
+    mouseX.set(Math.max(0, Math.min(1, nx)));
+    mouseY.set(Math.max(0, Math.min(1, ny)));
+  };
+
+  const triggerError = (msg: string) => {
+    setError(msg);
+    setShakeKey((k) => k + 1);
+    pulseCube();
+  };
+
+  const switchMode = (nextMode: AuthMode) => {
+    setError('');
+    setSuccessMsg('');
+    setManualFaceOverride(null);
+    setFocusedField(null);
     setMode(nextMode);
+    pulseCube();
     if (nextMode === 'forgot') {
       setForgotStep(1);
       setForgotEmail(email || '');
       setOtpDigits(['', '', '', '', '', '']);
-    } else if (typeof window !== 'undefined') {
-      const targetPath = nextMode === 'register' ? '/register' : '/login';
-      window.history.replaceState(null, '', targetPath);
+      setOtpPreview(null);
     }
   };
 
-  // Email domain chip helper
-  const applyEmailDomain = (domain: string, isForgot = false) => {
-    const current = isForgot ? forgotEmail : email;
-    const base = current.includes('@') ? current.split('@')[0] : current.trim() || 'creator';
-    const nextVal = `${base}${domain}`;
-    if (isForgot) {
+  const activeEmailValue = mode === 'forgot' ? forgotEmail : email;
+  const showDomainSuggestions =
+    activeEmailValue.length > 0 && !activeEmailValue.includes('@');
+
+  const applyEmailDomain = (domain: string) => {
+    const prefix = activeEmailValue.split('@')[0];
+    const nextVal = `${prefix}${domain}`;
+    if (mode === 'forgot') {
       setForgotEmail(nextVal);
     } else {
       setEmail(nextVal);
     }
-    triggerKeystrokeWave();
+    pulseCube();
   };
 
-  // Sign In Handler
+  const pwStrength = useMemo(
+    () => computePasswordStrength(mode === 'forgot' ? newPassword : password),
+    [mode, newPassword, password]
+  );
+
+  // --- Handlers ---
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setInfoMessage(null);
-
-    if (!email.trim() || !password) {
-      setError('Please enter both your email address and password.');
-      return;
-    }
-
+    setError('');
     setLoading(true);
+    pulseCube();
+
     try {
-      const result = await signIn('credentials', {
+      const res = await signIn('credentials', {
         redirect: false,
         email: email.trim().toLowerCase(),
         password,
       });
 
-      if (result?.error) {
-        setLoading(false);
-        setError('Invalid email or password. Try the 1-Click Demo Access or reset your password.');
-      } else if (result?.ok) {
-        setPortalWarpExit(true);
-        setTimeout(() => {
-          router.push(callbackUrl);
-        }, 560);
+      if (res?.error) {
+        triggerError('Invalid editorial email or passkey. Please verify your credentials.');
       } else {
-        setLoading(false);
-        setError('Unable to sign in right now. Please try again.');
+        router.push('/studio');
+        router.refresh();
       }
     } catch {
+      triggerError('An unexpected connection error occurred. Please try again.');
+    } finally {
       setLoading(false);
-      setError('Network error while connecting to authentication server.');
     }
   };
 
-  // Create Account Handler (with automatic sign-in!)
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setInfoMessage(null);
+    setError('');
 
-    if (!name.trim()) {
-      setError('Please enter your full name or creative alias.');
+    if (name.trim().length < 2) {
+      triggerError('Please enter your author or studio name.');
       return;
     }
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email.trim())) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+    if (password.length < 6) {
+      triggerError('Passkey must be at least 6 characters long.');
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match. Please check both fields.');
+      triggerError('Passkeys do not match.');
       return;
     }
 
     setLoading(true);
+    pulseCube();
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -325,108 +351,78 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
 
       const data = await res.json();
       if (!res.ok) {
+        triggerError(data.error || 'Registration failed. Please try another email.');
         setLoading(false);
-        if (res.status === 409) {
-          setError('An account with this email already exists. Try signing in instead.');
-        } else {
-          setError(data.error || 'Could not create your account. Please try again.');
-        }
         return;
       }
 
-      // Auto-sign in right after registration so the user enters the studio seamlessly
-      const loginResult = await signIn('credentials', {
+      const signInRes = await signIn('credentials', {
         redirect: false,
         email: email.trim().toLowerCase(),
         password,
       });
 
-      if (loginResult?.ok) {
-        setPortalWarpExit(true);
-        setTimeout(() => {
-          router.push(callbackUrl);
-        }, 560);
-      } else {
-        setLoading(false);
+      if (signInRes?.error) {
+        setSuccessMsg('Author imprint created! Please sign in with your new credentials.');
         setMode('login');
-        setInfoMessage('Account created! Please sign in with your new credentials.');
+        setLoading(false);
+      } else {
+        router.push('/studio');
+        router.refresh();
       }
     } catch {
+      triggerError('Network error while commissioning your account.');
       setLoading(false);
-      setError('Network error. Please verify your connection and try again.');
     }
   };
 
-  // 1-Click Demo Studio Access Handler
-  const handleInstantDemoAccess = async () => {
-    setError(null);
-    setInfoMessage(null);
+  const handleDemoAccess = async () => {
+    setError('');
     setDemoLoading(true);
-
+    setManualFaceOverride('seal');
+    pulseCube();
     try {
-      const result = await signIn('credentials', {
+      const res = await signIn('credentials', {
         redirect: false,
         email: 'demo@blogflow.ai',
         password: '__DEMO_STUDIO_ACCESS__',
       });
 
-      if (result?.ok) {
-        setPortalWarpExit(true);
-        setTimeout(() => {
-          router.push(callbackUrl);
-        }, 520);
-      } else {
+      if (res?.error) {
+        triggerError('Could not initialize Demo Atelier session.');
         setDemoLoading(false);
-        setError('Could not launch Demo Studio session. Please try again.');
+      } else {
+        router.push('/studio');
+        router.refresh();
       }
     } catch {
+      triggerError('Failed to launch Demo Atelier.');
       setDemoLoading(false);
-      setError('Network error while launching Demo Studio.');
     }
   };
 
-  // Social OAuth Handler
-  const handleSocialSignIn = async (provider: 'google' | 'github') => {
-    setError(null);
-    setInfoMessage(
-      `Connecting to ${provider === 'google' ? 'Google' : 'GitHub'} identity provider…`
-    );
-    try {
-      await signIn(provider, { callbackUrl });
-    } catch {
-      setError(`Could not initiate ${provider} sign-in.`);
-    }
-  };
-
-  // ==============================================================
-  // FORGOT PASSWORD MULTI-STEP HANDLERS
-  // ==============================================================
-
-  // Step 1 -> Request 6-digit OTP
-  const handleRequestOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setInfoMessage(null);
-
-    const cleanEmail = forgotEmail.trim().toLowerCase();
-    if (!cleanEmail || !/\S+@\S+\.\S+/.test(cleanEmail)) {
-      setError('Please enter a valid email address.');
+  // --- Forgot Password Handlers ---
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setError('');
+    if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
+      triggerError('Please enter a valid registered email address.');
       return;
     }
 
     setLoading(true);
+    pulseCube();
     try {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail }),
+        body: JSON.stringify({ email: forgotEmail.trim().toLowerCase() }),
       });
 
       const data = await res.json();
-      setLoading(false);
-
       if (!res.ok) {
-        setError(data.error || 'Could not generate recovery code.');
+        triggerError(data.error || 'Could not dispatch verification code.');
+        setLoading(false);
         return;
       }
 
@@ -434,21 +430,20 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
       setOtpPreview(data.otpPreview || null);
       setOtpDigits(['', '', '', '', '', '']);
       setForgotStep(2);
-      triggerKeystrokeWave();
     } catch {
+      triggerError('Failed to connect to recovery service.');
+    } finally {
       setLoading(false);
-      setError('Network error while requesting verification code.');
     }
   };
 
-  // OTP Slot Input Handling
-  const handleOtpDigitChange = (index: number, rawVal: string) => {
-    const digit = rawVal.replace(/\D/g, '').slice(-1);
+  const handleOtpChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
     const next = [...otpDigits];
     next[index] = digit;
     setOtpDigits(next);
-    setError(null);
-    triggerKeystrokeWave();
+    setError('');
+    pulseCube();
 
     if (digit && index < 5) {
       otpInputRefs.current[index + 1]?.focus();
@@ -466,41 +461,26 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     if (!pasted) return;
     const next = ['', '', '', '', '', ''];
-    for (let i = 0; i < pasted.length; i++) {
-      next[i] = pasted[i];
+    for (let i = 0; i < 6; i++) {
+      next[i] = pasted[i] || '';
     }
     setOtpDigits(next);
-    triggerKeystrokeWave();
-    const focusIdx = Math.min(5, pasted.length - 1);
+    pulseCube();
+    const focusIdx = Math.min(5, pasted.length);
     otpInputRefs.current[focusIdx]?.focus();
   };
 
-  const autoFillPreviewOtp = () => {
-    if (!otpPreview) return;
-    const chars = otpPreview.slice(0, 6).split('');
-    setOtpDigits([
-      chars[0] || '',
-      chars[1] || '',
-      chars[2] || '',
-      chars[3] || '',
-      chars[4] || '',
-      chars[5] || '',
-    ]);
-    setError(null);
-    triggerKeystrokeWave();
-  };
-
-  // Step 2 -> Verify 6-digit OTP
-  const handleVerifyOtpStep = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    const code = otpDigits.join('');
-    if (code.length !== 6) {
-      setError('Please enter all 6 digits of your verification code.');
+    setError('');
+    const otp = otpDigits.join('');
+    if (otp.length !== 6) {
+      triggerError('Please enter all 6 digits of your verification cipher.');
       return;
     }
 
     setLoading(true);
+    pulseCube();
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -508,41 +488,41 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
         body: JSON.stringify({
           action: 'verify_otp',
           email: forgotEmail.trim().toLowerCase(),
-          otp: code,
+          otp,
           resetToken,
         }),
       });
-      const data = await res.json();
-      setLoading(false);
 
+      const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Incorrect verification code.');
+        triggerError(data.error || 'Invalid verification cipher.');
+        setLoading(false);
         return;
       }
 
       setForgotStep(3);
-      triggerKeystrokeWave();
     } catch {
+      triggerError('Verification request failed.');
+    } finally {
       setLoading(false);
-      setError('Unable to verify code right now. Please try again.');
     }
   };
 
-  // Step 3 -> Commit New Password to PostgreSQL
-  const handleCommitNewPassword = async (e: React.FormEvent) => {
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError('');
 
-    if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long.');
+    if (newPassword.length < 6) {
+      triggerError('New passkey must be at least 6 characters.');
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setError('Passwords do not match.');
+      triggerError('New passkeys do not match.');
       return;
     }
 
     setLoading(true);
+    pulseCube();
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -557,493 +537,503 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
       });
 
       const data = await res.json();
-      setLoading(false);
-
       if (!res.ok) {
-        setError(data.error || 'Could not update password.');
+        triggerError(data.error || 'Could not update passkey.');
+        setLoading(false);
         return;
       }
 
-      setEmail(forgotEmail.trim().toLowerCase());
-      setPassword(newPassword);
       setForgotStep(4);
-      triggerKeystrokeWave();
     } catch {
+      triggerError('Failed to save new passkey.');
+    } finally {
       setLoading(false);
-      setError('Network error while updating your password.');
     }
   };
 
-  // Sign in immediately after Step 4 password reset
-  const handleSignInWithResetPassword = async () => {
+  const handleSignInAfterReset = async () => {
     setLoading(true);
-    setError(null);
-    const result = await signIn('credentials', {
+    const res = await signIn('credentials', {
       redirect: false,
       email: forgotEmail.trim().toLowerCase(),
       password: newPassword,
     });
-    if (result?.ok) {
-      setPortalWarpExit(true);
-      setTimeout(() => {
-        router.push(callbackUrl);
-      }, 540);
+    if (!res?.error) {
+      router.push('/studio');
+      router.refresh();
     } else {
+      setEmail(forgotEmail);
+      setPassword('');
+      switchMode('login');
       setLoading(false);
-      setMode('login');
-      setInfoMessage('Password updated! Please sign in below.');
     }
   };
 
-  const activePalette = MODE_PALETTES[mode];
-  const activePasswordStrength = evaluatePasswordStrength(
-    mode === 'forgot' ? newPassword : password
-  );
-
-  // Preset angles for the 3D Prism Stage
-  const presetRotationOffset = useMemo(() => {
-    if (prismPreset === 'kinetic') return { x: 18, y: -22, scale: 1.06 };
-    if (prismPreset === 'zenith') return { x: -16, y: 24, scale: 0.96 };
-    return { x: 0, y: 0, scale: 1 };
-  }, [prismPreset]);
+  // Default to Warm Archival Paper (light mode) on initial SSR so text is always crisp dark charcoal on ivory
+  const isDark = mounted ? theme === 'dark' : false;
+  const copy = MODE_COPY[mode];
 
   return (
     <div
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      className={`relative min-h-screen w-full overflow-hidden select-none transition-colors duration-700 ${
-        mounted && !isDark
-          ? 'bg-[#F4F6FB] text-[#0F172A]'
-          : 'bg-[#05060B] text-[#F8FAFC]'
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className={`relative min-h-screen w-full overflow-hidden flex flex-col justify-between select-none transition-colors duration-500 ${
+        isDark
+          ? 'bg-[#0B1612] text-[#F7F4EC]'
+          : 'bg-[#F7F4EC] text-[#18211D]'
       }`}
     >
-      {/* =====================================================================
-          LAYER 1: CURSOR-REACTIVE BIOLUMINESCENT AURORA & STARLIGHT FIELD
-          ===================================================================== */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Primary Dynamic Aurora Orb */}
-        <motion.div
-          style={{ x: auroraOffsetX, y: auroraOffsetY }}
-          animate={{
-            background: `radial-gradient(650px circle at 32% 38%, ${activePalette.primary}3B, ${activePalette.secondary}1F 45%, transparent 75%)`,
-            scale: 1 + (keystrokePulse % 3) * 0.03,
-          }}
-          transition={{ duration: 0.9, ease: EASE_OUT_EXPO }}
-          className="absolute -inset-32 blur-3xl opacity-90"
-        />
-
-        {/* Secondary Counter-Rotating Aurora Plume */}
-        <motion.div
-          animate={{
-            background: `radial-gradient(580px circle at 76% 66%, ${activePalette.secondary}33, ${activePalette.tertiary}1A 50%, transparent 78%)`,
-            rotate: mode === 'login' ? 0 : mode === 'register' ? 28 : -25,
-          }}
-          transition={{ duration: 1.1, ease: EASE_OUT_EXPO }}
-          className="absolute -inset-24 blur-3xl opacity-80"
-        />
-
-        {/* Subtle Refractive Perspective Grid */}
+      {/* --- LAYER 1: Archival Paper Grain, Brass Vernier Grid & Warm Cursor Spotlight --- */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        {/* Ambient Forest & Brass Radial Wash */}
         <div
-          className="absolute inset-0 opacity-[0.14] dark:opacity-[0.18]"
+          className="absolute inset-0 transition-opacity duration-700"
           style={{
-            backgroundImage: `linear-gradient(to right, ${activePalette.primary}22 1px, transparent 1px), linear-gradient(to bottom, ${activePalette.secondary}22 1px, transparent 1px)`,
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse 80% 75% at 50% 50%, black 25%, transparent 90%)',
-            WebkitMaskImage:
-              'radial-gradient(ellipse 80% 75% at 50% 50%, black 25%, transparent 90%)',
+            background: isDark
+              ? 'radial-gradient(circle at 26% 42%, rgba(22, 63, 50, 0.45), transparent 55%), radial-gradient(circle at 78% 25%, rgba(200, 161, 90, 0.14), transparent 50%)'
+              : 'radial-gradient(circle at 26% 42%, rgba(200, 161, 90, 0.18), transparent 55%), radial-gradient(circle at 78% 25%, rgba(22, 63, 50, 0.08), transparent 50%)',
           }}
         />
 
-        {/* Keystroke Resonance Wave Ring */}
-        <AnimatePresence mode="popLayout">
-          {keystrokePulse > 0 && (
-            <motion.div
-              key={keystrokePulse}
-              initial={{ opacity: 0.45, scale: 0.55 }}
-              animate={{ opacity: 0, scale: 1.65 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.85, ease: 'easeOut' }}
-              className="
-                absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                w-[520px] h-[520px] rounded-full border pointer-events-none
-              "
-              style={{ borderColor: activePalette.secondary }}
-            />
-          )}
-        </AnimatePresence>
+        {/* Cursor-Following Warm Brass Atelier Lamp */}
+        <motion.div
+          className="absolute w-[640px] h-[640px] rounded-full blur-[130px] -translate-x-1/2 -translate-y-1/2"
+          style={{
+            left: spotlightX,
+            top: spotlightY,
+            background: isDark
+              ? 'radial-gradient(circle, rgba(200,161,90,0.16) 0%, rgba(22,63,50,0.12) 45%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(200,161,90,0.22) 0%, rgba(22,63,50,0.06) 45%, transparent 70%)',
+          }}
+        />
+
+        {/* Fine Editorial Ruled Grid Lines */}
+        <div
+          className="absolute inset-0"
+          style={{
+            opacity: isDark ? 0.07 : 0.09,
+            backgroundImage: isDark
+              ? 'linear-gradient(to right, #C8A15A 1px, transparent 1px), linear-gradient(to bottom, #C8A15A 1px, transparent 1px)'
+              : 'linear-gradient(to right, #163F32 1px, transparent 1px), linear-gradient(to bottom, #163F32 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+            maskImage:
+              'radial-gradient(ellipse 85% 80% at 50% 50%, black 35%, transparent 100%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 85% 80% at 50% 50%, black 35%, transparent 100%)',
+          }}
+        />
       </div>
 
-      {/* =====================================================================
-          LAYER 2: TOP MINIMALIST NAVIGATION BAR
-          ===================================================================== */}
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6 sm:px-10">
+      {/* --- LAYER 2: Top Navigation Bar with 3D Gutenberg Type-Block Brand Lockup --- */}
+      <header
+        className={`relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 pt-5 pb-4 flex items-center justify-between border-b ${
+          isDark ? 'border-[#C8A15A]/15' : 'border-[#163F32]/12'
+        }`}
+      >
         <Link
           href="/landing"
-          className="group inline-flex items-center gap-3 text-xs font-medium tracking-wide text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors"
+          className={`group inline-flex items-center gap-2.5 text-xs font-mono uppercase tracking-[0.18em] transition-colors ${
+            isDark
+              ? 'text-[#C8A15A]/80 hover:text-[#F7F4EC]'
+              : 'text-[#163F32] hover:text-[#0B261D]'
+          }`}
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300/60 dark:border-white/15 bg-white/60 dark:bg-white/5 backdrop-blur-md group-hover:-translate-x-0.5 transition-transform">
-            <ArrowLeft size={14} />
-          </span>
-          <span>Back to Studio</span>
-        </Link>
-
-        {/* Brand Identity Lockup */}
-        <Link
-          href="/landing"
-          className="inline-flex items-center gap-2.5 text-slate-900 dark:text-white"
-        >
-          <motion.span
-            animate={{
-              rotate: keystrokePulse * 18,
-              borderColor: activePalette.secondary,
-            }}
-            transition={{ type: 'spring', stiffness: 180, damping: 16 }}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border bg-white/70 dark:bg-white/10 backdrop-blur-md shadow-sm"
-            style={{
-              boxShadow: `0 0 20px -4px ${activePalette.primary}66`,
-            }}
-          >
-            <Sparkles size={15} style={{ color: activePalette.secondary }} />
-          </motion.span>
           <span
-            className="text-xl tracking-tight font-semibold"
-            style={{ fontFamily: "'Instrument Serif', 'Newsreader', Georgia, serif" }}
+            className={`w-7 h-7 rounded-md flex items-center justify-center border transition-transform group-hover:-translate-x-0.5 ${
+              isDark
+                ? 'border-[#C8A15A]/30 bg-[#12261F] text-[#E5C98B]'
+                : 'border-[#163F32]/20 bg-[#EFECE1] text-[#163F32]'
+            }`}
           >
-            BlogFlow AI
+            <ArrowLeft className="w-3.5 h-3.5" />
           </span>
+          <span>Back to Atelier</span>
         </Link>
 
-        {/* Theme Switcher */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 dark:border-white/15 bg-white/70 dark:bg-white/5 px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 backdrop-blur-md hover:border-slate-400 dark:hover:border-white/30 transition-all cursor-pointer"
-          aria-label="Toggle color theme"
+        {/* Center Brand Lockup: 3D Gutenberg Cube + Serif Wordmark */}
+        <Link
+          href="/landing"
+          className="inline-flex items-center gap-3.5 group focus:outline-none"
+          title="BlogFlow AI — Gutenberg Type-Block Identity"
         >
-          {mounted && !isDark ? (
-            <>
-              <Sun size={13} className="text-amber-500" />
-              <span>Daylight</span>
-            </>
-          ) : (
-            <>
-              <Moon size={13} className="text-cyan-300" />
-              <span>Obsidian</span>
-            </>
+          <GutenbergTypeBlock3D
+            size={34}
+            activeFace={activeCubeFace}
+            activityPulse={keystrokePulse}
+            scrollPct={completionPct}
+            interactiveStamp={false}
+          />
+          <div className="flex flex-col text-left">
+            <span
+              className={`text-xl sm:text-2xl font-bold tracking-tight leading-none ${
+                isDark ? 'text-[#F7F4EC]' : 'text-[#12261F]'
+              }`}
+              style={{
+                fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+              }}
+            >
+              BlogFlow AI
+            </span>
+            <span
+              className={`text-[9px] font-mono uppercase tracking-[0.22em] mt-0.5 ${
+                isDark ? 'text-[#C8A15A]/80' : 'text-[#615B4E]'
+              }`}
+            >
+              EST. 1450 · TYPE FOUNDRY
+            </span>
+          </div>
+        </Link>
+
+        {/* Right Theme Switcher */}
+        <div className="flex items-center gap-3">
+          {mounted && (
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Toggle Atelier lighting"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-[11px] font-mono uppercase tracking-[0.14em] transition-all cursor-pointer ${
+                isDark
+                  ? 'border-[#C8A15A]/30 bg-[#12261F]/90 text-[#E5C98B] hover:border-[#C8A15A]'
+                  : 'border-[#163F32]/20 bg-[#EFECE1]/90 text-[#163F32] hover:border-[#163F32]/50'
+              }`}
+            >
+              {isDark ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-[#E5C98B]" />
+                  <span className="hidden sm:inline">Archival Paper</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-[#163F32]" />
+                  <span className="hidden sm:inline">Forest Obsidian</span>
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </div>
       </header>
 
-      {/* =====================================================================
-          LAYER 3: MAIN ASYMMETRIC 3D PORTAL WORKSPACE
-          ===================================================================== */}
-      <motion.main
-        animate={
-          portalWarpExit
-            ? { scale: 1.08, opacity: 0, filter: 'blur(16px)' }
-            : { scale: 1, opacity: 1, filter: 'blur(0px)' }
-        }
-        transition={{ duration: 0.55, ease: EASE_OUT_EXPO }}
-        className="relative z-10 mx-auto grid min-h-[calc(100vh-88px)] max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-12 pt-2 lg:grid-cols-12 sm:px-10"
-      >
-        {/* ===================================================================
-            LEFT COLUMN (7 COLS ON LG): 3D KINETIC TYPOGRAPHY & PRISM SCULPTURE
-            (Strictly zero workflow, pipeline, or dashboard clutter)
-            =================================================================== */}
-        <section className="relative flex flex-col justify-between lg:col-span-7 lg:pr-6">
-          {/* Interactive 3D Gyroscopic Prism Stage */}
-          <div
-            className="relative mx-auto flex h-[340px] sm:h-[420px] w-full max-w-[580px] items-center justify-center"
-            style={{ perspective: '1200px' }}
-          >
-            <motion.div
-              style={{
-                rotateX: sculptureRotateX,
-                rotateY: sculptureRotateY,
-                transformStyle: 'preserve-3d',
-              }}
-              animate={{
-                scale: presetRotationOffset.scale,
-              }}
-              transition={{ type: 'spring', stiffness: 90, damping: 18 }}
-              className="relative flex h-full w-full items-center justify-center"
+      {/* --- LAYER 3: Split Editorial Stage (Left 3D Gutenberg Cube Pedestal + Right Auth Press) --- */}
+      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 lg:py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        {/* LEFT COLUMN: Interactive 3D Gutenberg Type-Block Stage & Kinetic Serif Typography */}
+        <div className="lg:col-span-6 flex flex-col justify-center items-center lg:items-start text-center lg:text-left space-y-7">
+          {/* Interactive 3D Gutenberg Type-Block Pedestal */}
+          <div className="relative w-full max-w-[440px] flex flex-col items-center lg:items-start">
+            <div
+              className={`relative w-full h-[290px] sm:h-[320px] rounded-2xl border flex flex-col items-center justify-center overflow-hidden transition-colors duration-500 ${
+                isDark
+                  ? 'bg-[#0F211B]/80 border-[#C8A15A]/25 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.7)]'
+                  : 'bg-[#EFECE1]/85 border-[#163F32]/15 shadow-[0_24px_50px_-18px_rgba(22,63,50,0.14)]'
+              }`}
+              style={{ perspective: 1200 }}
             >
-              {/* Outer Refractive Orbital Ring 1 */}
-              <motion.div
-                animate={{
-                  rotateZ: 360,
-                  rotateX: 62 + presetRotationOffset.x,
-                  rotateY: -12 + presetRotationOffset.y,
-                  borderColor: activePalette.ringColor,
-                }}
-                transition={{
-                  rotateZ: { duration: 28, repeat: Infinity, ease: 'linear' },
-                  rotateX: { duration: 0.8, ease: EASE_OUT_EXPO },
-                  rotateY: { duration: 0.8, ease: EASE_OUT_EXPO },
-                }}
-                style={{ transformStyle: 'preserve-3d' }}
-                className="absolute h-[270px] w-[270px] sm:h-[340px] sm:w-[340px] rounded-full border-[1.5px] shadow-[0_0_50px_rgba(99,102,241,0.2)]"
-              />
+              {/* Top Corner Technical Readout */}
+              <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] pointer-events-none">
+                <span className={isDark ? 'text-[#C8A15A]' : 'text-[#163F32]'}>
+                  MATRIX FACE · {activeFaceMeta.numeral} ({activeFaceMeta.label.toUpperCase()})
+                </span>
+                <span className={isDark ? 'text-[#9DB1A8]' : 'text-[#615B4E]'}>
+                  STAMP PULSE · {String(keystrokePulse).padStart(2, '0')}
+                </span>
+              </div>
 
-              {/* Middle Counter-Rotating Glass Ring 2 */}
+              {/* Architectural Crosshairs & Vernier Rings */}
               <motion.div
-                animate={{
-                  rotateZ: -360,
-                  rotateX: -54 + presetRotationOffset.y,
-                  rotateY: 28 + presetRotationOffset.x,
-                  borderColor: activePalette.secondary,
-                }}
-                transition={{
-                  rotateZ: { duration: 22, repeat: Infinity, ease: 'linear' },
-                  rotateX: { duration: 0.8, ease: EASE_OUT_EXPO },
-                  rotateY: { duration: 0.8, ease: EASE_OUT_EXPO },
-                }}
-                style={{ transformStyle: 'preserve-3d', opacity: 0.42 }}
-                className="absolute h-[220px] w-[220px] sm:h-[280px] sm:w-[280px] rounded-full border border-dashed"
-              />
-
-              {/* Inner Gyroscopic Core Prism */}
-              <motion.div
-                animate={{
-                  rotateY: keystrokePulse * 25 + presetRotationOffset.y,
-                  rotateX: (keystrokePulse % 2 === 0 ? 12 : -12) + presetRotationOffset.x,
-                  boxShadow: `0 0 80px -10px ${activePalette.primary}88, inset 0 0 36px ${activePalette.secondary}55`,
-                }}
-                transition={{ type: 'spring', stiffness: 120, damping: 16 }}
                 style={{
-                  transform: 'translateZ(40px)',
-                  background: `linear-gradient(135deg, ${activePalette.primary}30 0%, ${activePalette.secondary}22 50%, transparent 100%)`,
+                  rotateX: stageRotateX,
+                  rotateY: stageRotateY,
+                  transformStyle: 'preserve-3d',
                 }}
-                className="relative flex h-40 w-40 sm:h-48 sm:w-48 items-center justify-center rounded-3xl border border-white/30 dark:border-white/20 backdrop-blur-2xl"
+                className="relative flex items-center justify-center w-60 h-60"
               >
-                {/* Inner Diamond Facet */}
+                {/* Outer Calibrated Brass Ring */}
                 <motion.div
-                  animate={{
-                    rotate: 45 + keystrokePulse * 15,
-                    borderColor: activePalette.secondary,
-                  }}
-                  transition={{ type: 'spring', stiffness: 140, damping: 18 }}
-                  className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border bg-white/20 dark:bg-white/5 backdrop-blur-md"
+                  animate={{ rotateZ: 360 }}
+                  transition={{ duration: 48, repeat: Infinity, ease: 'linear' }}
+                  className={`absolute inset-0 rounded-full border border-dashed pointer-events-none ${
+                    isDark ? 'border-[#C8A15A]/30' : 'border-[#163F32]/25'
+                  }`}
                 />
 
-                {/* Center Floating Glyph */}
+                {/* Inner Concentric Vernier Ring */}
+                <motion.div
+                  animate={{ rotateZ: -360 }}
+                  transition={{ duration: 34, repeat: Infinity, ease: 'linear' }}
+                  className={`absolute inset-6 rounded-full border pointer-events-none ${
+                    isDark ? 'border-[#163F32]/70' : 'border-[#C8A15A]/45'
+                  }`}
+                />
+
+                {/* Warm Brass Cast Shadow Plinth under Cube */}
                 <div
-                  className="absolute inset-0 flex flex-col items-center justify-center text-center"
-                  style={{ transform: 'translateZ(35px)' }}
-                >
-                  <span
-                    className="text-3xl sm:text-4xl font-normal tracking-tight text-slate-900 dark:text-white"
-                    style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
-                  >
-                    {mode === 'login' ? 'BF·I' : mode === 'register' ? 'BF·II' : 'BF·KEY'}
-                  </span>
-                  <span className="mt-1 font-mono text-[10px] tracking-[0.24em] uppercase text-slate-600 dark:text-slate-300">
-                    {prismPreset}
-                  </span>
+                  className="absolute w-36 h-36 rounded-full blur-2xl pointer-events-none"
+                  style={{
+                    background: isDark
+                      ? 'radial-gradient(circle, rgba(200,161,90,0.28) 0%, rgba(22,63,50,0.2) 60%, transparent 100%)'
+                      : 'radial-gradient(circle, rgba(22,63,50,0.18) 0%, rgba(200,161,90,0.22) 60%, transparent 100%)',
+                  }}
+                />
+
+                {/* THE 3D GUTENBERG TYPE-BLOCK CUBE */}
+                <div className="relative z-10">
+                  <GutenbergTypeBlock3D
+                    size={136}
+                    activeFace={activeCubeFace}
+                    activityPulse={keystrokePulse}
+                    scrollPct={completionPct}
+                    interactiveStamp={true}
+                    onStampFace={(nextFace) => {
+                      setFocusedField(null);
+                      setManualFaceOverride(nextFace);
+                      pulseCube();
+                    }}
+                  />
                 </div>
               </motion.div>
 
-              {/* Floating 3D Kinetic Typography Words Orbiting in Z-Space */}
-              {activePalette.kineticWords.map((word, idx) => {
-                const positions = [
-                  'top-6 left-4 sm:left-8',
-                  'top-10 right-4 sm:right-8',
-                  'bottom-10 left-6 sm:left-12',
-                  'bottom-6 right-6 sm:right-10',
-                ];
-                const zDepths = [75, 55, 65, 85];
-                return (
-                  <motion.div
-                    key={`${mode}-${word}`}
-                    initial={{ opacity: 0, y: 12, scale: 0.9 }}
-                    animate={{
-                      opacity: 1,
-                      y: [0, idx % 2 === 0 ? -7 : 7, 0],
-                      scale: 1,
-                    }}
-                    transition={{
-                      opacity: { duration: 0.45, delay: idx * 0.06 },
-                      y: {
-                        duration: 4.2 + idx * 0.5,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      },
-                    }}
-                    style={{
-                      transform: `translateZ(${zDepths[idx]}px)`,
-                    }}
-                    className={`absolute ${positions[idx]} rounded-xl border border-slate-300/60 dark:border-white/15 bg-white/75 dark:bg-white/[0.06] px-3.5 py-1.5 backdrop-blur-xl shadow-lg`}
-                  >
-                    <span className="font-mono text-[10px] sm:text-[11px] font-medium tracking-[0.22em] text-slate-800 dark:text-slate-100">
-                      {word}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </div>
-
-          {/* Sculptural Kinetic Editorial Headline */}
-          <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={mode}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.45, ease: EASE_OUT_EXPO }}
+              {/* Bottom Stage Caption Bar */}
+              <div
+                className={`absolute bottom-3 left-4 right-4 pt-2 border-t flex items-center justify-between text-[10px] font-mono tracking-[0.12em] ${
+                  isDark
+                    ? 'border-[#C8A15A]/15 text-[#C8A15A]/85'
+                    : 'border-[#163F32]/12 text-[#4A5A52]'
+                }`}
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 dark:border-white/15 bg-white/70 dark:bg-white/5 px-3.5 py-1 text-[11px] font-medium tracking-wide text-slate-700 dark:text-slate-300 backdrop-blur-md mb-4">
-                  <Sparkles size={12} style={{ color: activePalette.secondary }} />
-                  <span>{activePalette.badge}</span>
-                </div>
+                <span>{activeFaceMeta.caption}</span>
+                <span className="uppercase opacity-80">Click cube to rotate</span>
+              </div>
+            </div>
 
-                <h1
-                  className="text-4xl sm:text-6xl leading-[1.04] tracking-tight font-normal text-slate-900 dark:text-white"
-                  style={{ fontFamily: "'Instrument Serif', 'Newsreader', Georgia, serif" }}
-                >
-                  {activePalette.headlineFirst}{' '}
-                  <em
-                    className="italic font-normal bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: `linear-gradient(120deg, ${activePalette.primary}, ${activePalette.secondary})`,
-                    }}
-                  >
-                    {activePalette.headlineAccent}
-                  </em>{' '}
-                  {activePalette.headlineLast}
-                </h1>
-
-                <p className="mt-4 text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-300/85 max-w-lg mx-auto lg:mx-0">
-                  {activePalette.subline}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Interactive 3D Camera / Refraction Angle Controls */}
-            <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1">
-                3D Optics:
-              </span>
-              {(
-                [
-                  { id: 'prism', label: 'Prism Core', icon: Layers },
-                  { id: 'kinetic', label: 'Kinetic Orbit', icon: Compass },
-                  { id: 'zenith', label: 'Zenith Tilt', icon: Wand2 },
-                ] as const
-              ).map(({ id, label, icon: Icon }) => {
-                const isSelected = prismPreset === id;
+            {/* Unboxed Typographic 5-Face Inspector Bar (Zero-Pill Discipline) */}
+            <div
+              className={`w-full mt-3 pt-2.5 border-t flex flex-wrap items-center justify-center lg:justify-between gap-y-2 text-[11px] font-mono uppercase tracking-[0.15em] ${
+                isDark ? 'border-[#C8A15A]/20' : 'border-[#163F32]/15'
+              }`}
+            >
+              {CUBE_FACE_INDEX.map((face, idx) => {
+                const isSelected = activeCubeFace === face.id;
                 return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => {
-                      setPrismPreset(id);
-                      triggerKeystrokeWave();
-                    }}
-                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-cyan-400/60 bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
-                        : 'border-slate-300/70 dark:border-white/12 bg-white/60 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/25'
-                    }`}
-                  >
-                    <Icon size={12} />
-                    <span>{label}</span>
-                  </button>
+                  <React.Fragment key={face.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFocusedField(null);
+                        setManualFaceOverride(face.id);
+                        pulseCube();
+                      }}
+                      className={`cursor-pointer transition-colors pb-0.5 border-b-2 ${
+                        isSelected
+                          ? isDark
+                            ? 'text-[#E5C98B] border-[#C8A15A] font-semibold'
+                            : 'text-[#163F32] border-[#163F32] font-semibold'
+                          : isDark
+                          ? 'text-[#8FA59B] border-transparent hover:text-[#F7F4EC]'
+                          : 'text-[#615B4E] border-transparent hover:text-[#18211D]'
+                      }`}
+                    >
+                      {face.numeral} · {face.label}
+                    </button>
+                    {idx < CUBE_FACE_INDEX.length - 1 && (
+                      <span
+                        className={
+                          isDark ? 'text-[#C8A15A]/30' : 'text-[#163F32]/25'
+                        }
+                      >
+                        /
+                      </span>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </div>
           </div>
-        </section>
 
-        {/* ===================================================================
-            RIGHT COLUMN (5 COLS ON LG): 3D GLASSMORPHIC MORPHING AUTH CARD
-            =================================================================== */}
-        <section
-          className="relative lg:col-span-5 flex items-center justify-center"
-          style={{ perspective: '1400px' }}
-        >
+          {/* Kinetic Serif Headline & Unboxed Folio Metadata */}
+          <div className="space-y-3 max-w-lg">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-3"
+              >
+                <div
+                  className={`flex items-center justify-center lg:justify-start gap-2.5 text-[11px] font-mono uppercase tracking-[0.22em] ${
+                    isDark ? 'text-[#C8A15A]' : 'text-[#163F32]'
+                  }`}
+                >
+                  <Feather className="w-3.5 h-3.5" />
+                  <span>{copy.folioTag}</span>
+                </div>
+
+                <h1
+                  className={`text-4xl sm:text-5xl font-normal tracking-tight leading-[1.08] ${
+                    isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                  }`}
+                  style={{
+                    fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                  }}
+                >
+                  {copy.headlineStart}{' '}
+                  <span
+                    className={`italic font-normal ${
+                      isDark ? 'text-[#E5C98B]' : 'text-[#163F32]'
+                    }`}
+                    style={{
+                      textDecoration: 'underline',
+                      textDecorationColor: '#C8A15A',
+                      textUnderlineOffset: '6px',
+                      textDecorationThickness: '1.5px',
+                    }}
+                  >
+                    {copy.headlineItalic}
+                  </span>{' '}
+                  {copy.headlineEnd}
+                </h1>
+
+                <p
+                  className={`text-sm sm:text-base leading-relaxed font-normal ${
+                    isDark ? 'text-[#B4C4BC]' : 'text-[#4A5A52]'
+                  }`}
+                >
+                  {copy.subtext}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Unboxed Architectural Specifications Row */}
+            <div
+              className={`pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-1 text-[11px] font-mono uppercase tracking-[0.14em] ${
+                isDark ? 'text-[#8FA59B]' : 'text-[#615B4E]'
+              }`}
+            >
+              <span>ALLOY: #163F32 · #C8A15A</span>
+              <span>·</span>
+              <span>COMPLETION: {Math.round(completionPct * 100)}%</span>
+              <span>·</span>
+              <span>CIPHER: AES-GCM</span>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Warm Archival Paper & Brushed Brass Authentication Press Card */}
+        <div className="lg:col-span-6 w-full max-w-[470px] mx-auto">
           <motion.div
-            style={{
-              rotateX: cardRotateX,
-              rotateY: cardRotateY,
-              transformStyle: 'preserve-3d',
-            }}
-            className="relative w-full max-w-[460px]"
+            key={shakeKey}
+            animate={
+              shakeKey > 0
+                ? { x: [0, -10, 10, -7, 7, -3, 3, 0] }
+                : { x: 0 }
+            }
+            transition={{ duration: 0.4 }}
+            className="relative"
           >
-            {/* Outer Ambient Glow Halo */}
-            <motion.div
-              animate={{
-                background: `radial-gradient(circle at 50% 0%, ${activePalette.primary}44, ${activePalette.secondary}22 55%, transparent 80%)`,
+            {/* Subtle Brass Outer Frame Glow */}
+            <div
+              className=" -inset-[1px] rounded-2xl pointer-events-none opacity-80"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(200,161,90,0.45), rgba(22,63,50,0.2), rgba(200,161,90,0.35))'
+                  : 'linear-gradient(135deg, rgba(22,63,50,0.25), rgba(200,161,90,0.45), rgba(22,63,50,0.2))',
               }}
-              transition={{ duration: 0.7 }}
-              className="pointer-events-none absolute -inset-3 rounded-[32px] blur-2xl opacity-80"
             />
 
-            {/* Main Frosted Glass Portal Card */}
-            <motion.div
-              layout
-              transition={{ duration: 0.45, ease: EASE_OUT_EXPO }}
-              className="relative overflow-hidden rounded-[28px] border border-slate-300/80 dark:border-white/15 bg-white/85 dark:bg-[#0B0F1C]/80 p-6 sm:p-8 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+            {/* Main Card Interior */}
+            <div
+              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 ${
+                isDark
+                  ? 'bg-[#0F1F19]/95 border-[#C8A15A]/30 shadow-[0_28px_70px_-15px_rgba(0,0,0,0.8)]'
+                  : 'bg-[#FCFBF7] border-[#163F32]/18 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.14)]'
+              }`}
             >
-              {/* Specular Glare Overlay following cursor */}
-              <motion.div
-                style={{
-                  background: useTransform(
-                    [glareX, glareY],
-                    ([gx, gy]) =>
-                      `radial-gradient(380px circle at ${gx} ${gy}, rgba(255,255,255,0.14), transparent 70%)`
-                  ),
-                }}
-                className="pointer-events-none absolute inset-0"
-              />
+              {/* Top Brass Registration Hairline */}
+              <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#C8A15A]/25 text-[10px] font-mono uppercase tracking-[0.2em]">
+                <span className={isDark ? 'text-[#E5C98B]' : 'text-[#163F32]'}>
+                  PRESS REGISTER · {mode.toUpperCase()}
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[#9A732E] dark:text-[#C8A15A]">
+                  <Compass className="w-3 h-3" />
+                  <span>CUBE SYNC: {activeCubeFace.toUpperCase()}</span>
+                </span>
+              </div>
 
-              {/* Top Mode Switcher Tabs (Sign In / Create Account) */}
+              {/* Mode Switcher Tabs (Sign In vs Create Account) */}
               {mode !== 'forgot' ? (
-                <div className="relative z-10 mb-6 grid grid-cols-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-100/80 dark:bg-white/[0.04] p-1">
-                  {(['login', 'register'] as const).map((tab) => {
-                    const active = mode === tab;
-                    return (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => switchMode(tab)}
-                        className={`relative z-10 rounded-xl py-2.5 text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
-                          active
-                            ? 'text-slate-950 dark:text-white'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                        }`}
-                      >
-                        {active && (
-                          <motion.div
-                            layoutId="portalModeTab"
-                            transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                            className="absolute inset-0 -z-10 rounded-xl bg-white dark:bg-white/12 shadow-sm border border-slate-200/60 dark:border-white/15"
-                          />
-                        )}
-                        {tab === 'login' ? 'Sign In' : 'Create Account'}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="relative z-10 mb-6 flex items-center justify-between border-b border-slate-200/70 dark:border-white/10 pb-4">
+                <div
+                  className={`relative grid grid-cols-2 p-1 rounded-xl border mb-6 ${
+                    isDark
+                      ? 'bg-[#091410] border-[#C8A15A]/20'
+                      : 'bg-[#EFECE1] border-[#163F32]/12'
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
-                    className="inline-flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
+                    className={`relative z-10 py-2.5 text-xs font-mono uppercase tracking-[0.16em] font-semibold rounded-lg transition-colors cursor-pointer ${
+                      mode === 'login'
+                        ? 'text-[#F7F4EC]'
+                        : isDark
+                        ? 'text-[#9DB1A8] hover:text-[#F7F4EC]'
+                        : 'text-[#4A5A52] hover:text-[#18211D]'
+                    }`}
                   >
-                    <ArrowLeft size={14} />
-                    <span>Back to Sign In</span>
+                    {mode === 'login' && (
+                      <motion.div
+                        layoutId="atelierAuthTab"
+                        className="absolute inset-0 rounded-lg bg-[#163F32] border border-[#C8A15A]/45 shadow-sm -z-10"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    Sign In
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => switchMode('register')}
+                    className={`relative z-10 py-2.5 text-xs font-mono uppercase tracking-[0.16em] font-semibold rounded-lg transition-colors cursor-pointer ${
+                      mode === 'register'
+                        ? 'text-[#F7F4EC]'
+                        : isDark
+                        ? 'text-[#9DB1A8] hover:text-[#F7F4EC]'
+                        : 'text-[#4A5A52] hover:text-[#18211D]'
+                    }`}
+                  >
+                    {mode === 'register' && (
+                      <motion.div
+                        layoutId="atelierAuthTab"
+                        className="absolute inset-0 rounded-lg bg-[#163F32] border border-[#C8A15A]/45 shadow-sm -z-10"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    Create Account
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#C8A15A]/20">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className={`inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.15em] transition-colors cursor-pointer ${
+                      isDark
+                        ? 'text-[#E5C98B] hover:text-[#F7F4EC]'
+                        : 'text-[#163F32] hover:text-[#0B261D]'
+                    }`}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back to Sign In
                   </button>
                   <div className="flex items-center gap-1.5">
-                    {[1, 2, 3].map((stepNum) => (
+                    {[1, 2, 3, 4].map((s) => (
                       <span
-                        key={stepNum}
-                        className={`h-1.5 rounded-full transition-all ${
-                          forgotStep >= stepNum
-                            ? 'w-6 bg-amber-400'
-                            : 'w-2 bg-slate-300 dark:bg-white/15'
+                        key={s}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          forgotStep >= s
+                            ? 'w-5 bg-[#C8A15A]'
+                            : isDark
+                            ? 'w-2 bg-white/15'
+                            : 'w-2 bg-[#163F32]/15'
                         }`}
                       />
                     ))}
@@ -1051,789 +1041,906 @@ export default function MorphingAuthPortal({ initialMode }: MorphingAuthPortalPr
                 </div>
               )}
 
-              {/* Alert & Info Banners */}
+              {/* Alert Banners */}
               <AnimatePresence mode="wait">
                 {error && (
                   <motion.div
-                    key="auth-error"
-                    initial={{ opacity: 0, y: -8 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="relative z-10 mb-5 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs font-medium text-rose-700 dark:text-rose-200"
+                    exit={{ opacity: 0, y: -6 }}
+                    className={`mb-5 p-3.5 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
+                      isDark
+                        ? 'bg-[#3A1818]/90 border-[#D97757]/50 text-[#FCDAD0]'
+                        : 'bg-[#FDF2EE] border-[#B85D3B]/40 text-[#7A2E18]'
+                    }`}
                   >
-                    <AlertCircle size={15} className="mt-0.5 shrink-0 text-rose-500" />
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#C85A32]" />
                     <span>{error}</span>
                   </motion.div>
                 )}
 
-                {infoMessage && !error && (
+                {successMsg && !error && (
                   <motion.div
-                    key="auth-info"
-                    initial={{ opacity: 0, y: -8 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="relative z-10 mb-5 flex items-start gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs font-medium text-emerald-800 dark:text-emerald-200"
+                    exit={{ opacity: 0, y: -6 }}
+                    className={`mb-5 p-3.5 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
+                      isDark
+                        ? 'bg-[#123328]/90 border-[#C8A15A]/50 text-[#E5C98B]'
+                        : 'bg-[#EAF2EE] border-[#163F32]/30 text-[#123328]'
+                    }`}
                   >
-                    <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-500" />
-                    <span>{infoMessage}</span>
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[#163F32] dark:text-[#C8A15A]" />
+                    <span>{successMsg}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* =============================================================
-                  MODE 1 & 2: SIGN IN / CREATE ACCOUNT FORMS
-                  ============================================================= */}
+              {/* FORM VIEWS */}
               <AnimatePresence mode="wait">
-                {mode !== 'forgot' ? (
-                  <motion.div
-                    key={mode}
-                    initial={{ opacity: 0, x: mode === 'login' ? -16 : 16 }}
+                {/* ==================== LOGIN VIEW ==================== */}
+                {mode === 'login' && (
+                  <motion.form
+                    key="login-form"
+                    initial={{ opacity: 0, x: -14 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: mode === 'login' ? 16 : -16 }}
-                    transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-                    className="relative z-10"
+                    exit={{ opacity: 0, x: 14 }}
+                    transition={{ duration: 0.25 }}
+                    onSubmit={handleLoginSubmit}
+                    className="space-y-4"
                   >
-                    <div className="mb-5">
-                      <h2
-                        className="text-2xl sm:text-3xl font-normal tracking-tight text-slate-900 dark:text-white"
-                        style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
-                      >
-                        {mode === 'login' ? 'Welcome back' : 'Create your account'}
-                      </h2>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        {mode === 'login'
-                          ? 'Enter your credentials to unlock your creative workspace.'
-                          : 'Set up your personal credentials in seconds.'}
-                      </p>
-                    </div>
+                    {/* Email Field */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
+                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                          }`}
+                        >
+                          Editorial Email
+                        </label>
+                        <span
+                          className={`text-[10px] font-mono ${
+                            focusedField === 'email'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]/60'
+                              : 'text-[#615B4E]/70'
+                          }`}
+                        >
+                          FACE II · LOUPE
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <Mail
+                          className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                            focusedField === 'email'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]'
+                              : 'text-[#615B4E]'
+                          }`}
+                        />
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onFocus={() => {
+                            setFocusedField('email');
+                            pulseCube();
+                          }}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            pulseCube();
+                          }}
+                          placeholder="editor@publication.com"
+                          className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                            isDark
+                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                          }`}
+                        />
+                      </div>
 
-                    <form
-                      onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit}
-                      noValidate
-                      className="space-y-4"
-                    >
-                      {/* Full Name Field (Register Mode Only) */}
-                      {mode === 'register' && (
-                        <div>
-                          <label
-                            htmlFor="portal-name"
-                            className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300"
+                      {/* Domain Quick-Chips */}
+                      <AnimatePresence>
+                        {showDomainSuggestions && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="flex flex-wrap items-center gap-1.5 pt-2 overflow-hidden"
                           >
-                            Full Name
-                          </label>
-                          <div
-                            className={`relative flex items-center rounded-xl border transition-all ${
-                              focusedField === 'name'
-                                ? 'border-emerald-400/80 ring-2 ring-emerald-400/20 bg-white dark:bg-white/[0.07]'
-                                : 'border-slate-300/80 dark:border-white/12 bg-slate-50/70 dark:bg-white/[0.04]'
-                            }`}
-                          >
-                            <User
-                              size={15}
-                              className="ml-3.5 shrink-0 text-slate-400 dark:text-slate-400"
-                            />
-                            <input
-                              id="portal-name"
-                              type="text"
-                              autoComplete="name"
-                              placeholder="Aria Vance"
-                              value={name}
-                              onFocus={() => setFocusedField('name')}
-                              onBlur={() => setFocusedField(null)}
-                              onChange={(e) => {
-                                setName(e.target.value);
-                                triggerKeystrokeWave();
-                              }}
-                              disabled={loading || demoLoading}
-                              className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Email Address Field */}
-                      <div>
-                        <div className="mb-1.5 flex items-center justify-between">
-                          <label
-                            htmlFor="portal-email"
-                            className="text-xs font-medium text-slate-700 dark:text-slate-300"
-                          >
-                            Email Address
-                          </label>
-                          <div className="flex items-center gap-1">
                             {EMAIL_DOMAINS.map((dom) => (
                               <button
                                 key={dom}
                                 type="button"
-                                onClick={() => applyEmailDomain(dom, false)}
-                                className="rounded-md border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:text-slate-300 hover:border-cyan-400/50 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors cursor-pointer"
+                                onClick={() => applyEmailDomain(dom)}
+                                className={`text-[11px] font-mono px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                                  isDark
+                                    ? 'bg-[#12261F] border-[#C8A15A]/30 text-[#E5C98B] hover:border-[#C8A15A]'
+                                    : 'bg-[#EFECE1] border-[#163F32]/20 text-[#163F32] hover:bg-[#163F32] hover:text-[#F7F4EC]'
+                                }`}
                               >
                                 {dom}
                               </button>
                             ))}
-                          </div>
-                        </div>
-                        <div
-                          className={`relative flex items-center rounded-xl border transition-all ${
-                            focusedField === 'email'
-                              ? 'border-cyan-400/80 ring-2 ring-cyan-400/20 bg-white dark:bg-white/[0.07]'
-                              : 'border-slate-300/80 dark:border-white/12 bg-slate-50/70 dark:bg-white/[0.04]'
-                          }`}
-                        >
-                          <Mail
-                            size={15}
-                            className="ml-3.5 shrink-0 text-slate-400 dark:text-slate-400"
-                          />
-                          <input
-                            id="portal-email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="creator@blogflow.ai"
-                            value={email}
-                            onFocus={() => setFocusedField('email')}
-                            onBlur={() => setFocusedField(null)}
-                            onChange={(e) => {
-                              setEmail(e.target.value);
-                              triggerKeystrokeWave();
-                            }}
-                            disabled={loading || demoLoading}
-                            className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
-                          />
-                        </div>
-                      </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
-                      {/* Password Field */}
-                      <div>
-                        <div className="mb-1.5 flex items-center justify-between">
-                          <label
-                            htmlFor="portal-password"
-                            className="text-xs font-medium text-slate-700 dark:text-slate-300"
-                          >
-                            Password
-                          </label>
-                          {mode === 'login' && (
-                            <button
-                              type="button"
-                              onClick={() => switchMode('forgot')}
-                              className="text-xs font-medium text-indigo-600 dark:text-cyan-300 hover:underline cursor-pointer"
-                            >
-                              Forgot password?
-                            </button>
-                          )}
-                        </div>
-                        <div
-                          className={`relative flex items-center rounded-xl border transition-all ${
-                            focusedField === 'password'
-                              ? 'border-indigo-400/80 ring-2 ring-indigo-400/20 bg-white dark:bg-white/[0.07]'
-                              : 'border-slate-300/80 dark:border-white/12 bg-slate-50/70 dark:bg-white/[0.04]'
+                    {/* Password Field */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
+                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                           }`}
                         >
-                          <Lock
-                            size={15}
-                            className="ml-3.5 shrink-0 text-slate-400 dark:text-slate-400"
-                          />
+                          Passkey
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => switchMode('forgot')}
+                          className={`text-[11px] font-mono underline underline-offset-4 transition-colors cursor-pointer ${
+                            isDark
+                              ? 'text-[#E5C98B] hover:text-[#F7F4EC]'
+                              : 'text-[#163F32] hover:text-[#9A732E]'
+                          }`}
+                        >
+                          Forgot passkey?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Lock
+                          className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                            focusedField === 'password'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]'
+                              : 'text-[#615B4E]'
+                          }`}
+                        />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={password}
+                          onFocus={() => {
+                            setFocusedField('password');
+                            pulseCube();
+                          }}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            pulseCube();
+                          }}
+                          placeholder="••••••••"
+                          className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                            isDark
+                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer ${
+                            isDark
+                              ? 'text-[#8FA59B] hover:text-[#F7F4EC]'
+                              : 'text-[#615B4E] hover:text-[#18211D]'
+                          }`}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Primary Submit CTA */}
+                    <button
+                      type="submit"
+                      disabled={loading || demoLoading}
+                      className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
+                      ) : (
+                        <>
+                          <span>Enter Editorial Atelier</span>
+                          <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                        </>
+                      )}
+                    </button>
+                  </motion.form>
+                )}
+
+                {/* ==================== REGISTER VIEW ==================== */}
+                {mode === 'register' && (
+                  <motion.form
+                    key="register-form"
+                    initial={{ opacity: 0, x: 14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -14 }}
+                    transition={{ duration: 0.25 }}
+                    onSubmit={handleRegisterSubmit}
+                    className="space-y-4"
+                  >
+                    {/* Author / Studio Name */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
+                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                          }`}
+                        >
+                          Author or Publication Name
+                        </label>
+                        <span
+                          className={`text-[10px] font-mono ${
+                            focusedField === 'name'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]/60'
+                              : 'text-[#615B4E]/70'
+                          }`}
+                        >
+                          FACE V · SILCROW
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <User
+                          className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                            focusedField === 'name'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]'
+                              : 'text-[#615B4E]'
+                          }`}
+                        />
+                        <input
+                          type="text"
+                          required
+                          value={name}
+                          onFocus={() => {
+                            setFocusedField('name');
+                            pulseCube();
+                          }}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            pulseCube();
+                          }}
+                          placeholder="Clara Vance"
+                          className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
+                            isDark
+                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
+                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                          }`}
+                        >
+                          Editorial Email
+                        </label>
+                        <span
+                          className={`text-[10px] font-mono ${
+                            focusedField === 'email'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]/60'
+                              : 'text-[#615B4E]/70'
+                          }`}
+                        >
+                          FACE II · LOUPE
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <Mail
+                          className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                            focusedField === 'email'
+                              ? 'text-[#C8A15A]'
+                              : isDark
+                              ? 'text-[#8FA59B]'
+                              : 'text-[#615B4E]'
+                          }`}
+                        />
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onFocus={() => {
+                            setFocusedField('email');
+                            pulseCube();
+                          }}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            pulseCube();
+                          }}
+                          placeholder="clara@atelier.press"
+                          className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
+                            isDark
+                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                          }`}
+                        />
+                      </div>
+                      <AnimatePresence>
+                        {showDomainSuggestions && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="flex flex-wrap items-center gap-1.5 pt-2 overflow-hidden"
+                          >
+                            {EMAIL_DOMAINS.map((dom) => (
+                              <button
+                                key={dom}
+                                type="button"
+                                onClick={() => applyEmailDomain(dom)}
+                                className={`text-[11px] font-mono px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                                  isDark
+                                    ? 'bg-[#12261F] border-[#C8A15A]/30 text-[#E5C98B] hover:border-[#C8A15A]'
+                                    : 'bg-[#EFECE1] border-[#163F32]/20 text-[#163F32] hover:bg-[#163F32] hover:text-[#F7F4EC]'
+                                }`}
+                              >
+                                {dom}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Passwords Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                          }`}
+                        >
+                          Passkey
+                        </label>
+                        <div className="relative">
+                          <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#615B4E]" />
                           <input
-                            id="portal-password"
                             type={showPassword ? 'text' : 'password'}
-                            autoComplete={
-                              mode === 'login' ? 'current-password' : 'new-password'
-                            }
-                            placeholder={
-                              mode === 'login'
-                                ? 'Enter your password'
-                                : 'At least 8 characters'
-                            }
+                            required
                             value={password}
-                            onFocus={() => setFocusedField('password')}
+                            onFocus={() => {
+                              setFocusedField('password');
+                              pulseCube();
+                            }}
                             onBlur={() => setFocusedField(null)}
                             onChange={(e) => {
                               setPassword(e.target.value);
-                              triggerKeystrokeWave();
+                              pulseCube();
                             }}
-                            disabled={loading || demoLoading}
-                            className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
+                            placeholder="Min 6 chars"
+                            className={`w-full pl-10 pr-9 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
+                              isDark
+                                ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                            }`}
                           />
                           <button
                             type="button"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                            className="mr-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
-                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            onClick={() => setShowPassword((v) => !v)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#615B4E] cursor-pointer"
                           >
-                            {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                          </button>
-                        </div>
-
-                        {/* Live 4-Bar Password Strength Meter in Register Mode */}
-                        {mode === 'register' && password.length > 0 && (
-                          <div className="mt-2">
-                            <div className="grid grid-cols-4 gap-1.5">
-                              {[1, 2, 3, 4].map((bar) => (
-                                <div
-                                  key={bar}
-                                  className="h-1 rounded-full transition-colors duration-300"
-                                  style={{
-                                    backgroundColor:
-                                      activePasswordStrength.score >= bar
-                                        ? activePasswordStrength.color
-                                        : 'rgba(148,163,184,0.22)',
-                                  }}
-                                />
-                              ))}
-                            </div>
-                            <div className="mt-1 flex items-center justify-between text-[11px] font-mono">
-                              <span className="text-slate-500 dark:text-slate-400">
-                                Password strength
-                              </span>
-                              <span style={{ color: activePasswordStrength.color }}>
-                                {activePasswordStrength.label}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Confirm Password (Register Mode Only) */}
-                      {mode === 'register' && (
-                        <div>
-                          <div className="mb-1.5 flex items-center justify-between">
-                            <label
-                              htmlFor="portal-confirm-password"
-                              className="text-xs font-medium text-slate-700 dark:text-slate-300"
-                            >
-                              Confirm Password
-                            </label>
-                            {confirmPassword.length > 0 && (
-                              <span
-                                className={`font-mono text-[10px] ${
-                                  password === confirmPassword
-                                    ? 'text-emerald-500'
-                                    : 'text-rose-400'
-                                }`}
-                              >
-                                {password === confirmPassword ? 'Matched' : 'Does not match'}
-                              </span>
+                            {showPassword ? (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            ) : (
+                              <Eye className="w-3.5 h-3.5" />
                             )}
-                          </div>
-                          <div
-                            className={`relative flex items-center rounded-xl border transition-all ${
-                              focusedField === 'confirmPassword'
-                                ? 'border-emerald-400/80 ring-2 ring-emerald-400/20 bg-white dark:bg-white/[0.07]'
-                                : 'border-slate-300/80 dark:border-white/12 bg-slate-50/70 dark:bg-white/[0.04]'
-                            }`}
-                          >
-                            <ShieldCheck
-                              size={15}
-                              className="ml-3.5 shrink-0 text-slate-400 dark:text-slate-400"
-                            />
-                            <input
-                              id="portal-confirm-password"
-                              type={showConfirmPassword ? 'text' : 'password'}
-                              autoComplete="new-password"
-                              placeholder="Re-enter your password"
-                              value={confirmPassword}
-                              onFocus={() => setFocusedField('confirmPassword')}
-                              onBlur={() => setFocusedField(null)}
-                              onChange={(e) => {
-                                setConfirmPassword(e.target.value);
-                                triggerKeystrokeWave();
-                              }}
-                              disabled={loading || demoLoading}
-                              className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword((prev) => !prev)}
-                              className="mr-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
-                              aria-label={
-                                showConfirmPassword ? 'Hide password' : 'Show password'
-                              }
-                            >
-                              {showConfirmPassword ? (
-                                <EyeOff size={15} />
-                              ) : (
-                                <Eye size={15} />
-                              )}
-                            </button>
-                          </div>
+                          </button>
                         </div>
-                      )}
-
-                      {/* Remember Me Checkbox (Login Mode) */}
-                      {mode === 'login' && (
-                        <div className="flex items-center justify-between pt-0.5">
-                          <label className="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={rememberMe}
-                              onChange={(e) => setRememberMe(e.target.checked)}
-                              className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                            <span>Keep my session active for 30 days</span>
-                          </label>
-                        </div>
-                      )}
-
-                      {/* Primary Submit CTA */}
-                      <button
-                        type="submit"
-                        disabled={loading || demoLoading}
-                        className="group relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3.5 px-5 text-sm font-semibold text-white shadow-lg transition-all cursor-pointer disabled:opacity-60"
-                        style={{
-                          background: `linear-gradient(135deg, ${activePalette.primary}, ${activePalette.secondary})`,
-                          boxShadow: `0 12px 30px -8px ${activePalette.primary}88`,
-                        }}
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 size={16} className="animate-spin" />
-                            <span>
-                              {mode === 'login'
-                                ? 'Opening Portal…'
-                                : 'Creating Account & Signing In…'}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span>
-                              {mode === 'login'
-                                ? 'Sign In to Studio'
-                                : 'Create Account & Enter'}
-                            </span>
-                            <ArrowRight
-                              size={15}
-                              className="transition-transform group-hover:translate-x-0.5"
-                            />
-                          </>
-                        )}
-                      </button>
-                    </form>
-
-                    {/* 1-Click Instant Demo Studio Access + Social Auth */}
-                    <div className="mt-6">
-                      <div className="relative flex items-center justify-center">
-                        <div className="w-full border-t border-slate-200 dark:border-white/10" />
-                        <span className="bg-white dark:bg-[#0C101E] px-3 font-mono text-[10px] uppercase tracking-widest text-slate-400">
-                          Instant Access
-                        </span>
-                        <div className="w-full border-t border-slate-200 dark:border-white/10" />
                       </div>
 
-                      <div className="mt-4 space-y-2.5">
-                        <button
-                          type="button"
-                          onClick={handleInstantDemoAccess}
-                          disabled={loading || demoLoading}
-                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-400/35 dark:border-cyan-400/30 bg-indigo-500/10 dark:bg-cyan-400/10 py-2.5 px-4 text-xs font-semibold text-indigo-900 dark:text-cyan-200 hover:bg-indigo-500/15 dark:hover:bg-cyan-400/15 transition-all cursor-pointer disabled:opacity-60"
+                      <div>
+                        <label
+                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                          }`}
                         >
-                          {demoLoading ? (
-                            <>
-                              <Loader2 size={14} className="animate-spin" />
-                              <span>Launching Demo Sandbox…</span>
-                            </>
-                          ) : (
-                            <>
-                              <Fingerprint size={15} className="text-indigo-500 dark:text-cyan-300" />
-                              <span>1-Click Demo Studio Access (demo@blogflow.ai)</span>
-                            </>
-                          )}
-                        </button>
-
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <button
-                            type="button"
-                            onClick={() => handleSocialSignIn('google')}
-                            disabled={loading || demoLoading}
-                            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200/90 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] py-2.5 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
-                          >
-                            <span className="font-bold text-slate-900 dark:text-white">G</span>
-                            <span>Google</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleSocialSignIn('github')}
-                            disabled={loading || demoLoading}
-                            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200/90 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] py-2.5 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
-                          >
-                            <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
-                              GH
-                            </span>
-                            <span>GitHub</span>
-                          </button>
+                          Confirm
+                        </label>
+                        <div className="relative">
+                          <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#615B4E]" />
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={confirmPassword}
+                            onFocus={() => {
+                              setFocusedField('confirm');
+                              pulseCube();
+                            }}
+                            onBlur={() => setFocusedField(null)}
+                            onChange={(e) => {
+                              setConfirmPassword(e.target.value);
+                              pulseCube();
+                            }}
+                            placeholder="Repeat passkey"
+                            className={`w-full pl-10 pr-3 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
+                              isDark
+                                ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                            }`}
+                          />
                         </div>
                       </div>
                     </div>
-                  </motion.div>
-                ) : (
-                  /* =============================================================
-                     MODE 3: MULTI-STEP ANIMATED FORGOT PASSWORD FLOW
-                     (Step 1: Email -> Step 2: 6-Digit OTP -> Step 3: New Password -> Step 4: Done)
-                     ============================================================= */
-                  <motion.div
-                    key={`forgot-step-${forgotStep}`}
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -14 }}
-                    transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-                    className="relative z-10"
-                  >
-                    {/* STEP 1: ENTER EMAIL TO REQUEST 6-DIGIT CODE */}
-                    {forgotStep === 1 && (
-                      <div>
-                        <div className="mb-5">
-                          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-500">
-                            Step 01 / 03 · Identity Dispatch
+
+                    {/* Passkey Alloy Strength Meter */}
+                    {password.length > 0 && (
+                      <div className="space-y-1 pt-0.5">
+                        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.14em]">
+                          <span className={isDark ? 'text-[#8FA59B]' : 'text-[#615B4E]'}>
+                            Passkey Temper
                           </span>
-                          <h2
-                            className="mt-1 text-2xl sm:text-3xl font-normal tracking-tight text-slate-900 dark:text-white"
-                            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
-                          >
-                            Reset your password
-                          </h2>
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Enter the email associated with your account and we&apos;ll generate a 6-digit recovery code.
-                          </p>
+                          <span style={{ color: pwStrength.color }} className="font-semibold">
+                            {pwStrength.label}
+                          </span>
                         </div>
-
-                        <form onSubmit={handleRequestOtp} className="space-y-4" noValidate>
-                          <div>
-                            <div className="mb-1.5 flex items-center justify-between">
-                              <label
-                                htmlFor="forgot-email"
-                                className="text-xs font-medium text-slate-700 dark:text-slate-300"
-                              >
-                                Account Email
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setForgotEmail('demo@blogflow.ai');
-                                  triggerKeystrokeWave();
-                                }}
-                                className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors cursor-pointer"
-                              >
-                                Try demo@blogflow.ai
-                              </button>
-                            </div>
-                            <div className="relative flex items-center rounded-xl border border-slate-300/80 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.04] focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/20">
-                              <Mail size={15} className="ml-3.5 shrink-0 text-slate-400" />
-                              <input
-                                id="forgot-email"
-                                type="email"
-                                required
-                                placeholder="demo@blogflow.ai"
-                                value={forgotEmail}
-                                onChange={(e) => {
-                                  setForgotEmail(e.target.value);
-                                  triggerKeystrokeWave();
-                                }}
-                                disabled={loading}
-                                className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 py-3.5 px-5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all cursor-pointer disabled:opacity-60"
-                          >
-                            {loading ? (
-                              <>
-                                <Loader2 size={16} className="animate-spin" />
-                                <span>Generating 6-Digit Code…</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>Send 6-Digit Verification Code</span>
-                                <ArrowRight size={15} />
-                              </>
-                            )}
-                          </button>
-                        </form>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {[1, 2, 3, 4].map((level) => (
+                            <div
+                              key={level}
+                              className="h-1 rounded-full transition-all duration-300"
+                              style={{
+                                backgroundColor:
+                                  pwStrength.score >= level
+                                    ? pwStrength.color
+                                    : isDark
+                                    ? 'rgba(255,255,255,0.1)'
+                                    : 'rgba(22,63,50,0.12)',
+                              }}
+                            />
+                          ))}
+                        </div>
                       </div>
                     )}
 
-                    {/* STEP 2: 6-DIGIT OTP VERIFICATION */}
-                    {forgotStep === 2 && (
-                      <div>
-                        <div className="mb-4">
-                          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-500">
-                            Step 02 / 03 · 6-Digit Verification
-                          </span>
-                          <h2
-                            className="mt-1 text-2xl sm:text-3xl font-normal tracking-tight text-slate-900 dark:text-white"
-                            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
+                    <button
+                      type="submit"
+                      disabled={loading || demoLoading}
+                      className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#12261F] bg-gradient-to-r from-[#E5C98B] via-[#C8A15A] to-[#D9B772] hover:brightness-105 border border-[#8A6829]/40 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-[#12261F]" />
+                      ) : (
+                        <>
+                          <span>Commission Author Account</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </motion.form>
+                )}
+
+                {/* ==================== FORGOT PASSWORD MULTI-STEP VIEW ==================== */}
+                {mode === 'forgot' && (
+                  <motion.div
+                    key={`forgot-step-${forgotStep}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {forgotStep === 1 && (
+                      <form onSubmit={handleSendOtp} className="space-y-4">
+                        <div className="space-y-1">
+                          <h3
+                            className={`text-lg font-semibold ${
+                              isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                            }`}
+                            style={{
+                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                            }}
                           >
-                            Enter verification code
-                          </h2>
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Enter the 6-digit cryptographic code generated for{' '}
-                            <span className="font-medium text-slate-800 dark:text-slate-200">
-                              {forgotEmail}
-                            </span>
-                            .
+                            Step I · Dispatch Recovery Cipher
+                          </h3>
+                          <p
+                            className={`text-xs leading-relaxed ${
+                              isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
+                            }`}
+                          >
+                            Enter your editorial email. We will issue a 6-digit foundry verification code.
                           </p>
                         </div>
 
-                        {/* Interactive Sandbox Dispatch Preview Banner */}
+                        <div>
+                          <label
+                            className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
+                          >
+                            Registered Email
+                          </label>
+                          <div className="relative">
+                            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
+                            <input
+                              type="email"
+                              required
+                              value={forgotEmail}
+                              onFocus={() => {
+                                setFocusedField('email');
+                                pulseCube();
+                              }}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => {
+                                setForgotEmail(e.target.value);
+                                pulseCube();
+                              }}
+                              placeholder="editor@publication.com"
+                              className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
+                          ) : (
+                            <>
+                              <span>Send 6-Digit Foundry Code</span>
+                              <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    )}
+
+                    {forgotStep === 2 && (
+                      <form onSubmit={handleVerifyOtp} className="space-y-4">
+                        <div className="space-y-1">
+                          <h3
+                            className={`text-lg font-semibold ${
+                              isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                            }`}
+                            style={{
+                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                            }}
+                          >
+                            Step II · Verify 6-Digit Seal
+                          </h3>
+                          <p
+                            className={`text-xs leading-relaxed ${
+                              isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
+                            }`}
+                          >
+                            Enter the 6-digit code dispatched to{' '}
+                            <span className="font-semibold underline">{forgotEmail}</span>.
+                          </p>
+                        </div>
+
                         {otpPreview && (
-                          <div className="mb-5 flex items-center justify-between rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-xs">
-                            <div>
-                              <span className="block font-mono text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-300">
-                                Instant Verification Code
-                              </span>
-                              <span className="font-mono text-base font-bold tracking-[0.25em] text-slate-900 dark:text-white">
-                                {otpPreview}
+                          <div
+                            className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
+                              isDark
+                                ? 'bg-[#12261F] border-[#C8A15A]/40 text-[#E5C98B]'
+                                : 'bg-[#EFECE1] border-[#163F32]/25 text-[#163F32]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <KeyRound className="w-4 h-4 shrink-0 text-[#C8A15A]" />
+                              <span>
+                                Dispatch Code:{' '}
+                                <strong className="font-mono tracking-widest text-sm">
+                                  {otpPreview}
+                                </strong>
                               </span>
                             </div>
                             <button
                               type="button"
-                              onClick={autoFillPreviewOtp}
-                              className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-amber-400 transition-colors cursor-pointer"
+                              onClick={() => {
+                                setOtpDigits(otpPreview.split(''));
+                                pulseCube();
+                              }}
+                              className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded bg-[#163F32] text-[#F7F4EC] hover:opacity-90 cursor-pointer"
                             >
-                              Auto-fill Code
+                              Auto-fill
                             </button>
                           </div>
                         )}
 
-                        <form onSubmit={handleVerifyOtpStep} className="space-y-5" noValidate>
-                          <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
-                            {otpDigits.map((digit, idx) => (
-                              <input
-                                key={idx}
-                                ref={(el) => {
-                                  otpInputRefs.current[idx] = el;
-                                }}
-                                type="text"
-                                inputMode="numeric"
-                                maxLength={1}
-                                value={digit}
-                                onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
-                                onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                                onPaste={handleOtpPaste}
-                                aria-label={`Digit ${idx + 1}`}
-                                className="h-12 sm:h-14 w-full rounded-xl border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/[0.05] text-center font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/25"
-                              />
-                            ))}
-                          </div>
+                        <div className="grid grid-cols-6 gap-2 pt-1">
+                          {otpDigits.map((digit, idx) => (
+                            <input
+                              key={idx}
+                              ref={(el) => {
+                                otpInputRefs.current[idx] = el;
+                              }}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onFocus={() => setFocusedField('otp')}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => handleOtpChange(idx, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                              onPaste={idx === 0 ? handleOtpPaste : undefined}
+                              className={`w-full aspect-square text-center text-lg font-mono font-bold rounded-xl border transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#091410] border-[#C8A15A]/30 text-[#E5C98B] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/25 text-[#163F32] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          ))}
+                        </div>
 
-                          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                            <button
-                              type="button"
-                              onClick={() => setForgotStep(1)}
-                              className="hover:underline cursor-pointer"
-                            >
-                              Change email address
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleRequestOtp}
-                              className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-300 hover:underline cursor-pointer"
-                            >
-                              <RefreshCw size={12} />
-                              <span>Resend code</span>
-                            </button>
-                          </div>
-
+                        <div className="flex items-center justify-between text-xs pt-1">
                           <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 py-3.5 px-5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all cursor-pointer disabled:opacity-60"
+                            type="button"
+                            onClick={() => setForgotStep(1)}
+                            className="underline opacity-75 hover:opacity-100 cursor-pointer"
                           >
-                            {loading ? (
-                              <>
-                                <Loader2 size={16} className="animate-spin" />
-                                <span>Verifying Code…</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>Verify 6-Digit Code</span>
-                                <ArrowRight size={15} />
-                              </>
-                            )}
+                            Change email
                           </button>
-                        </form>
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => handleSendOtp()}
+                            className="inline-flex items-center gap-1 underline opacity-75 hover:opacity-100 cursor-pointer"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Resend code
+                          </button>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
+                          ) : (
+                            <>
+                              <span>Verify Foundry Seal</span>
+                              <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                            </>
+                          )}
+                        </button>
+                      </form>
                     )}
 
-                    {/* STEP 3: SET NEW PASSWORD IN DATABASE */}
                     {forgotStep === 3 && (
-                      <div>
-                        <div className="mb-5">
-                          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-emerald-400">
-                            Step 03 / 03 · Mint New Cipher
-                          </span>
-                          <h2
-                            className="mt-1 text-2xl sm:text-3xl font-normal tracking-tight text-slate-900 dark:text-white"
-                            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
+                      <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                        <div className="space-y-1">
+                          <h3
+                            className={`text-lg font-semibold ${
+                              isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                            }`}
+                            style={{
+                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                            }}
                           >
-                            Create new password
-                          </h2>
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Choose a strong password (at least 8 characters) to update your account in the database.
+                            Step III · Cast New Passkey
+                          </h3>
+                          <p
+                            className={`text-xs leading-relaxed ${
+                              isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
+                            }`}
+                          >
+                            Seal verified. Enter your new passkey below.
                           </p>
                         </div>
 
-                        <form onSubmit={handleCommitNewPassword} className="space-y-4" noValidate>
-                          <div>
-                            <label
-                              htmlFor="reset-new-password"
-                              className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300"
-                            >
-                              New Password
-                            </label>
-                            <div className="relative flex items-center rounded-xl border border-slate-300/80 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.04] focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/20">
-                              <KeyRound size={15} className="ml-3.5 shrink-0 text-slate-400" />
-                              <input
-                                id="reset-new-password"
-                                type={showNewPassword ? 'text' : 'password'}
-                                placeholder="At least 8 characters"
-                                value={newPassword}
-                                onChange={(e) => {
-                                  setNewPassword(e.target.value);
-                                  triggerKeystrokeWave();
-                                }}
-                                disabled={loading}
-                                className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowNewPassword((prev) => !prev)}
-                                className="mr-3 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-                              >
-                                {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                              </button>
-                            </div>
-
-                            {/* Password Strength Bar */}
-                            {newPassword.length > 0 && (
-                              <div className="mt-2">
-                                <div className="grid grid-cols-4 gap-1.5">
-                                  {[1, 2, 3, 4].map((bar) => (
-                                    <div
-                                      key={bar}
-                                      className="h-1 rounded-full transition-colors duration-300"
-                                      style={{
-                                        backgroundColor:
-                                          activePasswordStrength.score >= bar
-                                            ? activePasswordStrength.color
-                                            : 'rgba(148,163,184,0.22)',
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                                <div className="mt-1 flex items-center justify-between text-[11px] font-mono">
-                                  <span className="text-slate-500 dark:text-slate-400">
-                                    Strength
-                                  </span>
-                                  <span style={{ color: activePasswordStrength.color }}>
-                                    {activePasswordStrength.label}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="reset-confirm-password"
-                              className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300"
-                            >
-                              Confirm New Password
-                            </label>
-                            <div className="relative flex items-center rounded-xl border border-slate-300/80 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.04] focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/20">
-                              <ShieldCheck size={15} className="ml-3.5 shrink-0 text-slate-400" />
-                              <input
-                                id="reset-confirm-password"
-                                type={showNewPassword ? 'text' : 'password'}
-                                placeholder="Re-enter new password"
-                                value={confirmNewPassword}
-                                onChange={(e) => {
-                                  setConfirmNewPassword(e.target.value);
-                                  triggerKeystrokeWave();
-                                }}
-                                disabled={loading}
-                                className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3.5 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all cursor-pointer disabled:opacity-60"
+                        <div>
+                          <label
+                            className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
                           >
-                            {loading ? (
-                              <>
-                                <Loader2 size={16} className="animate-spin" />
-                                <span>Updating Password…</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>Save New Password</span>
-                                <CheckCircle2 size={15} />
-                              </>
-                            )}
-                          </button>
-                        </form>
-                      </div>
+                            New Passkey
+                          </label>
+                          <div className="relative">
+                            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              required
+                              value={newPassword}
+                              onFocus={() => setFocusedField('password')}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => {
+                                setNewPassword(e.target.value);
+                                pulseCube();
+                              }}
+                              placeholder="At least 6 characters"
+                              className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
+                          >
+                            Confirm New Passkey
+                          </label>
+                          <div className="relative">
+                            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              required
+                              value={confirmNewPassword}
+                              onFocus={() => setFocusedField('confirm')}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => {
+                                setConfirmNewPassword(e.target.value);
+                                pulseCube();
+                              }}
+                              placeholder="Repeat new passkey"
+                              className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#12261F] bg-gradient-to-r from-[#E5C98B] via-[#C8A15A] to-[#D9B772] hover:brightness-105 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#12261F]" />
+                          ) : (
+                            <>
+                              <span>Update Passkey</span>
+                              <CheckCircle2 className="w-4 h-4" />
+                            </>
+                          )}
+                        </button>
+                      </form>
                     )}
 
-                    {/* STEP 4: PASSWORD UPDATED SUCCESS */}
                     {forgotStep === 4 && (
-                      <div className="py-4 text-center">
-                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/40 bg-emerald-500/15 text-emerald-400">
-                          <CheckCircle2 size={28} />
+                      <div className="text-center py-4 space-y-4">
+                        <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center bg-[#163F32] text-[#E5C98B] border border-[#C8A15A]">
+                          <CheckCircle2 className="w-6 h-6" />
                         </div>
-                        <h2
-                          className="text-3xl font-normal tracking-tight text-slate-900 dark:text-white"
-                          style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
+                        <div className="space-y-1">
+                          <h3
+                            className={`text-xl font-semibold ${
+                              isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                            }`}
+                            style={{
+                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                            }}
+                          >
+                            Passkey Re-Cast Complete
+                          </h3>
+                          <p
+                            className={`text-xs ${
+                              isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
+                            }`}
+                          >
+                            Your editorial credentials have been updated in the foundry ledger.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleSignInAfterReset}
+                          disabled={loading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          Password updated
-                        </h2>
-                        <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                          Your new password for{' '}
-                          <span className="font-semibold">{forgotEmail}</span> has been saved to the database.
-                        </p>
-
-                        <div className="mt-6 space-y-2.5">
-                          <button
-                            type="button"
-                            onClick={handleSignInWithResetPassword}
-                            disabled={loading}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 py-3.5 px-5 text-sm font-semibold text-white shadow-lg cursor-pointer disabled:opacity-60"
-                          >
-                            {loading ? (
-                              <>
-                                <Loader2 size={16} className="animate-spin" />
-                                <span>Signing In…</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>Sign In Now with New Password</span>
-                                <ArrowRight size={15} />
-                              </>
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => switchMode('login')}
-                            className="w-full rounded-xl border border-slate-300 dark:border-white/15 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer"
-                          >
-                            Return to Sign In Form
-                          </button>
-                        </div>
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
+                          ) : (
+                            <>
+                              <span>Enter Atelier Now</span>
+                              <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                            </>
+                          )}
+                        </button>
                       </div>
                     )}
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+
+              {/* --- 1-Click Instant Atelier Pass & Social Providers --- */}
+              {mode !== 'forgot' && (
+                <div className="mt-6 pt-5 border-t border-[#C8A15A]/20 space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleDemoAccess}
+                    disabled={loading || demoLoading}
+                    className={`w-full py-2.5 px-4 rounded-xl border text-xs font-mono uppercase tracking-[0.14em] transition-all flex items-center justify-between group cursor-pointer ${
+                      isDark
+                        ? 'bg-[#12261F]/70 hover:bg-[#163F32] border-[#C8A15A]/35 text-[#E5C98B]'
+                        : 'bg-[#EFECE1]/90 hover:bg-[#163F32] border-[#163F32]/20 text-[#163F32] hover:text-[#F7F4EC]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-[#C8A15A]" />
+                      <span>Instant Guest Atelier Pass (1-Click Demo)</span>
+                    </span>
+                    {demoLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => signIn('google', { callbackUrl: '/studio' })}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                        isDark
+                          ? 'bg-[#091410] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
+                          : 'bg-[#F7F4EC] border-[#163F32]/15 text-[#18211D] hover:bg-[#EFECE1]'
+                      }`}
+                    >
+                      <span className="font-serif font-bold text-sm text-[#C8A15A]">G</span>
+                      <span>Google</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => signIn('github', { callbackUrl: '/studio' })}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                        isDark
+                          ? 'bg-[#091410] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
+                          : 'bg-[#F7F4EC] border-[#163F32]/15 text-[#18211D] hover:bg-[#EFECE1]'
+                      }`}
+                    >
+                      <span className="font-mono font-bold text-xs text-[#C8A15A]">GH</span>
+                      <span>GitHub</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </motion.div>
-        </section>
-      </motion.main>
+        </div>
+      </main>
+
+      {/* --- LAYER 4: Editorial Colophon Footer --- */}
+      <footer
+        className={`relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono uppercase tracking-[0.16em] ${
+          isDark
+            ? 'border-[#C8A15A]/15 text-[#8FA59B]'
+            : 'border-[#163F32]/12 text-[#615B4E]'
+        }`}
+      >
+        <span>COLOPHON · GUTENBERG TYPE-BLOCK EDITION</span>
+        <span>WARM ARCHIVAL PAPER (#F7F4EC) · FOREST (#163F32) · BRASS (#C8A15A)</span>
+      </footer>
     </div>
   );
 }
+
+export default MorphingAuthPortal;
