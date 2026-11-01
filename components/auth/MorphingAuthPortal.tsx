@@ -26,8 +26,6 @@ import {
   RefreshCw,
   Sun,
   Moon,
-  Feather,
-  Compass,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import GutenbergTypeBlock3D, { TypeBlockFace } from '@/components/brand/GutenbergTypeBlock3D';
@@ -42,96 +40,47 @@ interface MorphingAuthPortalProps {
 
 const EMAIL_DOMAINS = ['@gmail.com', '@outlook.com', '@blogflow.ai'];
 
-const CUBE_FACE_INDEX: {
-  id: TypeBlockFace;
-  numeral: string;
-  label: string;
-  caption: string;
-}[] = [
-  {
-    id: 'monogram',
-    numeral: 'I',
-    label: 'Monogram',
-    caption: 'Movable-Type Matrix · Sign In',
-  },
-  {
-    id: 'loupe',
-    numeral: 'II',
-    label: 'Loupe',
-    caption: 'Optical Calibration · Identity Lookup',
-  },
-  {
-    id: 'nib',
-    numeral: 'III',
-    label: 'Nib',
-    caption: 'Fountain Draught · New Author Press',
-  },
-  {
-    id: 'seal',
-    numeral: 'IV',
-    label: 'Seal',
-    caption: 'Foundry Cipher · Passkey & Verification',
-  },
-  {
-    id: 'section',
-    numeral: 'V',
-    label: 'Silcrow',
-    caption: 'Editorial Folio · Author Attribution',
-  },
-];
-
 const MODE_COPY: Record<
   AuthMode,
   {
-    folioTag: string;
     headlineStart: string;
     headlineItalic: string;
-    headlineEnd: string;
     subtext: string;
     defaultFace: TypeBlockFace;
   }
 > = {
   login: {
-    folioTag: 'FOLIO I · ATELIER ENTRY',
-    headlineStart: 'Step to the',
-    headlineItalic: 'movable-type',
-    headlineEnd: 'press.',
-    subtext:
-      'Enter your editorial credentials to unlock your private desk, typography presets, and archival workspace.',
+    headlineStart: 'Welcome',
+    headlineItalic: 'back.',
+    subtext: 'Sign in to continue to your writing studio.',
     defaultFace: 'monogram',
   },
   register: {
-    folioTag: 'FOLIO II · AUTHOR COMMISSION',
-    headlineStart: 'Cast your',
-    headlineItalic: 'signature',
-    headlineEnd: 'in brass.',
-    subtext:
-      'Commission a new author imprint with custom voice calibration, long-form drafting tools, and instant press access.',
+    headlineStart: 'Create your',
+    headlineItalic: 'account.',
+    subtext: 'Start drafting and publishing in your personal studio.',
     defaultFace: 'nib',
   },
   forgot: {
-    folioTag: 'FOLIO III · SEAL RECOVERY',
-    headlineStart: 'Re-strike your',
-    headlineItalic: 'foundry',
-    headlineEnd: 'cipher.',
-    subtext:
-      'Verify your editorial address with a 6-digit security dispatch and mint a fresh cryptographic passkey.',
+    headlineStart: 'Reset your',
+    headlineItalic: 'password.',
+    subtext: 'Verify your email to set a new password.',
     defaultFace: 'seal',
   },
 };
 
 function computePasswordStrength(pw: string) {
-  if (!pw) return { score: 0, label: 'Unset', color: '#8A8477' };
+  if (!pw) return { score: 0, label: '', color: '#8A8477' };
   let score = 0;
   if (pw.length >= 6) score += 1;
   if (pw.length >= 10) score += 1;
   if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) score += 1;
   if (/[^A-Za-z0-9]/.test(pw)) score += 1;
 
-  if (score <= 1) return { score: 1, label: 'Fragile Cast', color: '#B85D3B' };
-  if (score === 2) return { score: 2, label: 'Standard Alloy', color: '#C8A15A' };
-  if (score === 3) return { score: 3, label: 'Tempered Brass', color: '#2A6B53' };
-  return { score: 4, label: 'Archival Grade', color: '#163F32' };
+  if (score <= 1) return { score: 1, label: 'Weak', color: '#B85D3B' };
+  if (score === 2) return { score: 2, label: 'Fair', color: '#C8A15A' };
+  if (score === 3) return { score: 3, label: 'Good', color: '#2A6B53' };
+  return { score: 4, label: 'Strong', color: '#163F32' };
 }
 
 export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortalProps) {
@@ -172,17 +121,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Cursor-reactive 3D stage coordinates
+  // Cursor-reactive 3D stage & spotlight coordinates
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
-  const smoothX = useSpring(mouseX, { stiffness: 65, damping: 24 });
-  const smoothY = useSpring(mouseY, { stiffness: 65, damping: 24 });
+  const smoothX = useSpring(mouseX, { stiffness: 55, damping: 24 });
+  const smoothY = useSpring(mouseY, { stiffness: 55, damping: 24 });
 
   // 3D stage tilt transforms
-  const stageRotateX = useTransform(smoothY, [0, 1], [8, -8]);
-  const stageRotateY = useTransform(smoothX, [0, 1], [-10, 10]);
-  const spotlightX = useTransform(smoothX, [0, 1], ['15%', '85%']);
-  const spotlightY = useTransform(smoothY, [0, 1], ['15%', '85%']);
+  const stageRotateX = useTransform(smoothY, [0, 1], [7, -7]);
+  const stageRotateY = useTransform(smoothX, [0, 1], [-9, 9]);
+  const spotlightX = useTransform(smoothX, [0, 1], ['20%', '80%']);
+  const spotlightY = useTransform(smoothY, [0, 1], ['20%', '80%']);
 
   useEffect(() => {
     setMounted(true);
@@ -201,7 +150,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   }, [status, router]);
 
-  // Determine active 3D cube face based on focus, mode, or manual inspection
+  // Determine active 3D cube face based on focus, mode, or manual click
   const activeCubeFace: TypeBlockFace = useMemo(() => {
     if (focusedField === 'name') return 'section';
     if (focusedField === 'email') return 'loupe';
@@ -216,7 +165,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     return MODE_COPY[mode].defaultFace;
   }, [focusedField, manualFaceOverride, mode, forgotStep]);
 
-  // Calculate form completion percentage (0..1) to drive subtle cube elevation/rotation
+  // Calculate form completion percentage (0..1) to drive subtle cube motion
   const completionPct = useMemo(() => {
     if (mode === 'login') {
       let pct = 0;
@@ -234,9 +183,6 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
     return (forgotStep - 1) / 3;
   }, [mode, name, email, password, confirmPassword, forgotStep]);
-
-  const activeFaceMeta =
-    CUBE_FACE_INDEX.find((f) => f.id === activeCubeFace) || CUBE_FACE_INDEX[0];
 
   const pulseCube = () => {
     setKeystrokePulse((prev) => prev + 1);
@@ -307,7 +253,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       });
 
       if (res?.error) {
-        triggerError('Invalid editorial email or passkey. Please verify your credentials.');
+        triggerError('Invalid email or password. Please try again.');
       } else {
         router.push('/studio');
         router.refresh();
@@ -324,15 +270,15 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     setError('');
 
     if (name.trim().length < 2) {
-      triggerError('Please enter your author or studio name.');
+      triggerError('Please enter your name.');
       return;
     }
     if (password.length < 6) {
-      triggerError('Passkey must be at least 6 characters long.');
+      triggerError('Password must be at least 6 characters long.');
       return;
     }
     if (password !== confirmPassword) {
-      triggerError('Passkeys do not match.');
+      triggerError('Passwords do not match.');
       return;
     }
 
@@ -363,7 +309,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       });
 
       if (signInRes?.error) {
-        setSuccessMsg('Author imprint created! Please sign in with your new credentials.');
+        setSuccessMsg('Account created! Please sign in with your new credentials.');
         setMode('login');
         setLoading(false);
       } else {
@@ -371,7 +317,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
         router.refresh();
       }
     } catch {
-      triggerError('Network error while commissioning your account.');
+      triggerError('Network error while creating your account.');
       setLoading(false);
     }
   };
@@ -389,14 +335,14 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       });
 
       if (res?.error) {
-        triggerError('Could not initialize Demo Atelier session.');
+        triggerError('Could not start demo session.');
         setDemoLoading(false);
       } else {
         router.push('/studio');
         router.refresh();
       }
     } catch {
-      triggerError('Failed to launch Demo Atelier.');
+      triggerError('Failed to start demo session.');
       setDemoLoading(false);
     }
   };
@@ -406,7 +352,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     if (e) e.preventDefault();
     setError('');
     if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
-      triggerError('Please enter a valid registered email address.');
+      triggerError('Please enter a valid email address.');
       return;
     }
 
@@ -421,7 +367,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
       const data = await res.json();
       if (!res.ok) {
-        triggerError(data.error || 'Could not dispatch verification code.');
+        triggerError(data.error || 'Could not send verification code.');
         setLoading(false);
         return;
       }
@@ -475,7 +421,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     setError('');
     const otp = otpDigits.join('');
     if (otp.length !== 6) {
-      triggerError('Please enter all 6 digits of your verification cipher.');
+      triggerError('Please enter all 6 digits of your verification code.');
       return;
     }
 
@@ -495,7 +441,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
       const data = await res.json();
       if (!res.ok) {
-        triggerError(data.error || 'Invalid verification cipher.');
+        triggerError(data.error || 'Invalid verification code.');
         setLoading(false);
         return;
       }
@@ -513,11 +459,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     setError('');
 
     if (newPassword.length < 6) {
-      triggerError('New passkey must be at least 6 characters.');
+      triggerError('New password must be at least 6 characters.');
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      triggerError('New passkeys do not match.');
+      triggerError('Passwords do not match.');
       return;
     }
 
@@ -538,14 +484,14 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
       const data = await res.json();
       if (!res.ok) {
-        triggerError(data.error || 'Could not update passkey.');
+        triggerError(data.error || 'Could not update password.');
         setLoading(false);
         return;
       }
 
       setForgotStep(4);
     } catch {
-      triggerError('Failed to save new passkey.');
+      triggerError('Failed to save new password.');
     } finally {
       setLoading(false);
     }
@@ -569,7 +515,6 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   };
 
-  // Default to Warm Archival Paper (light mode) on initial SSR so text is always crisp dark charcoal on ivory
   const isDark = mounted ? theme === 'dark' : false;
   const copy = MODE_COPY[mode];
 
@@ -579,133 +524,114 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       onMouseMove={handleMouseMove}
       className={`relative min-h-screen w-full overflow-hidden flex flex-col justify-between select-none transition-colors duration-500 ${
         isDark
-          ? 'bg-[#0B1612] text-[#F7F4EC]'
+          ? 'bg-[#08120E] text-[#F7F4EC]'
           : 'bg-[#F7F4EC] text-[#18211D]'
       }`}
     >
-      {/* --- LAYER 1: Archival Paper Grain, Brass Vernier Grid & Warm Cursor Spotlight --- */}
+      {/* --- LAYER 1: Warm Ambient Brass Spotlight & Subtle Depth --- */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        {/* Ambient Forest & Brass Radial Wash */}
+        {/* Primary Warm Ambient Brass Spotlight & Deep Emerald Depth */}
         <div
           className="absolute inset-0 transition-opacity duration-700"
           style={{
             background: isDark
-              ? 'radial-gradient(circle at 26% 42%, rgba(22, 63, 50, 0.45), transparent 55%), radial-gradient(circle at 78% 25%, rgba(200, 161, 90, 0.14), transparent 50%)'
-              : 'radial-gradient(circle at 26% 42%, rgba(200, 161, 90, 0.18), transparent 55%), radial-gradient(circle at 78% 25%, rgba(22, 63, 50, 0.08), transparent 50%)',
+              ? [
+                  'radial-gradient(circle 680px at 28% 48%, rgba(200, 161, 90, 0.22), rgba(22, 63, 50, 0.34) 48%, transparent 78%)',
+                  'radial-gradient(circle 620px at 74% 52%, rgba(200, 161, 90, 0.12), rgba(15, 38, 30, 0.28) 52%, transparent 80%)',
+                  'radial-gradient(ellipse 100% 70% at 50% 0%, rgba(200, 161, 90, 0.09), transparent 65%)',
+                ].join(', ')
+              : [
+                  'radial-gradient(circle 680px at 28% 48%, rgba(200, 161, 90, 0.28), rgba(22, 63, 50, 0.08) 50%, transparent 78%)',
+                  'radial-gradient(circle 620px at 74% 52%, rgba(200, 161, 90, 0.18), rgba(22, 63, 50, 0.05) 52%, transparent 80%)',
+                  'radial-gradient(ellipse 100% 70% at 50% 0%, rgba(200, 161, 90, 0.14), transparent 65%)',
+                ].join(', '),
           }}
         />
 
-        {/* Cursor-Following Warm Brass Atelier Lamp */}
+        {/* Cursor-Following Warm Brass Ambient Halo */}
         <motion.div
-          className="absolute w-[640px] h-[640px] rounded-full blur-[130px] -translate-x-1/2 -translate-y-1/2"
+          className="absolute w-[720px] h-[720px] rounded-full blur-[140px] -translate-x-1/2 -translate-y-1/2"
           style={{
             left: spotlightX,
             top: spotlightY,
             background: isDark
-              ? 'radial-gradient(circle, rgba(200,161,90,0.16) 0%, rgba(22,63,50,0.12) 45%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(200,161,90,0.22) 0%, rgba(22,63,50,0.06) 45%, transparent 70%)',
+              ? 'radial-gradient(circle, rgba(229, 201, 139, 0.17) 0%, rgba(200, 161, 90, 0.09) 40%, transparent 72%)'
+              : 'radial-gradient(circle, rgba(200, 161, 90, 0.24) 0%, rgba(22, 63, 50, 0.06) 42%, transparent 72%)',
           }}
         />
 
-        {/* Fine Editorial Ruled Grid Lines */}
+        {/* Soft Architectural Light Vignette */}
         <div
           className="absolute inset-0"
           style={{
-            opacity: isDark ? 0.07 : 0.09,
-            backgroundImage: isDark
-              ? 'linear-gradient(to right, #C8A15A 1px, transparent 1px), linear-gradient(to bottom, #C8A15A 1px, transparent 1px)'
-              : 'linear-gradient(to right, #163F32 1px, transparent 1px), linear-gradient(to bottom, #163F32 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage:
-              'radial-gradient(ellipse 85% 80% at 50% 50%, black 35%, transparent 100%)',
-            WebkitMaskImage:
-              'radial-gradient(ellipse 85% 80% at 50% 50%, black 35%, transparent 100%)',
+            background: isDark
+              ? 'radial-gradient(ellipse 90% 85% at 50% 50%, transparent 55%, rgba(4, 10, 8, 0.65) 100%)'
+              : 'radial-gradient(ellipse 90% 85% at 50% 50%, transparent 60%, rgba(22, 63, 50, 0.06) 100%)',
           }}
         />
       </div>
 
-      {/* --- LAYER 2: Top Navigation Bar with 3D Gutenberg Type-Block Brand Lockup --- */}
-      <header
-        className={`relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 pt-5 pb-4 flex items-center justify-between border-b ${
-          isDark ? 'border-[#C8A15A]/15' : 'border-[#163F32]/12'
-        }`}
-      >
+      {/* --- LAYER 2: Clean Minimal Top Navigation Bar --- */}
+      <header className="relative z-20 w-full max-w-6xl mx-auto px-6 sm:px-10 pt-6 pb-4 flex items-center justify-between gap-8">
+        {/* Zone 1: Back Link */}
         <Link
           href="/landing"
-          className={`group inline-flex items-center gap-2.5 text-xs font-mono uppercase tracking-[0.18em] transition-colors ${
+          className={`group inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
             isDark
-              ? 'text-[#C8A15A]/80 hover:text-[#F7F4EC]'
+              ? 'text-[#C8A15A]/90 hover:text-[#F7F4EC]'
               : 'text-[#163F32] hover:text-[#0B261D]'
           }`}
         >
-          <span
-            className={`w-7 h-7 rounded-md flex items-center justify-center border transition-transform group-hover:-translate-x-0.5 ${
-              isDark
-                ? 'border-[#C8A15A]/30 bg-[#12261F] text-[#E5C98B]'
-                : 'border-[#163F32]/20 bg-[#EFECE1] text-[#163F32]'
-            }`}
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-          </span>
-          <span>Back to Atelier</span>
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Home</span>
         </Link>
 
-        {/* Center Brand Lockup: 3D Gutenberg Cube + Serif Wordmark */}
+        {/* Zone 2: Single-Line Brand Wordmark + 3D Cube Mark */}
         <Link
           href="/landing"
-          className="inline-flex items-center gap-3.5 group focus:outline-none"
-          title="BlogFlow AI — Gutenberg Type-Block Identity"
+          className="inline-flex items-center gap-3 group focus:outline-none whitespace-nowrap shrink-0"
         >
           <GutenbergTypeBlock3D
-            size={34}
+            size={30}
             activeFace={activeCubeFace}
             activityPulse={keystrokePulse}
             scrollPct={completionPct}
             interactiveStamp={false}
           />
-          <div className="flex flex-col text-left">
-            <span
-              className={`text-xl sm:text-2xl font-bold tracking-tight leading-none ${
-                isDark ? 'text-[#F7F4EC]' : 'text-[#12261F]'
-              }`}
-              style={{
-                fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
-              }}
-            >
-              BlogFlow AI
-            </span>
-            <span
-              className={`text-[9px] font-mono uppercase tracking-[0.22em] mt-0.5 ${
-                isDark ? 'text-[#C8A15A]/80' : 'text-[#615B4E]'
-              }`}
-            >
-              EST. 1450 · TYPE FOUNDRY
-            </span>
-          </div>
+          <span
+            className={`text-xl font-bold tracking-tight ${
+              isDark ? 'text-[#F7F4EC]' : 'text-[#12261F]'
+            }`}
+            style={{
+              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+            }}
+          >
+            BlogFlow AI
+          </span>
         </Link>
 
-        {/* Right Theme Switcher */}
-        <div className="flex items-center gap-3">
+        {/* Zone 3: Theme Toggle */}
+        <div className="flex items-center shrink-0">
           {mounted && (
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label="Toggle Atelier lighting"
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-[11px] font-mono uppercase tracking-[0.14em] transition-all cursor-pointer ${
+              aria-label="Toggle theme"
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isDark
-                  ? 'border-[#C8A15A]/30 bg-[#12261F]/90 text-[#E5C98B] hover:border-[#C8A15A]'
-                  : 'border-[#163F32]/20 bg-[#EFECE1]/90 text-[#163F32] hover:border-[#163F32]/50'
+                  ? 'border-[#C8A15A]/25 bg-[#10221C]/80 text-[#E5C98B] hover:border-[#C8A15A]/60'
+                  : 'border-[#163F32]/15 bg-white/70 text-[#163F32] hover:border-[#163F32]/40'
               }`}
             >
               {isDark ? (
                 <>
                   <Sun className="w-3.5 h-3.5 text-[#E5C98B]" />
-                  <span className="hidden sm:inline">Archival Paper</span>
+                  <span>Light</span>
                 </>
               ) : (
                 <>
                   <Moon className="w-3.5 h-3.5 text-[#163F32]" />
-                  <span className="hidden sm:inline">Forest Obsidian</span>
+                  <span>Dark</span>
                 </>
               )}
             </button>
@@ -713,167 +639,87 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
         </div>
       </header>
 
-      {/* --- LAYER 3: Split Editorial Stage (Left 3D Gutenberg Cube Pedestal + Right Auth Press) --- */}
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 lg:py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-        {/* LEFT COLUMN: Interactive 3D Gutenberg Type-Block Stage & Kinetic Serif Typography */}
-        <div className="lg:col-span-6 flex flex-col justify-center items-center lg:items-start text-center lg:text-left space-y-7">
-          {/* Interactive 3D Gutenberg Type-Block Pedestal */}
-          <div className="relative w-full max-w-[440px] flex flex-col items-center lg:items-start">
-            <div
-              className={`relative w-full h-[290px] sm:h-[320px] rounded-2xl border flex flex-col items-center justify-center overflow-hidden transition-colors duration-500 ${
-                isDark
-                  ? 'bg-[#0F211B]/80 border-[#C8A15A]/25 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.7)]'
-                  : 'bg-[#EFECE1]/85 border-[#163F32]/15 shadow-[0_24px_50px_-18px_rgba(22,63,50,0.14)]'
-              }`}
-              style={{ perspective: 1200 }}
+      {/* --- LAYER 3: Split Main Stage (Unboxed 3D Cube + Clean Form Card) --- */}
+      <main className="relative z-10 flex-1 w-full max-w-6xl mx-auto px-6 sm:px-10 py-6 lg:py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        {/* LEFT COLUMN: Unboxed Floating 3D Gutenberg Cube + Short Welcome Copy */}
+        <div className="lg:col-span-6 flex flex-col justify-center items-center lg:items-start text-center lg:text-left space-y-6">
+          {/* Unboxed 3D Cube Stage with Warm Brass Spotlight Halo */}
+          <div
+            className="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72 lg: -ml-2"
+            style={{ perspective: 1200 }}
+          >
+            <motion.div
+              style={{
+                rotateX: stageRotateX,
+                rotateY: stageRotateY,
+                transformStyle: 'preserve-3d',
+              }}
+              className="relative flex items-center justify-center w-full h-full"
             >
-              {/* Top Corner Technical Readout */}
-              <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] pointer-events-none">
-                <span className={isDark ? 'text-[#C8A15A]' : 'text-[#163F32]'}>
-                  MATRIX FACE · {activeFaceMeta.numeral} ({activeFaceMeta.label.toUpperCase()})
-                </span>
-                <span className={isDark ? 'text-[#9DB1A8]' : 'text-[#615B4E]'}>
-                  STAMP PULSE · {String(keystrokePulse).padStart(2, '0')}
-                </span>
-              </div>
-
-              {/* Architectural Crosshairs & Vernier Rings */}
-              <motion.div
+              {/* Soft Warm Brass Spotlight Plinth Glow behind Cube */}
+              <div
+                className="absolute w-52 h-52 rounded-full blur-3xl pointer-events-none"
                 style={{
-                  rotateX: stageRotateX,
-                  rotateY: stageRotateY,
-                  transformStyle: 'preserve-3d',
+                  background: isDark
+                    ? 'radial-gradient(circle, rgba(229, 201, 139, 0.34) 0%, rgba(200, 161, 90, 0.18) 45%, rgba(22, 63, 50, 0.15) 70%, transparent 100%)'
+                    : 'radial-gradient(circle, rgba(200, 161, 90, 0.38) 0%, rgba(22, 63, 50, 0.14) 55%, transparent 100%)',
                 }}
-                className="relative flex items-center justify-center w-60 h-60"
-              >
-                {/* Outer Calibrated Brass Ring */}
-                <motion.div
-                  animate={{ rotateZ: 360 }}
-                  transition={{ duration: 48, repeat: Infinity, ease: 'linear' }}
-                  className={`absolute inset-0 rounded-full border border-dashed pointer-events-none ${
-                    isDark ? 'border-[#C8A15A]/30' : 'border-[#163F32]/25'
-                  }`}
-                />
+              />
 
-                {/* Inner Concentric Vernier Ring */}
-                <motion.div
-                  animate={{ rotateZ: -360 }}
-                  transition={{ duration: 34, repeat: Infinity, ease: 'linear' }}
-                  className={`absolute inset-6 rounded-full border pointer-events-none ${
-                    isDark ? 'border-[#163F32]/70' : 'border-[#C8A15A]/45'
-                  }`}
-                />
+              {/* Subtle Orbital Brass Ring */}
+              <motion.div
+                animate={{ rotateZ: 360 }}
+                transition={{ duration: 54, repeat: Infinity, ease: 'linear' }}
+                className={`absolute inset-2 rounded-full border border-dashed pointer-events-none ${
+                  isDark ? 'border-[#C8A15A]/25' : 'border-[#163F32]/20'
+                }`}
+              />
 
-                {/* Warm Brass Cast Shadow Plinth under Cube */}
-                <div
-                  className="absolute w-36 h-36 rounded-full blur-2xl pointer-events-none"
-                  style={{
-                    background: isDark
-                      ? 'radial-gradient(circle, rgba(200,161,90,0.28) 0%, rgba(22,63,50,0.2) 60%, transparent 100%)'
-                      : 'radial-gradient(circle, rgba(22,63,50,0.18) 0%, rgba(200,161,90,0.22) 60%, transparent 100%)',
+              {/* Inner Subtle Ring */}
+              <motion.div
+                animate={{ rotateZ: -360 }}
+                transition={{ duration: 38, repeat: Infinity, ease: 'linear' }}
+                className={`absolute inset-9 rounded-full border pointer-events-none ${
+                  isDark ? 'border-[#C8A15A]/15' : 'border-[#C8A15A]/35'
+                }`}
+              />
+
+              {/* Interactive 3D Gutenberg Cube */}
+              <div className="relative z-10">
+                <GutenbergTypeBlock3D
+                  size={148}
+                  activeFace={activeCubeFace}
+                  activityPulse={keystrokePulse}
+                  scrollPct={completionPct}
+                  interactiveStamp={true}
+                  onStampFace={(nextFace) => {
+                    setFocusedField(null);
+                    setManualFaceOverride(nextFace);
+                    pulseCube();
                   }}
                 />
-
-                {/* THE 3D GUTENBERG TYPE-BLOCK CUBE */}
-                <div className="relative z-10">
-                  <GutenbergTypeBlock3D
-                    size={136}
-                    activeFace={activeCubeFace}
-                    activityPulse={keystrokePulse}
-                    scrollPct={completionPct}
-                    interactiveStamp={true}
-                    onStampFace={(nextFace) => {
-                      setFocusedField(null);
-                      setManualFaceOverride(nextFace);
-                      pulseCube();
-                    }}
-                  />
-                </div>
-              </motion.div>
-
-              {/* Bottom Stage Caption Bar */}
-              <div
-                className={`absolute bottom-3 left-4 right-4 pt-2 border-t flex items-center justify-between text-[10px] font-mono tracking-[0.12em] ${
-                  isDark
-                    ? 'border-[#C8A15A]/15 text-[#C8A15A]/85'
-                    : 'border-[#163F32]/12 text-[#4A5A52]'
-                }`}
-              >
-                <span>{activeFaceMeta.caption}</span>
-                <span className="uppercase opacity-80">Click cube to rotate</span>
               </div>
-            </div>
-
-            {/* Unboxed Typographic 5-Face Inspector Bar (Zero-Pill Discipline) */}
-            <div
-              className={`w-full mt-3 pt-2.5 border-t flex flex-wrap items-center justify-center lg:justify-between gap-y-2 text-[11px] font-mono uppercase tracking-[0.15em] ${
-                isDark ? 'border-[#C8A15A]/20' : 'border-[#163F32]/15'
-              }`}
-            >
-              {CUBE_FACE_INDEX.map((face, idx) => {
-                const isSelected = activeCubeFace === face.id;
-                return (
-                  <React.Fragment key={face.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFocusedField(null);
-                        setManualFaceOverride(face.id);
-                        pulseCube();
-                      }}
-                      className={`cursor-pointer transition-colors pb-0.5 border-b-2 ${
-                        isSelected
-                          ? isDark
-                            ? 'text-[#E5C98B] border-[#C8A15A] font-semibold'
-                            : 'text-[#163F32] border-[#163F32] font-semibold'
-                          : isDark
-                          ? 'text-[#8FA59B] border-transparent hover:text-[#F7F4EC]'
-                          : 'text-[#615B4E] border-transparent hover:text-[#18211D]'
-                      }`}
-                    >
-                      {face.numeral} · {face.label}
-                    </button>
-                    {idx < CUBE_FACE_INDEX.length - 1 && (
-                      <span
-                        className={
-                          isDark ? 'text-[#C8A15A]/30' : 'text-[#163F32]/25'
-                        }
-                      >
-                        /
-                      </span>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Kinetic Serif Headline & Unboxed Folio Metadata */}
-          <div className="space-y-3 max-w-lg">
+          {/* Concise Welcome Copy */}
+          <div className="space-y-2.5 max-w-md">
             <AnimatePresence mode="wait">
               <motion.div
                 key={mode}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="space-y-3"
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-2.5"
               >
-                <div
-                  className={`flex items-center justify-center lg:justify-start gap-2.5 text-[11px] font-mono uppercase tracking-[0.22em] ${
-                    isDark ? 'text-[#C8A15A]' : 'text-[#163F32]'
-                  }`}
-                >
-                  <Feather className="w-3.5 h-3.5" />
-                  <span>{copy.folioTag}</span>
-                </div>
-
                 <h1
-                  className={`text-4xl sm:text-5xl font-normal tracking-tight leading-[1.08] ${
+                  className={`text-4xl sm:text-5xl font-normal tracking-tight leading-[1.1] ${
                     isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
                   }`}
                   style={{
                     fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                    textWrap: 'balance',
                   }}
                 >
                   {copy.headlineStart}{' '}
@@ -881,20 +727,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     className={`italic font-normal ${
                       isDark ? 'text-[#E5C98B]' : 'text-[#163F32]'
                     }`}
-                    style={{
-                      textDecoration: 'underline',
-                      textDecorationColor: '#C8A15A',
-                      textUnderlineOffset: '6px',
-                      textDecorationThickness: '1.5px',
-                    }}
                   >
                     {copy.headlineItalic}
-                  </span>{' '}
-                  {copy.headlineEnd}
+                  </span>
                 </h1>
 
                 <p
-                  className={`text-sm sm:text-base leading-relaxed font-normal ${
+                  className={`text-base leading-relaxed ${
                     isDark ? 'text-[#B4C4BC]' : 'text-[#4A5A52]'
                   }`}
                 >
@@ -902,24 +741,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                 </p>
               </motion.div>
             </AnimatePresence>
-
-            {/* Unboxed Architectural Specifications Row */}
-            <div
-              className={`pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-1 text-[11px] font-mono uppercase tracking-[0.14em] ${
-                isDark ? 'text-[#8FA59B]' : 'text-[#615B4E]'
-              }`}
-            >
-              <span>ALLOY: #163F32 · #C8A15A</span>
-              <span>·</span>
-              <span>COMPLETION: {Math.round(completionPct * 100)}%</span>
-              <span>·</span>
-              <span>CIPHER: AES-GCM</span>
-            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Warm Archival Paper & Brushed Brass Authentication Press Card */}
-        <div className="lg:col-span-6 w-full max-w-[470px] mx-auto">
+        {/* RIGHT COLUMN: Clean Form Card with Everyday Labels */}
+        <div className="lg:col-span-6 w-full max-w-[440px] mx-auto">
           <motion.div
             key={shakeKey}
             animate={
@@ -930,48 +756,27 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
             transition={{ duration: 0.4 }}
             className="relative"
           >
-            {/* Subtle Brass Outer Frame Glow */}
+            {/* Card Container */}
             <div
-              className=" -inset-[1px] rounded-2xl pointer-events-none opacity-80"
-              style={{
-                background: isDark
-                  ? 'linear-gradient(135deg, rgba(200,161,90,0.45), rgba(22,63,50,0.2), rgba(200,161,90,0.35))'
-                  : 'linear-gradient(135deg, rgba(22,63,50,0.25), rgba(200,161,90,0.45), rgba(22,63,50,0.2))',
-              }}
-            />
-
-            {/* Main Card Interior */}
-            <div
-              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 ${
+              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 backdrop-blur-md ${
                 isDark
-                  ? 'bg-[#0F1F19]/95 border-[#C8A15A]/30 shadow-[0_28px_70px_-15px_rgba(0,0,0,0.8)]'
-                  : 'bg-[#FCFBF7] border-[#163F32]/18 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.14)]'
+                  ? 'bg-[#0D1D17]/90 border-[#C8A15A]/25 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.75)]'
+                  : 'bg-[#FCFBF7]/95 border-[#163F32]/15 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.12)]'
               }`}
             >
-              {/* Top Brass Registration Hairline */}
-              <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#C8A15A]/25 text-[10px] font-mono uppercase tracking-[0.2em]">
-                <span className={isDark ? 'text-[#E5C98B]' : 'text-[#163F32]'}>
-                  PRESS REGISTER · {mode.toUpperCase()}
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-[#9A732E] dark:text-[#C8A15A]">
-                  <Compass className="w-3 h-3" />
-                  <span>CUBE SYNC: {activeCubeFace.toUpperCase()}</span>
-                </span>
-              </div>
-
-              {/* Mode Switcher Tabs (Sign In vs Create Account) */}
+              {/* Mode Switcher Tabs (Sign In vs Sign Up) */}
               {mode !== 'forgot' ? (
                 <div
                   className={`relative grid grid-cols-2 p-1 rounded-xl border mb-6 ${
                     isDark
-                      ? 'bg-[#091410] border-[#C8A15A]/20'
-                      : 'bg-[#EFECE1] border-[#163F32]/12'
+                      ? 'bg-[#08130F] border-[#C8A15A]/15'
+                      : 'bg-[#EFECE1] border-[#163F32]/10'
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
-                    className={`relative z-10 py-2.5 text-xs font-mono uppercase tracking-[0.16em] font-semibold rounded-lg transition-colors cursor-pointer ${
+                    className={`relative z-10 py-2.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                       mode === 'login'
                         ? 'text-[#F7F4EC]'
                         : isDark
@@ -981,8 +786,8 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   >
                     {mode === 'login' && (
                       <motion.div
-                        layoutId="atelierAuthTab"
-                        className="absolute inset-0 rounded-lg bg-[#163F32] border border-[#C8A15A]/45 shadow-sm -z-10"
+                        layoutId="cleanAuthTab"
+                        className="absolute inset-0 rounded-lg bg-[#163F32] border border-[#C8A15A]/40 shadow-sm -z-10"
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -992,7 +797,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   <button
                     type="button"
                     onClick={() => switchMode('register')}
-                    className={`relative z-10 py-2.5 text-xs font-mono uppercase tracking-[0.16em] font-semibold rounded-lg transition-colors cursor-pointer ${
+                    className={`relative z-10 py-2.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                       mode === 'register'
                         ? 'text-[#F7F4EC]'
                         : isDark
@@ -1002,12 +807,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   >
                     {mode === 'register' && (
                       <motion.div
-                        layoutId="atelierAuthTab"
-                        className="absolute inset-0 rounded-lg bg-[#163F32] border border-[#C8A15A]/45 shadow-sm -z-10"
+                        layoutId="cleanAuthTab"
+                        className="absolute inset-0 rounded-lg bg-[#163F32] border border-[#C8A15A]/40 shadow-sm -z-10"
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
-                    Create Account
+                    Sign Up
                   </button>
                 </div>
               ) : (
@@ -1015,7 +820,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
-                    className={`inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.15em] transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-2 text-xs font-medium transition-colors cursor-pointer ${
                       isDark
                         ? 'text-[#E5C98B] hover:text-[#F7F4EC]'
                         : 'text-[#163F32] hover:text-[#0B261D]'
@@ -1082,35 +887,22 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                 {mode === 'login' && (
                   <motion.form
                     key="login-form"
-                    initial={{ opacity: 0, x: -14 }}
+                    initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 14 }}
-                    transition={{ duration: 0.25 }}
+                    exit={{ opacity: 0, x: 12 }}
+                    transition={{ duration: 0.2 }}
                     onSubmit={handleLoginSubmit}
                     className="space-y-4"
                   >
                     {/* Email Field */}
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
-                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                          }`}
-                        >
-                          Editorial Email
-                        </label>
-                        <span
-                          className={`text-[10px] font-mono ${
-                            focusedField === 'email'
-                              ? 'text-[#C8A15A]'
-                              : isDark
-                              ? 'text-[#8FA59B]/60'
-                              : 'text-[#615B4E]/70'
-                          }`}
-                        >
-                          FACE II · LOUPE
-                        </span>
-                      </div>
+                      <label
+                        className={`block text-xs font-medium mb-1.5 ${
+                          isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                        }`}
+                      >
+                        Email
+                      </label>
                       <div className="relative">
                         <Mail
                           className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
@@ -1134,16 +926,16 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             setEmail(e.target.value);
                             pulseCube();
                           }}
-                          placeholder="editor@publication.com"
+                          placeholder="you@example.com"
                           className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
                       </div>
 
-                      {/* Domain Quick-Chips */}
+                      {/* Domain Quick-Buttons */}
                       <AnimatePresence>
                         {showDomainSuggestions && (
                           <motion.div
@@ -1175,22 +967,22 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label
-                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
+                          className={`block text-xs font-medium ${
                             isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                           }`}
                         >
-                          Passkey
+                          Password
                         </label>
                         <button
                           type="button"
                           onClick={() => switchMode('forgot')}
-                          className={`text-[11px] font-mono underline underline-offset-4 transition-colors cursor-pointer ${
+                          className={`text-xs underline underline-offset-4 transition-colors cursor-pointer ${
                             isDark
                               ? 'text-[#E5C98B] hover:text-[#F7F4EC]'
                               : 'text-[#163F32] hover:text-[#9A732E]'
                           }`}
                         >
-                          Forgot passkey?
+                          Forgot password?
                         </button>
                       </div>
                       <div className="relative">
@@ -1219,13 +1011,14 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                           placeholder="••••••••"
                           className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword((v) => !v)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
                           className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer ${
                             isDark
                               ? 'text-[#8FA59B] hover:text-[#F7F4EC]'
@@ -1245,13 +1038,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     <button
                       type="submit"
                       disabled={loading || demoLoading}
-                      className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
                       ) : (
                         <>
-                          <span>Enter Editorial Atelier</span>
+                          <span>Sign In</span>
                           <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
                         </>
                       )}
@@ -1263,35 +1056,22 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                 {mode === 'register' && (
                   <motion.form
                     key="register-form"
-                    initial={{ opacity: 0, x: 14 }}
+                    initial={{ opacity: 0, x: 12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -14 }}
-                    transition={{ duration: 0.25 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ duration: 0.2 }}
                     onSubmit={handleRegisterSubmit}
                     className="space-y-4"
                   >
-                    {/* Author / Studio Name */}
+                    {/* Full Name */}
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
-                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                          }`}
-                        >
-                          Author or Publication Name
-                        </label>
-                        <span
-                          className={`text-[10px] font-mono ${
-                            focusedField === 'name'
-                              ? 'text-[#C8A15A]'
-                              : isDark
-                              ? 'text-[#8FA59B]/60'
-                              : 'text-[#615B4E]/70'
-                          }`}
-                        >
-                          FACE V · SILCROW
-                        </span>
-                      </div>
+                      <label
+                        className={`block text-xs font-medium mb-1.5 ${
+                          isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                        }`}
+                      >
+                        Full Name
+                      </label>
                       <div className="relative">
                         <User
                           className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
@@ -1315,10 +1095,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             setName(e.target.value);
                             pulseCube();
                           }}
-                          placeholder="Clara Vance"
+                          placeholder="Your name"
                           className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
@@ -1327,26 +1107,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
                     {/* Email */}
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold ${
-                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                          }`}
-                        >
-                          Editorial Email
-                        </label>
-                        <span
-                          className={`text-[10px] font-mono ${
-                            focusedField === 'email'
-                              ? 'text-[#C8A15A]'
-                              : isDark
-                              ? 'text-[#8FA59B]/60'
-                              : 'text-[#615B4E]/70'
-                          }`}
-                        >
-                          FACE II · LOUPE
-                        </span>
-                      </div>
+                      <label
+                        className={`block text-xs font-medium mb-1.5 ${
+                          isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                        }`}
+                      >
+                        Email
+                      </label>
                       <div className="relative">
                         <Mail
                           className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
@@ -1370,10 +1137,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             setEmail(e.target.value);
                             pulseCube();
                           }}
-                          placeholder="clara@atelier.press"
+                          placeholder="you@example.com"
                           className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
@@ -1409,11 +1176,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label
-                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                          className={`block text-xs font-medium mb-1.5 ${
                             isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                           }`}
                         >
-                          Passkey
+                          Password
                         </label>
                         <div className="relative">
                           <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#615B4E]" />
@@ -1433,13 +1200,14 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             placeholder="Min 6 chars"
                             className={`w-full pl-10 pr-9 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                               isDark
-                                ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                                 : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                             }`}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword((v) => !v)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
                             className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#615B4E] cursor-pointer"
                           >
                             {showPassword ? (
@@ -1453,11 +1221,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
                       <div>
                         <label
-                          className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                          className={`block text-xs font-medium mb-1.5 ${
                             isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                           }`}
                         >
-                          Confirm
+                          Confirm Password
                         </label>
                         <div className="relative">
                           <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#615B4E]" />
@@ -1474,10 +1242,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               setConfirmPassword(e.target.value);
                               pulseCube();
                             }}
-                            placeholder="Repeat passkey"
+                            placeholder="Repeat password"
                             className={`w-full pl-10 pr-3 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                               isDark
-                                ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                                 : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                             }`}
                           />
@@ -1485,12 +1253,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       </div>
                     </div>
 
-                    {/* Passkey Alloy Strength Meter */}
+                    {/* Password Strength Meter */}
                     {password.length > 0 && (
                       <div className="space-y-1 pt-0.5">
-                        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.14em]">
+                        <div className="flex items-center justify-between text-xs">
                           <span className={isDark ? 'text-[#8FA59B]' : 'text-[#615B4E]'}>
-                            Passkey Temper
+                            Password strength
                           </span>
                           <span style={{ color: pwStrength.color }} className="font-semibold">
                             {pwStrength.label}
@@ -1524,7 +1292,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                         <Loader2 className="w-4 h-4 animate-spin text-[#12261F]" />
                       ) : (
                         <>
-                          <span>Commission Author Account</span>
+                          <span>Create Account</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -1539,7 +1307,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.25 }}
+                    transition={{ duration: 0.2 }}
                   >
                     {forgotStep === 1 && (
                       <form onSubmit={handleSendOtp} className="space-y-4">
@@ -1548,28 +1316,25 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             className={`text-lg font-semibold ${
                               isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
                             }`}
-                            style={{
-                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
-                            }}
                           >
-                            Step I · Dispatch Recovery Cipher
+                            Reset Password
                           </h3>
                           <p
                             className={`text-xs leading-relaxed ${
                               isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
                             }`}
                           >
-                            Enter your editorial email. We will issue a 6-digit foundry verification code.
+                            Enter your email address and we will send you a 6-digit verification code.
                           </p>
                         </div>
 
                         <div>
                           <label
-                            className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                            className={`block text-xs font-medium mb-1.5 ${
                               isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                             }`}
                           >
-                            Registered Email
+                            Email
                           </label>
                           <div className="relative">
                             <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
@@ -1586,10 +1351,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                                 setForgotEmail(e.target.value);
                                 pulseCube();
                               }}
-                              placeholder="editor@publication.com"
+                              placeholder="you@example.com"
                               className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                  ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1599,13 +1364,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
                           ) : (
                             <>
-                              <span>Send 6-Digit Foundry Code</span>
+                              <span>Send Verification Code</span>
                               <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
                             </>
                           )}
@@ -1620,18 +1385,15 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             className={`text-lg font-semibold ${
                               isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
                             }`}
-                            style={{
-                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
-                            }}
                           >
-                            Step II · Verify 6-Digit Seal
+                            Enter 6-Digit Code
                           </h3>
                           <p
                             className={`text-xs leading-relaxed ${
                               isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
                             }`}
                           >
-                            Enter the 6-digit code dispatched to{' '}
+                            Enter the code sent to{' '}
                             <span className="font-semibold underline">{forgotEmail}</span>.
                           </p>
                         </div>
@@ -1647,7 +1409,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             <div className="flex items-center gap-2">
                               <KeyRound className="w-4 h-4 shrink-0 text-[#C8A15A]" />
                               <span>
-                                Dispatch Code:{' '}
+                                Code:{' '}
                                 <strong className="font-mono tracking-widest text-sm">
                                   {otpPreview}
                                 </strong>
@@ -1659,7 +1421,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                                 setOtpDigits(otpPreview.split(''));
                                 pulseCube();
                               }}
-                              className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded bg-[#163F32] text-[#F7F4EC] hover:opacity-90 cursor-pointer"
+                              className="text-xs font-medium px-2.5 py-1 rounded bg-[#163F32] text-[#F7F4EC] hover:opacity-90 cursor-pointer"
                             >
                               Auto-fill
                             </button>
@@ -1684,7 +1446,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               onPaste={idx === 0 ? handleOtpPaste : undefined}
                               className={`w-full aspect-square text-center text-lg font-mono font-bold rounded-xl border transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#091410] border-[#C8A15A]/30 text-[#E5C98B] focus:border-[#C8A15A]'
+                                  ? 'bg-[#08130F] border-[#C8A15A]/30 text-[#E5C98B] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/25 text-[#163F32] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1712,13 +1474,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
                           ) : (
                             <>
-                              <span>Verify Foundry Seal</span>
+                              <span>Verify Code</span>
                               <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
                             </>
                           )}
@@ -1733,28 +1495,25 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             className={`text-lg font-semibold ${
                               isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
                             }`}
-                            style={{
-                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
-                            }}
                           >
-                            Step III · Cast New Passkey
+                            Set New Password
                           </h3>
                           <p
                             className={`text-xs leading-relaxed ${
                               isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
                             }`}
                           >
-                            Seal verified. Enter your new passkey below.
+                            Code verified. Enter your new password below.
                           </p>
                         </div>
 
                         <div>
                           <label
-                            className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                            className={`block text-xs font-medium mb-1.5 ${
                               isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                             }`}
                           >
-                            New Passkey
+                            New Password
                           </label>
                           <div className="relative">
                             <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
@@ -1771,7 +1530,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               placeholder="At least 6 characters"
                               className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
+                                  ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1780,11 +1539,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
                         <div>
                           <label
-                            className={`block text-[11px] font-mono uppercase tracking-[0.16em] font-semibold mb-1.5 ${
+                            className={`block text-xs font-medium mb-1.5 ${
                               isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                             }`}
                           >
-                            Confirm New Passkey
+                            Confirm New Password
                           </label>
                           <div className="relative">
                             <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
@@ -1798,10 +1557,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                                 setConfirmNewPassword(e.target.value);
                                 pulseCube();
                               }}
-                              placeholder="Repeat new passkey"
+                              placeholder="Repeat new password"
                               className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#091410] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
+                                  ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1817,7 +1576,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             <Loader2 className="w-4 h-4 animate-spin text-[#12261F]" />
                           ) : (
                             <>
-                              <span>Update Passkey</span>
+                              <span>Update Password</span>
                               <CheckCircle2 className="w-4 h-4" />
                             </>
                           )}
@@ -1835,31 +1594,28 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             className={`text-xl font-semibold ${
                               isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
                             }`}
-                            style={{
-                              fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
-                            }}
                           >
-                            Passkey Re-Cast Complete
+                            Password Updated
                           </h3>
                           <p
                             className={`text-xs ${
                               isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
                             }`}
                           >
-                            Your editorial credentials have been updated in the foundry ledger.
+                            Your password has been updated. You can now sign in.
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={handleSignInAfterReset}
                           disabled={loading}
-                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
                           {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
                           ) : (
                             <>
-                              <span>Enter Atelier Now</span>
+                              <span>Continue to Studio</span>
                               <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
                             </>
                           )}
@@ -1870,27 +1626,26 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                 )}
               </AnimatePresence>
 
-              {/* --- 1-Click Instant Atelier Pass & Social Providers --- */}
+              {/* --- Demo Account & Social Providers --- */}
               {mode !== 'forgot' && (
-                <div className="mt-6 pt-5 border-t border-[#C8A15A]/20 space-y-3">
+                <div className="mt-6 pt-5 border-t border-[#C8A15A]/15 space-y-3">
                   <button
                     type="button"
                     onClick={handleDemoAccess}
                     disabled={loading || demoLoading}
-                    className={`w-full py-2.5 px-4 rounded-xl border text-xs font-mono uppercase tracking-[0.14em] transition-all flex items-center justify-between group cursor-pointer ${
+                    className={`w-full py-2.5 px-4 rounded-xl border text-xs font-medium transition-all flex items-center justify-center gap-2 group cursor-pointer ${
                       isDark
-                        ? 'bg-[#12261F]/70 hover:bg-[#163F32] border-[#C8A15A]/35 text-[#E5C98B]'
-                        : 'bg-[#EFECE1]/90 hover:bg-[#163F32] border-[#163F32]/20 text-[#163F32] hover:text-[#F7F4EC]'
+                        ? 'bg-[#12261F]/60 hover:bg-[#163F32] border-[#C8A15A]/30 text-[#E5C98B]'
+                        : 'bg-[#EFECE1]/80 hover:bg-[#163F32] border-[#163F32]/15 text-[#163F32] hover:text-[#F7F4EC]'
                     }`}
                   >
-                    <span className="flex items-center gap-2 font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-[#C8A15A]" />
-                      <span>Instant Guest Atelier Pass (1-Click Demo)</span>
-                    </span>
                     {demoLoading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                      <>
+                        <span>Try Demo Account</span>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </>
                     )}
                   </button>
 
@@ -1900,7 +1655,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       onClick={() => signIn('google', { callbackUrl: '/studio' })}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
-                          ? 'bg-[#091410] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
+                          ? 'bg-[#08130F] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
                           : 'bg-[#F7F4EC] border-[#163F32]/15 text-[#18211D] hover:bg-[#EFECE1]'
                       }`}
                     >
@@ -1913,7 +1668,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       onClick={() => signIn('github', { callbackUrl: '/studio' })}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
-                          ? 'bg-[#091410] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
+                          ? 'bg-[#08130F] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
                           : 'bg-[#F7F4EC] border-[#163F32]/15 text-[#18211D] hover:bg-[#EFECE1]'
                       }`}
                     >
@@ -1928,17 +1683,8 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
         </div>
       </main>
 
-      {/* --- LAYER 4: Editorial Colophon Footer --- */}
-      <footer
-        className={`relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono uppercase tracking-[0.16em] ${
-          isDark
-            ? 'border-[#C8A15A]/15 text-[#8FA59B]'
-            : 'border-[#163F32]/12 text-[#615B4E]'
-        }`}
-      >
-        <span>COLOPHON · GUTENBERG TYPE-BLOCK EDITION</span>
-        <span>WARM ARCHIVAL PAPER (#F7F4EC) · FOREST (#163F32) · BRASS (#C8A15A)</span>
-      </footer>
+      {/* Subtle Bottom Spacer for Vertical Balance */}
+      <div className="h-6" />
     </div>
   );
 }
