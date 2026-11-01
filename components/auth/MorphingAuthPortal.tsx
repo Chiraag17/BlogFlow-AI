@@ -193,12 +193,20 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   }, [searchParams]);
 
+  const targetRedirect = useMemo(() => {
+    const cb = searchParams?.get('callbackUrl');
+    if (cb && cb.startsWith('/') && cb !== '/login' && cb !== '/register') {
+      return cb;
+    }
+    return '/dashboard';
+  }, [searchParams]);
+
   // Only auto-redirect on initial load if not currently playing the 3D warp animation
   useEffect(() => {
     if (status === 'authenticated' && !isWarpingRef.current) {
-      router.push('/studio');
+      router.push(targetRedirect);
     }
-  }, [status, router]);
+  }, [status, router, targetRedirect]);
 
   // Default to Dark Golden Cosmos when unmounted so the starfield shines immediately
   const isDark = mounted ? theme === 'dark' : true;
@@ -308,12 +316,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       setWarpStage('jump');
     }, 520);
 
-    // Stage 3: Navigate to Studio after warp climax
+    // Stage 3: Navigate to Dashboard after warp climax
     setTimeout(() => {
-      router.push('/studio');
+      router.push(targetRedirect);
       router.refresh();
     }, 1850);
-  }, [router, spawnKeystrokeParticles]);
+  }, [router, spawnKeystrokeParticles, targetRedirect]);
 
   // --- 60FPS 3D GOLDEN STARDUST COSMOS & PARTICLE CANVAS ---
   useEffect(() => {
@@ -2057,7 +2065,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   <div className="grid grid-cols-2 gap-2.5">
                     <button
                       type="button"
-                      onClick={() => signIn('google', { callbackUrl: '/studio' })}
+                      onClick={() => signIn('google', { callbackUrl: targetRedirect })}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
                           ? 'bg-[#06100C] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
@@ -2070,7 +2078,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
                     <button
                       type="button"
-                      onClick={() => signIn('github', { callbackUrl: '/studio' })}
+                      onClick={() => signIn('github', { callbackUrl: targetRedirect })}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
                           ? 'bg-[#06100C] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
