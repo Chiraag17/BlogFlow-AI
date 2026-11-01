@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -36,6 +36,42 @@ type FocusedField = 'name' | 'email' | 'password' | 'confirm' | 'otp' | null;
 
 interface MorphingAuthPortalProps {
   initialMode?: AuthMode;
+}
+
+interface Star3D {
+  x: number;
+  y: number;
+  z: number;
+  pz: number;
+  size: number;
+  color: string;
+  twinklePhase: number;
+  twinkleSpeed: number;
+}
+
+interface KeystrokeParticle {
+  x: number;
+  y: number;
+  sx: number;
+  sy: number;
+  cx: number;
+  cy: number;
+  tx: number;
+  ty: number;
+  progress: number;
+  speed: number;
+  size: number;
+  color: string;
+  trail: { x: number; y: number }[];
+}
+
+interface AbsorptionRing {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  alpha: number;
+  color: string;
 }
 
 const EMAIL_DOMAINS = ['@gmail.com', '@outlook.com', '@blogflow.ai'];
@@ -95,6 +131,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const [manualFaceOverride, setManualFaceOverride] = useState<TypeBlockFace | null>(null);
   const [keystrokePulse, setKeystrokePulse] = useState(0);
 
+  // 3D Warp Launch Sequence State
+  const [isWarping, setIsWarping] = useState(false);
+  const [warpStage, setWarpStage] = useState<'idle' | 'align' | 'jump'>('idle');
+  const isWarpingRef = useRef(false);
+
   // Login / Register state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -120,6 +161,14 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cubeStageRef = useRef<HTMLDivElement>(null);
+  const formCardRef = useRef<HTMLDivElement>(null);
+
+  // Particle & Starfield Refs for 60fps Canvas Loop
+  const particlesRef = useRef<KeystrokeParticle[]>([]);
+  const ringsRef = useRef<AbsorptionRing[]>([]);
+  const pointerNormRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
 
   // Cursor-reactive 3D stage & spotlight coordinates
   const mouseX = useMotionValue(0.5);
@@ -128,10 +177,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const smoothY = useSpring(mouseY, { stiffness: 55, damping: 24 });
 
   // 3D stage tilt transforms
-  const stageRotateX = useTransform(smoothY, [0, 1], [7, -7]);
-  const stageRotateY = useTransform(smoothX, [0, 1], [-9, 9]);
-  const spotlightX = useTransform(smoothX, [0, 1], ['20%', '80%']);
-  const spotlightY = useTransform(smoothY, [0, 1], ['20%', '80%']);
+  const stageRotateX = useTransform(smoothY, [0, 1], [8, -8]);
+  const stageRotateY = useTransform(smoothX, [0, 1], [-10, 10]);
+  const spotlightX = useTransform(smoothX, [0, 1], ['18%', '82%']);
+  const spotlightY = useTransform(smoothY, [0, 1], ['18%', '82%']);
 
   useEffect(() => {
     setMounted(true);
@@ -144,14 +193,20 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   }, [searchParams]);
 
+  // Only auto-redirect on initial load if not currently playing the 3D warp animation
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && !isWarpingRef.current) {
       router.push('/studio');
     }
   }, [status, router]);
 
-  // Determine active 3D cube face based on focus, mode, or manual click
+  // Default to Dark Golden Cosmos when unmounted so the starfield shines immediately
+  const isDark = mounted ? theme === 'dark' : true;
+  const copy = MODE_COPY[mode];
+
+  // Determine active 3D cube face based on warp, focus, mode, or manual click
   const activeCubeFace: TypeBlockFace = useMemo(() => {
+    if (isWarping) return 'seal';
     if (focusedField === 'name') return 'section';
     if (focusedField === 'email') return 'loupe';
     if (focusedField === 'password' || focusedField === 'confirm' || focusedField === 'otp') {
@@ -163,9 +218,9 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       return 'seal';
     }
     return MODE_COPY[mode].defaultFace;
-  }, [focusedField, manualFaceOverride, mode, forgotStep]);
+  }, [isWarping, focusedField, manualFaceOverride, mode, forgotStep]);
 
-  // Calculate form completion percentage (0..1) to drive subtle cube motion
+  // Calculate form completion percentage (0..1)
   const completionPct = useMemo(() => {
     if (mode === 'login') {
       let pct = 0;
@@ -184,23 +239,295 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     return (forgotStep - 1) / 3;
   }, [mode, name, email, password, confirmPassword, forgotStep]);
 
-  const pulseCube = () => {
-    setKeystrokePulse((prev) => prev + 1);
-  };
+  // Spawn Golden Keystroke Energy Particles flowing from the active input card into the 3D Cube
+  const spawnKeystrokeParticles = useCallback((count = 2) => {
+    if (typeof window === 'undefined') return;
+    const cubeRect = cubeStageRef.current?.getBoundingClientRect();
+    const formRect = formCardRef.current?.getBoundingClientRect();
+
+    const tx = cubeRect
+      ? cubeRect.left + cubeRect.width / 2
+      : window.innerWidth * 0.3;
+    const ty = cubeRect
+      ? cubeRect.top + cubeRect.height / 2
+      : window.innerHeight * 0.45;
+
+    const sxBase = formRect
+      ? formRect.left + formRect.width * 0.35
+      : window.innerWidth * 0.68;
+    const syBase = formRect
+      ? formRect.top + formRect.height * 0.45
+      : window.innerHeight * 0.5;
+
+    const palette = ['#F5E1A4', '#E5C98B', '#C8A15A', '#52B788'];
+
+    for (let i = 0; i < count; i++) {
+      const sx = sxBase + (Math.random() - 0.5) * 120;
+      const sy = syBase + (Math.random() - 0.5) * 90;
+      // Control point arcs upward or downward in 3D-like curve toward the cube
+      const cx = (sx + tx) / 2 + (Math.random() - 0.5) * 140;
+      const cy = Math.min(sy, ty) - 60 - Math.random() * 110;
+
+      particlesRef.current.push({
+        x: sx,
+        y: sy,
+        sx,
+        sy,
+        cx,
+        cy,
+        tx: tx + (Math.random() - 0.5) * 28,
+        ty: ty + (Math.random() - 0.5) * 28,
+        progress: 0,
+        speed: 0.024 + Math.random() * 0.018,
+        size: 2.2 + Math.random() * 2.2,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        trail: [],
+      });
+    }
+  }, []);
+
+  const pulseCube = useCallback(
+    (emitParticles = true) => {
+      setKeystrokePulse((prev) => prev + 1);
+      if (emitParticles) {
+        spawnKeystrokeParticles(2);
+      }
+    },
+    [spawnKeystrokeParticles]
+  );
+
+  // Trigger the 3D Cube Spin & Starfield Warp Jump into the Studio
+  const triggerWarpToStudio = useCallback(() => {
+    isWarpingRef.current = true;
+    setIsWarping(true);
+    setWarpStage('align');
+    spawnKeystrokeParticles(14);
+
+    // Stage 2: Engage high-speed starfield warp streaks
+    setTimeout(() => {
+      setWarpStage('jump');
+    }, 520);
+
+    // Stage 3: Navigate to Studio after warp climax
+    setTimeout(() => {
+      router.push('/studio');
+      router.refresh();
+    }, 1850);
+  }, [router, spawnKeystrokeParticles]);
+
+  // --- 60FPS 3D GOLDEN STARDUST COSMOS & PARTICLE CANVAS ---
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const STAR_COUNT = 260;
+    const starColorsDark = ['#F7F4EC', '#E5C98B', '#C8A15A', '#8FD6B8', '#D9B772'];
+    const starColorsLight = ['#C8A15A', '#163F32', '#9A732E', '#2A6B53', '#8A6829'];
+
+    const stars: Star3D[] = Array.from({ length: STAR_COUNT }, () => {
+      const z = Math.random() * width;
+      return {
+        x: (Math.random() - 0.5) * width * 2.2,
+        y: (Math.random() - 0.5) * height * 2.2,
+        z,
+        pz: z,
+        size: 0.7 + Math.random() * 1.9,
+        color: (isDark ? starColorsDark : starColorsLight)[
+          Math.floor(Math.random() * 5)
+        ],
+        twinklePhase: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.015 + Math.random() * 0.03,
+      };
+    });
+
+    let warpSpeedMultiplier = 1;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Smoothly ramp warp speed when post-login 3D warp jump is triggered
+      const targetSpeed = isWarpingRef.current ? 34 : 1.15;
+      warpSpeedMultiplier += (targetSpeed - warpSpeedMultiplier) * 0.06;
+
+      // Camera center shifts subtly with cursor parallax, or locks to center during warp
+      const px = isWarpingRef.current ? 0.5 : pointerNormRef.current.x;
+      const py = isWarpingRef.current ? 0.5 : pointerNormRef.current.y;
+      const centerX = width / 2 + (px - 0.5) * 90;
+      const centerY = height / 2 + (py - 0.5) * 70;
+
+      // 1. Draw 3D Starfield
+      const focalLength = width * 0.75;
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
+        star.pz = star.z;
+        star.z -= warpSpeedMultiplier * 2.2;
+        star.twinklePhase += star.twinkleSpeed;
+
+        if (star.z <= 1) {
+          star.z = width;
+          star.pz = width;
+          star.x = (Math.random() - 0.5) * width * 2.2;
+          star.y = (Math.random() - 0.5) * height * 2.2;
+        }
+
+        const sx = (star.x / star.z) * focalLength + centerX;
+        const sy = (star.y / star.z) * focalLength + centerY;
+
+        const pxScreen = (star.x / star.pz) * focalLength + centerX;
+        const pyScreen = (star.y / star.pz) * focalLength + centerY;
+
+        if (sx >= 0 && sx <= width && sy >= 0 && sy <= height) {
+          const depthRatio = 1 - star.z / width;
+          const twinkle = 0.65 + 0.35 * Math.sin(star.twinklePhase);
+          const alpha = Math.min(1, Math.max(0.1, depthRatio * twinkle));
+          const radius = Math.max(0.4, star.size * depthRatio * 1.6);
+
+          if (warpSpeedMultiplier > 3.2) {
+            // Draw high-speed 3D warp starlight streaks
+            ctx.beginPath();
+            ctx.moveTo(pxScreen, pyScreen);
+            ctx.lineTo(sx, sy);
+            ctx.strokeStyle = star.color;
+            ctx.globalAlpha = Math.min(0.95, alpha * 1.2);
+            ctx.lineWidth = Math.max(1, radius * 1.15);
+            ctx.lineCap = 'round';
+            ctx.stroke();
+          } else {
+            // Draw glowing 3D stardust point
+            ctx.beginPath();
+            ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = star.color;
+            ctx.globalAlpha = isDark ? alpha : alpha * 0.75;
+            ctx.fill();
+
+            // Subtle golden halo on larger foreground stars
+            if (radius > 1.8 && isDark) {
+              ctx.beginPath();
+              ctx.arc(sx, sy, radius * 2.6, 0, Math.PI * 2);
+              ctx.fillStyle = star.color;
+              ctx.globalAlpha = alpha * 0.16;
+              ctx.fill();
+            }
+          }
+        }
+      }
+
+      // 2. Draw Keystroke Energy Particles flowing into the 3D Cube
+      for (let i = particlesRef.current.length - 1; i >= 0; i--) {
+        const p = particlesRef.current[i];
+        p.progress += p.speed;
+
+        if (p.progress >= 1) {
+          // Spawn an absorption golden pulse ring on the 3D cube
+          ringsRef.current.push({
+            x: p.tx,
+            y: p.ty,
+            radius: 18,
+            maxRadius: 85,
+            alpha: 0.65,
+            color: p.color,
+          });
+          particlesRef.current.splice(i, 1);
+          continue;
+        }
+
+        const t = p.progress;
+        const inv = 1 - t;
+        // Quadratic Bezier interpolation
+        const nx = inv * inv * p.sx + 2 * inv * t * p.cx + t * t * p.tx;
+        const ny = inv * inv * p.sy + 2 * inv * t * p.cy + t * t * p.ty;
+
+        p.trail.push({ x: nx, y: ny });
+        if (p.trail.length > 10) p.trail.shift();
+
+        p.x = nx;
+        p.y = ny;
+
+        // Draw luminous comet trail
+        if (p.trail.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(p.trail[0].x, p.trail[0].y);
+          for (let j = 1; j < p.trail.length; j++) {
+            ctx.lineTo(p.trail[j].x, p.trail[j].y);
+          }
+          ctx.strokeStyle = p.color;
+          ctx.globalAlpha = 0.55 * (1 - t * 0.3);
+          ctx.lineWidth = p.size * 0.9;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        }
+
+        // Draw glowing particle head
+        ctx.beginPath();
+        ctx.arc(nx, ny, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFFDF7';
+        ctx.globalAlpha = 0.95;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, p.size * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.35;
+        ctx.fill();
+      }
+
+      // 3. Draw Cube Energy Absorption Rings
+      for (let i = ringsRef.current.length - 1; i >= 0; i--) {
+        const ring = ringsRef.current[i];
+        ring.radius += 2.4;
+        ring.alpha *= 0.92;
+
+        if (ring.alpha <= 0.03 || ring.radius >= ring.maxRadius) {
+          ringsRef.current.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = ring.color;
+        ctx.globalAlpha = ring.alpha;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = 1;
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    animationFrameId = requestAnimationFrame(render);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isDark]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    mouseX.set(Math.max(0, Math.min(1, nx)));
-    mouseY.set(Math.max(0, Math.min(1, ny)));
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    mouseX.set(nx);
+    mouseY.set(ny);
+    pointerNormRef.current = { x: nx, y: ny };
   };
 
   const triggerError = (msg: string) => {
     setError(msg);
     setShakeKey((k) => k + 1);
-    pulseCube();
+    pulseCube(false);
   };
 
   const switchMode = (nextMode: AuthMode) => {
@@ -209,7 +536,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     setManualFaceOverride(null);
     setFocusedField(null);
     setMode(nextMode);
-    pulseCube();
+    pulseCube(true);
     if (nextMode === 'forgot') {
       setForgotStep(1);
       setForgotEmail(email || '');
@@ -230,7 +557,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     } else {
       setEmail(nextVal);
     }
-    pulseCube();
+    pulseCube(true);
   };
 
   const pwStrength = useMemo(
@@ -243,7 +570,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     e.preventDefault();
     setError('');
     setLoading(true);
-    pulseCube();
+    pulseCube(true);
 
     try {
       const res = await signIn('credentials', {
@@ -254,13 +581,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
       if (res?.error) {
         triggerError('Invalid email or password. Please try again.');
+        setLoading(false);
       } else {
-        router.push('/studio');
-        router.refresh();
+        triggerWarpToStudio();
       }
     } catch {
       triggerError('An unexpected connection error occurred. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -283,7 +609,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
 
     setLoading(true);
-    pulseCube();
+    pulseCube(true);
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -313,8 +639,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
         setMode('login');
         setLoading(false);
       } else {
-        router.push('/studio');
-        router.refresh();
+        triggerWarpToStudio();
       }
     } catch {
       triggerError('Network error while creating your account.');
@@ -326,7 +651,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     setError('');
     setDemoLoading(true);
     setManualFaceOverride('seal');
-    pulseCube();
+    pulseCube(true);
     try {
       const res = await signIn('credentials', {
         redirect: false,
@@ -338,8 +663,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
         triggerError('Could not start demo session.');
         setDemoLoading(false);
       } else {
-        router.push('/studio');
-        router.refresh();
+        triggerWarpToStudio();
       }
     } catch {
       triggerError('Failed to start demo session.');
@@ -357,7 +681,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
 
     setLoading(true);
-    pulseCube();
+    pulseCube(true);
     try {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
@@ -389,7 +713,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     next[index] = digit;
     setOtpDigits(next);
     setError('');
-    pulseCube();
+    pulseCube(true);
 
     if (digit && index < 5) {
       otpInputRefs.current[index + 1]?.focus();
@@ -411,7 +735,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       next[i] = pasted[i] || '';
     }
     setOtpDigits(next);
-    pulseCube();
+    pulseCube(true);
     const focusIdx = Math.min(5, pasted.length);
     otpInputRefs.current[focusIdx]?.focus();
   };
@@ -426,7 +750,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
 
     setLoading(true);
-    pulseCube();
+    pulseCube(true);
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -468,7 +792,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
 
     setLoading(true);
-    pulseCube();
+    pulseCube(true);
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -505,8 +829,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       password: newPassword,
     });
     if (!res?.error) {
-      router.push('/studio');
-      router.refresh();
+      triggerWarpToStudio();
     } else {
       setEmail(forgotEmail);
       setPassword('');
@@ -515,64 +838,73 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   };
 
-  const isDark = mounted ? theme === 'dark' : false;
-  const copy = MODE_COPY[mode];
-
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className={`relative min-h-screen w-full overflow-hidden flex flex-col justify-between select-none transition-colors duration-500 ${
+      className={`relative min-h-screen w-full overflow-hidden flex flex-col justify-between select-none transition-colors duration-700 ${
         isDark
-          ? 'bg-[#08120E] text-[#F7F4EC]'
-          : 'bg-[#F7F4EC] text-[#18211D]'
+          ? 'bg-[#050B09] text-[#F7F4EC]'
+          : 'bg-[#F5F2E8] text-[#18211D]'
       }`}
     >
-      {/* --- LAYER 1: Warm Ambient Brass Spotlight & Subtle Depth --- */}
+      {/* --- LAYER 1: Golden Stardust Cosmos & Interactive 3D Starfield --- */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        {/* Primary Warm Ambient Brass Spotlight & Deep Emerald Depth */}
+        {/* Deep Cosmic Nebula Clouds */}
         <div
           className="absolute inset-0 transition-opacity duration-700"
           style={{
             background: isDark
               ? [
-                  'radial-gradient(circle 680px at 28% 48%, rgba(200, 161, 90, 0.22), rgba(22, 63, 50, 0.34) 48%, transparent 78%)',
-                  'radial-gradient(circle 620px at 74% 52%, rgba(200, 161, 90, 0.12), rgba(15, 38, 30, 0.28) 52%, transparent 80%)',
-                  'radial-gradient(ellipse 100% 70% at 50% 0%, rgba(200, 161, 90, 0.09), transparent 65%)',
+                  'radial-gradient(circle 760px at 28% 46%, rgba(200, 161, 90, 0.19), rgba(22, 63, 50, 0.32) 46%, transparent 78%)',
+                  'radial-gradient(circle 680px at 76% 38%, rgba(34, 97, 74, 0.24), rgba(200, 161, 90, 0.10) 48%, transparent 80%)',
+                  'radial-gradient(ellipse 110% 75% at 50% 100%, rgba(16, 48, 37, 0.45), transparent 70%)',
                 ].join(', ')
               : [
-                  'radial-gradient(circle 680px at 28% 48%, rgba(200, 161, 90, 0.28), rgba(22, 63, 50, 0.08) 50%, transparent 78%)',
-                  'radial-gradient(circle 620px at 74% 52%, rgba(200, 161, 90, 0.18), rgba(22, 63, 50, 0.05) 52%, transparent 80%)',
-                  'radial-gradient(ellipse 100% 70% at 50% 0%, rgba(200, 161, 90, 0.14), transparent 65%)',
+                  'radial-gradient(circle 760px at 28% 46%, rgba(200, 161, 90, 0.26), rgba(22, 63, 50, 0.08) 48%, transparent 78%)',
+                  'radial-gradient(circle 640px at 76% 42%, rgba(200, 161, 90, 0.18), rgba(22, 63, 50, 0.06) 50%, transparent 80%)',
                 ].join(', '),
           }}
         />
 
-        {/* Cursor-Following Warm Brass Ambient Halo */}
+        {/* Cursor-Reactive Cosmic Nebula Halo */}
         <motion.div
           className="absolute w-[720px] h-[720px] rounded-full blur-[140px] -translate-x-1/2 -translate-y-1/2"
           style={{
             left: spotlightX,
             top: spotlightY,
             background: isDark
-              ? 'radial-gradient(circle, rgba(229, 201, 139, 0.17) 0%, rgba(200, 161, 90, 0.09) 40%, transparent 72%)'
-              : 'radial-gradient(circle, rgba(200, 161, 90, 0.24) 0%, rgba(22, 63, 50, 0.06) 42%, transparent 72%)',
+              ? 'radial-gradient(circle, rgba(229, 201, 139, 0.16) 0%, rgba(22, 63, 50, 0.14) 45%, transparent 72%)'
+              : 'radial-gradient(circle, rgba(200, 161, 90, 0.22) 0%, rgba(22, 63, 50, 0.06) 45%, transparent 72%)',
           }}
         />
 
-        {/* Soft Architectural Light Vignette */}
+        {/* 60fps 3D Starfield & Keystroke Energy Particle Canvas */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+        />
+
+        {/* Soft Cosmic Edge Vignette */}
         <div
           className="absolute inset-0"
           style={{
             background: isDark
-              ? 'radial-gradient(ellipse 90% 85% at 50% 50%, transparent 55%, rgba(4, 10, 8, 0.65) 100%)'
-              : 'radial-gradient(ellipse 90% 85% at 50% 50%, transparent 60%, rgba(22, 63, 50, 0.06) 100%)',
+              ? 'radial-gradient(ellipse 92% 88% at 50% 50%, transparent 52%, rgba(2, 6, 4, 0.78) 100%)'
+              : 'radial-gradient(ellipse 92% 88% at 50% 50%, transparent 60%, rgba(22, 63, 50, 0.07) 100%)',
           }}
         />
       </div>
 
       {/* --- LAYER 2: Clean Minimal Top Navigation Bar --- */}
-      <header className="relative z-20 w-full max-w-6xl mx-auto px-6 sm:px-10 pt-6 pb-4 flex items-center justify-between gap-8">
+      <motion.header
+        animate={{
+          opacity: isWarping ? 0 : 1,
+          y: isWarping ? -24 : 0,
+        }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-20 w-full max-w-6xl mx-auto px-6 sm:px-10 pt-6 pb-4 flex items-center justify-between gap-8"
+      >
         {/* Zone 1: Back Link */}
         <Link
           href="/landing"
@@ -619,7 +951,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
               aria-label="Toggle theme"
               className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isDark
-                  ? 'border-[#C8A15A]/25 bg-[#10221C]/80 text-[#E5C98B] hover:border-[#C8A15A]/60'
+                  ? 'border-[#C8A15A]/25 bg-[#0E2019]/80 text-[#E5C98B] hover:border-[#C8A15A]/60'
                   : 'border-[#163F32]/15 bg-white/70 text-[#163F32] hover:border-[#163F32]/40'
               }`}
             >
@@ -637,15 +969,27 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
             </button>
           )}
         </div>
-      </header>
+      </motion.header>
 
       {/* --- LAYER 3: Split Main Stage (Unboxed 3D Cube + Clean Form Card) --- */}
       <main className="relative z-10 flex-1 w-full max-w-6xl mx-auto px-6 sm:px-10 py-6 lg:py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
         {/* LEFT COLUMN: Unboxed Floating 3D Gutenberg Cube + Short Welcome Copy */}
-        <div className="lg:col-span-6 flex flex-col justify-center items-center lg:items-start text-center lg:text-left space-y-6">
-          {/* Unboxed 3D Cube Stage with Warm Brass Spotlight Halo */}
+        <motion.div
+          animate={
+            isWarping
+              ? {
+                  x: typeof window !== 'undefined' && window.innerWidth >= 1024 ? '52%' : 0,
+                  scale: warpStage === 'jump' ? 1.38 : 1.12,
+                }
+              : { x: 0, scale: 1 }
+          }
+          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+          className="lg:col-span-6 flex flex-col justify-center items-center lg:items-start text-center lg:text-left space-y-6"
+        >
+          {/* Unboxed 3D Cube Stage with Cosmic Golden Rings */}
           <div
-            className="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72 lg: -ml-2"
+            ref={cubeStageRef}
+            className="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72 lg:-ml-2"
             style={{ perspective: 1200 }}
           >
             <motion.div
@@ -656,96 +1000,157 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
               }}
               className="relative flex items-center justify-center w-full h-full"
             >
-              {/* Soft Warm Brass Spotlight Plinth Glow behind Cube */}
-              <div
-                className="absolute w-52 h-52 rounded-full blur-3xl pointer-events-none"
+              {/* Soft Golden Cosmos Plinth Glow behind Cube */}
+              <motion.div
+                animate={
+                  isWarping
+                    ? { scale: [1, 1.65, 2.4], opacity: [0.5, 0.9, 0] }
+                    : { scale: 1, opacity: 1 }
+                }
+                transition={{ duration: 1.5 }}
+                className="absolute w-56 h-56 rounded-full blur-3xl pointer-events-none"
                 style={{
                   background: isDark
-                    ? 'radial-gradient(circle, rgba(229, 201, 139, 0.34) 0%, rgba(200, 161, 90, 0.18) 45%, rgba(22, 63, 50, 0.15) 70%, transparent 100%)'
-                    : 'radial-gradient(circle, rgba(200, 161, 90, 0.38) 0%, rgba(22, 63, 50, 0.14) 55%, transparent 100%)',
+                    ? 'radial-gradient(circle, rgba(229, 201, 139, 0.38) 0%, rgba(200, 161, 90, 0.20) 45%, rgba(22, 63, 50, 0.18) 70%, transparent 100%)'
+                    : 'radial-gradient(circle, rgba(200, 161, 90, 0.42) 0%, rgba(22, 63, 50, 0.15) 55%, transparent 100%)',
                 }}
               />
 
-              {/* Subtle Orbital Brass Ring */}
+              {/* Outer Celestial Orbital Ring */}
               <motion.div
-                animate={{ rotateZ: 360 }}
-                transition={{ duration: 54, repeat: Infinity, ease: 'linear' }}
+                animate={{
+                  rotateZ: 360,
+                  scale: isWarping ? 1.45 : 1,
+                }}
+                transition={{
+                  rotateZ: {
+                    duration: isWarping ? 4 : 50,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  },
+                  scale: { duration: 0.8 },
+                }}
                 className={`absolute inset-2 rounded-full border border-dashed pointer-events-none ${
-                  isDark ? 'border-[#C8A15A]/25' : 'border-[#163F32]/20'
+                  isDark ? 'border-[#C8A15A]/30' : 'border-[#163F32]/25'
                 }`}
               />
 
-              {/* Inner Subtle Ring */}
+              {/* Inner Celestial Ring */}
               <motion.div
-                animate={{ rotateZ: -360 }}
-                transition={{ duration: 38, repeat: Infinity, ease: 'linear' }}
+                animate={{
+                  rotateZ: -360,
+                  scale: isWarping ? 1.25 : 1,
+                }}
+                transition={{
+                  rotateZ: {
+                    duration: isWarping ? 3 : 34,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  },
+                  scale: { duration: 0.8 },
+                }}
                 className={`absolute inset-9 rounded-full border pointer-events-none ${
-                  isDark ? 'border-[#C8A15A]/15' : 'border-[#C8A15A]/35'
+                  isDark ? 'border-[#E5C98B]/20' : 'border-[#C8A15A]/40'
                 }`}
               />
 
               {/* Interactive 3D Gutenberg Cube */}
               <div className="relative z-10">
                 <GutenbergTypeBlock3D
-                  size={148}
+                  size={152}
                   activeFace={activeCubeFace}
                   activityPulse={keystrokePulse}
                   scrollPct={completionPct}
-                  interactiveStamp={true}
+                  interactiveStamp={!isWarping}
+                  warpSpin={isWarping}
                   onStampFace={(nextFace) => {
                     setFocusedField(null);
                     setManualFaceOverride(nextFace);
-                    pulseCube();
+                    pulseCube(false);
                   }}
                 />
               </div>
             </motion.div>
           </div>
 
-          {/* Concise Welcome Copy */}
+          {/* Concise Welcome Copy or Post-Login Launch Status */}
           <div className="space-y-2.5 max-w-md">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={mode}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="space-y-2.5"
-              >
-                <h1
-                  className={`text-4xl sm:text-5xl font-normal tracking-tight leading-[1.1] ${
-                    isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
-                  }`}
-                  style={{
-                    fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
-                    textWrap: 'balance',
-                  }}
+              {isWarping ? (
+                <motion.div
+                  key="warp-copy"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.35 }}
+                  className="space-y-2 text-center"
                 >
-                  {copy.headlineStart}{' '}
-                  <span
-                    className={`italic font-normal ${
-                      isDark ? 'text-[#E5C98B]' : 'text-[#163F32]'
+                  <h2
+                    className={`text-3xl sm:text-4xl font-normal tracking-tight ${
+                      isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                    }`}
+                    style={{
+                      fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                    }}
+                  >
+                    Entering{' '}
+                    <span className="italic text-[#E5C98B]">Studio...</span>
+                  </h2>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={mode}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="space-y-2.5"
+                >
+                  <h1
+                    className={`text-4xl sm:text-5xl font-normal tracking-tight leading-[1.1] ${
+                      isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                    }`}
+                    style={{
+                      fontFamily: "'Fraunces', 'Instrument Serif', Georgia, serif",
+                      textWrap: 'balance',
+                    }}
+                  >
+                    {copy.headlineStart}{' '}
+                    <span
+                      className={`italic font-normal ${
+                        isDark ? 'text-[#E5C98B]' : 'text-[#163F32]'
+                      }`}
+                    >
+                      {copy.headlineItalic}
+                    </span>
+                  </h1>
+
+                  <p
+                    className={`text-base leading-relaxed ${
+                      isDark ? 'text-[#B4C4BC]' : 'text-[#4A5A52]'
                     }`}
                   >
-                    {copy.headlineItalic}
-                  </span>
-                </h1>
-
-                <p
-                  className={`text-base leading-relaxed ${
-                    isDark ? 'text-[#B4C4BC]' : 'text-[#4A5A52]'
-                  }`}
-                >
-                  {copy.subtext}
-                </p>
-              </motion.div>
+                    {copy.subtext}
+                  </p>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
 
         {/* RIGHT COLUMN: Clean Form Card with Everyday Labels */}
-        <div className="lg:col-span-6 w-full max-w-[440px] mx-auto">
+        <motion.div
+          ref={formCardRef}
+          animate={
+            isWarping
+              ? { opacity: 0, scale: 0.9, y: 20, filter: 'blur(8px)' }
+              : { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
+          }
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className={`lg:col-span-6 w-full max-w-[440px] mx-auto ${
+            isWarping ? 'pointer-events-none' : ''
+          }`}
+        >
           <motion.div
             key={shakeKey}
             animate={
@@ -758,10 +1163,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
           >
             {/* Card Container */}
             <div
-              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 backdrop-blur-md ${
+              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 backdrop-blur-xl ${
                 isDark
-                  ? 'bg-[#0D1D17]/90 border-[#C8A15A]/25 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.75)]'
-                  : 'bg-[#FCFBF7]/95 border-[#163F32]/15 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.12)]'
+                  ? 'bg-[#0B1914]/85 border-[#C8A15A]/25 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.8)]'
+                  : 'bg-[#FCFBF7]/90 border-[#163F32]/15 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.12)]'
               }`}
             >
               {/* Mode Switcher Tabs (Sign In vs Sign Up) */}
@@ -769,7 +1174,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                 <div
                   className={`relative grid grid-cols-2 p-1 rounded-xl border mb-6 ${
                     isDark
-                      ? 'bg-[#08130F] border-[#C8A15A]/15'
+                      ? 'bg-[#06100C] border-[#C8A15A]/15'
                       : 'bg-[#EFECE1] border-[#163F32]/10'
                   }`}
                 >
@@ -919,17 +1324,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                           value={email}
                           onFocus={() => {
                             setFocusedField('email');
-                            pulseCube();
+                            pulseCube(false);
                           }}
                           onBlur={() => setFocusedField(null)}
                           onChange={(e) => {
                             setEmail(e.target.value);
-                            pulseCube();
+                            pulseCube(true);
                           }}
                           placeholder="you@example.com"
                           className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
@@ -1001,17 +1406,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                           value={password}
                           onFocus={() => {
                             setFocusedField('password');
-                            pulseCube();
+                            pulseCube(false);
                           }}
                           onBlur={() => setFocusedField(null)}
                           onChange={(e) => {
                             setPassword(e.target.value);
-                            pulseCube();
+                            pulseCube(true);
                           }}
                           placeholder="••••••••"
                           className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
@@ -1088,17 +1493,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                           value={name}
                           onFocus={() => {
                             setFocusedField('name');
-                            pulseCube();
+                            pulseCube(false);
                           }}
                           onBlur={() => setFocusedField(null)}
                           onChange={(e) => {
                             setName(e.target.value);
-                            pulseCube();
+                            pulseCube(true);
                           }}
                           placeholder="Your name"
                           className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
@@ -1130,17 +1535,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                           value={email}
                           onFocus={() => {
                             setFocusedField('email');
-                            pulseCube();
+                            pulseCube(false);
                           }}
                           onBlur={() => setFocusedField(null)}
                           onChange={(e) => {
                             setEmail(e.target.value);
-                            pulseCube();
+                            pulseCube(true);
                           }}
                           placeholder="you@example.com"
                           className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                             isDark
-                              ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                              ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                               : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                           }`}
                         />
@@ -1190,17 +1595,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             value={password}
                             onFocus={() => {
                               setFocusedField('password');
-                              pulseCube();
+                              pulseCube(false);
                             }}
                             onBlur={() => setFocusedField(null)}
                             onChange={(e) => {
                               setPassword(e.target.value);
-                              pulseCube();
+                              pulseCube(true);
                             }}
                             placeholder="Min 6 chars"
                             className={`w-full pl-10 pr-9 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                               isDark
-                                ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                                 : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                             }`}
                           />
@@ -1235,17 +1640,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                             value={confirmPassword}
                             onFocus={() => {
                               setFocusedField('confirm');
-                              pulseCube();
+                              pulseCube(false);
                             }}
                             onBlur={() => setFocusedField(null)}
                             onChange={(e) => {
                               setConfirmPassword(e.target.value);
-                              pulseCube();
+                              pulseCube(true);
                             }}
                             placeholder="Repeat password"
                             className={`w-full pl-10 pr-3 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                               isDark
-                                ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                                 : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                             }`}
                           />
@@ -1344,17 +1749,17 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               value={forgotEmail}
                               onFocus={() => {
                                 setFocusedField('email');
-                                pulseCube();
+                                pulseCube(false);
                               }}
                               onBlur={() => setFocusedField(null)}
                               onChange={(e) => {
                                 setForgotEmail(e.target.value);
-                                pulseCube();
+                                pulseCube(true);
                               }}
                               placeholder="you@example.com"
                               className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                  ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1419,7 +1824,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               type="button"
                               onClick={() => {
                                 setOtpDigits(otpPreview.split(''));
-                                pulseCube();
+                                pulseCube(true);
                               }}
                               className="text-xs font-medium px-2.5 py-1 rounded bg-[#163F32] text-[#F7F4EC] hover:opacity-90 cursor-pointer"
                             >
@@ -1446,7 +1851,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               onPaste={idx === 0 ? handleOtpPaste : undefined}
                               className={`w-full aspect-square text-center text-lg font-mono font-bold rounded-xl border transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#08130F] border-[#C8A15A]/30 text-[#E5C98B] focus:border-[#C8A15A]'
+                                  ? 'bg-[#06100C] border-[#C8A15A]/30 text-[#E5C98B] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/25 text-[#163F32] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1525,12 +1930,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               onBlur={() => setFocusedField(null)}
                               onChange={(e) => {
                                 setNewPassword(e.target.value);
-                                pulseCube();
+                                pulseCube(true);
                               }}
                               placeholder="At least 6 characters"
                               className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
+                                  ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1555,12 +1960,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               onBlur={() => setFocusedField(null)}
                               onChange={(e) => {
                                 setConfirmNewPassword(e.target.value);
-                                pulseCube();
+                                pulseCube(true);
                               }}
                               placeholder="Repeat new password"
                               className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
-                                  ? 'bg-[#08130F] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
+                                  ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
                                   : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] focus:border-[#163F32] focus:bg-white'
                               }`}
                             />
@@ -1655,7 +2060,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       onClick={() => signIn('google', { callbackUrl: '/studio' })}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
-                          ? 'bg-[#08130F] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
+                          ? 'bg-[#06100C] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
                           : 'bg-[#F7F4EC] border-[#163F32]/15 text-[#18211D] hover:bg-[#EFECE1]'
                       }`}
                     >
@@ -1668,7 +2073,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       onClick={() => signIn('github', { callbackUrl: '/studio' })}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
-                          ? 'bg-[#08130F] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
+                          ? 'bg-[#06100C] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
                           : 'bg-[#F7F4EC] border-[#163F32]/15 text-[#18211D] hover:bg-[#EFECE1]'
                       }`}
                     >
@@ -1680,10 +2085,26 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
               )}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </main>
 
-      {/* Subtle Bottom Spacer for Vertical Balance */}
+      {/* --- LAYER 4: Post-Login Golden Warp Flash Overlay --- */}
+      <AnimatePresence>
+        {warpStage === 'jump' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.25, 0.92] }}
+            transition={{ duration: 1.25, ease: 'easeIn' }}
+            className="pointer-events-none fixed inset-0 z-50"
+            style={{
+              background: isDark
+                ? 'radial-gradient(circle at 50% 50%, rgba(229, 201, 139, 0.85) 0%, rgba(22, 63, 50, 0.95) 55%, #050B09 100%)'
+                : 'radial-gradient(circle at 50% 50%, rgba(229, 201, 139, 0.9) 0%, #F7F4EC 80%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="h-6" />
     </div>
   );

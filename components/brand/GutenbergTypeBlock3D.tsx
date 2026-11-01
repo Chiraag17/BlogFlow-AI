@@ -17,6 +17,8 @@ export interface GutenbergTypeBlock3DProps {
   interactiveStamp?: boolean;
   /** Optional callback when user clicks/stamps the 3D block */
   onStampFace?: (nextFace: TypeBlockFace) => void;
+  /** Optional high-speed 3D spin state for post-login warp sequence */
+  warpSpin?: boolean;
   /** Optional className for wrapper */
   className?: string;
 }
@@ -38,6 +40,7 @@ export default function GutenbergTypeBlock3D({
   activityPulse = 0,
   interactiveStamp = true,
   onStampFace,
+  warpSpin = false,
   className = '',
 }: GutenbergTypeBlock3DProps) {
   const [internalFace, setInternalFace] = useState<TypeBlockFace>(activeFace);
@@ -81,17 +84,22 @@ export default function GutenbergTypeBlock3D({
   // Activity pulse imparts a subtle 12-degree mechanical tick
   const pulseYaw = (activityPulse % 4) * 4;
 
-  const finalRx = mountTumble
+  const finalRx = warpSpin
+    ? 344
+    : mountTumble
     ? 65
     : base.rx + hoverAngles.rx + scrollPitch + (stamping ? 8 : 0);
-  const finalRy = mountTumble
+  const finalRy = warpSpin
+    ? 704
+    : mountTumble
     ? -195
     : base.ry + hoverAngles.ry + scrollYaw + pulseYaw;
-  const finalRz = mountTumble ? -18 : base.rz;
-  const finalTz = stamping ? -6 : hoverAngles.hovering ? 3 : 0;
-  const finalScale = stamping ? 0.91 : hoverAngles.hovering ? 1.06 : 1;
+  const finalRz = warpSpin ? 360 : mountTumble ? -18 : base.rz;
+  const finalTz = warpSpin ? 24 : stamping ? -6 : hoverAngles.hovering ? 3 : 0;
+  const finalScale = warpSpin ? 1.18 : stamping ? 0.91 : hoverAngles.hovering ? 1.06 : 1;
 
   const handlePointerMove = (e: React.PointerEvent<HTMLSpanElement>) => {
+    if (warpSpin) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = (e.clientX - rect.left) / rect.width - 0.5;
     const ny = (e.clientY - rect.top) / rect.height - 0.5;
@@ -107,9 +115,7 @@ export default function GutenbergTypeBlock3D({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLSpanElement>) => {
-    if (!interactiveStamp) return;
-    // If inside a link and user clicks directly on the 3D cube, still allow navigation unless shift/alt or onStampFace is used,
-    // while cycling the 3D face and firing the ink-stamp animation
+    if (!interactiveStamp || warpSpin) return;
     const currentIdx = FACE_ORDER.indexOf(internalFace);
     const nextFace = FACE_ORDER[(currentIdx + 1) % FACE_ORDER.length];
     setInternalFace(nextFace);
@@ -117,7 +123,6 @@ export default function GutenbergTypeBlock3D({
     setStampRippleKey((k) => k + 1);
     onStampFace?.(nextFace);
     setTimeout(() => setStamping(false), 240);
-    // Do not call e.preventDefault() so parent <Link> navigation still works seamlessly
     void e;
   };
 
@@ -150,11 +155,14 @@ export default function GutenbergTypeBlock3D({
       aria-hidden="true"
     >
       {/* Expanding Brushed-Brass Letterpress Ink Stamp Ripple */}
-      {stampRippleKey > 0 && (
+      {(stampRippleKey > 0 || warpSpin) && (
         <span
-          key={stampRippleKey}
-          className="pointer-events-none absolute inset-0 rounded-md border border-[#C8A15A] animate-ping"
-          style={{ animationDuration: '480ms', animationIterationCount: 1 }}
+          key={warpSpin ? 'warp-ripple' : stampRippleKey}
+          className="pointer-events-none absolute inset-0 rounded-xl border border-[#E5C98B] animate-ping"
+          style={{
+            animationDuration: warpSpin ? '650ms' : '480ms',
+            animationIterationCount: warpSpin ? 'infinite' : 1,
+          }}
         />
       )}
 
@@ -176,7 +184,9 @@ export default function GutenbergTypeBlock3D({
           position: 'relative',
           transformStyle: 'preserve-3d',
           transform: `translateZ(${finalTz}px) rotateX(${finalRx.toFixed(1)}deg) rotateY(${finalRy.toFixed(1)}deg) rotateZ(${finalRz.toFixed(1)}deg) scale(${finalScale})`,
-          transition: hoverAngles.hovering
+          transition: warpSpin
+            ? 'transform 1350ms cubic-bezier(0.22, 1, 0.36, 1)'
+            : hoverAngles.hovering
             ? 'transform 140ms cubic-bezier(0.16, 1, 0.3, 1)'
             : 'transform 560ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
@@ -191,10 +201,8 @@ export default function GutenbergTypeBlock3D({
             boxShadow: 'inset 0 1px 2px rgba(229, 201, 139, 0.45), inset 0 -2px 4px rgba(0,0,0,0.6)',
           }}
         >
-          {/* Corner Foundry Studs */}
           <span className="absolute top-1 left-1 w-1 h-1 rounded-full bg-[#C8A15A]/70" />
           <span className="absolute top-1 right-1 w-1 h-1 rounded-full bg-[#C8A15A]/70" />
-          {/* Raised Relief Serif 'B' */}
           <span
             style={{
               fontFamily: "'Fraunces', 'Playfair Display', Georgia, serif",
@@ -208,7 +216,6 @@ export default function GutenbergTypeBlock3D({
           >
             B
           </span>
-          {/* Signature Gutenberg Type Alignment Nick on Bottom Bevel */}
           <span
             className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-full bg-[#C8A15A]"
             style={{ width: `${Math.max(8, Math.round(size * 0.32))}px`, height: '2.5px' }}
