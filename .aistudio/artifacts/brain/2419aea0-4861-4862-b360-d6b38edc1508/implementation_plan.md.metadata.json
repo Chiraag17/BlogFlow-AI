@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to fix the post-login 404 error by routing authenticated users to /dashboard (or their requested callbackUrl) and providing a /studio route alias so neither URL ever 404s.",
-  "updatedAt":  "2026-11-01T11:50:29.957545907Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Implementation plan to replace the landing page hero text intro with a 3D Gutenberg Cube Spin & 6-Face Shatter Reveal animation, remove the 'AI-Powered Editorial Automation · Interactive 3D Studio' kicker text completely, and allow replaying the 3D shatter sequence by clicking the brand logo.",
+  "updatedAt": "2026-11-02T15:22:57.380029837Z",
+  "requestFeedback": true,
+  "userFacing": true
 }

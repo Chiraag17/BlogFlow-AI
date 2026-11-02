@@ -156,7 +156,7 @@ const NAV_LINKS: { id: string; label: string; href: string; face: TypeBlockFace 
   { id: 'features', label: 'Features', href: '#features', face: 'seal' },
 ];
 
-function LandingNavbar() {
+function LandingNavbar({ onReplayHero }: { onReplayHero: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
   const [activeNavId, setActiveNavId] = useState<string>('hero');
@@ -206,7 +206,15 @@ function LandingNavbar() {
     >
       <div className="lp-nav-main-row">
         <div className="lp-nav-brand-cluster">
-          <Link href="/" className="lp-nav-logo">
+          <Link
+            href="#hero"
+            onClick={(e) => {
+              e.preventDefault();
+              onReplayHero();
+            }}
+            className="lp-nav-logo"
+            title="Click to replay 3D Gutenberg Cube reveal"
+          >
             <GutenbergTypeBlock3D
               size={32}
               activeFace={activeNavFace}
@@ -311,14 +319,362 @@ const HERO_CHAPTER_INDEX: ChapterStageSpec[] = [
 const HERO_REVEAL_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const HERO_MORPH_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
+interface CubeShardSpec {
+  id: number;
+  tx: number;
+  ty: number;
+  tz: number;
+  rot: number;
+  size: number;
+  isDiamond: boolean;
+  color: string;
+}
+
+const CUBE_SHATTER_SHARDS: CubeShardSpec[] = Array.from({ length: 24 }, (_, idx) => {
+  const angle = (idx / 24) * Math.PI * 2 + (idx % 3) * 0.18;
+  const dist = 160 + (idx % 4) * 75;
+  return {
+    id: idx,
+    tx: Math.round(Math.cos(angle) * dist),
+    ty: Math.round(Math.sin(angle) * dist * 0.85),
+    tz: 80 + (idx % 5) * 45,
+    rot: (idx % 2 === 0 ? 1 : -1) * (140 + idx * 18),
+    size: 5 + (idx % 4) * 3,
+    isDiamond: idx % 2 === 0,
+    color: idx % 3 === 0 ? '#E5C98B' : idx % 3 === 1 ? '#C8A15A' : '#163F32',
+  };
+});
+
+/**
+ * 3D Gutenberg Cube that spins across its 6 engraved faces and shatters outward in 3D space
+ */
+function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
+  const size = 164;
+  const half = size / 2;
+  const isShatter = phase === 'shatter';
+
+  const faceCommonStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: `${size}px`,
+    height: `${size}px`,
+    borderRadius: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    userSelect: 'none',
+    backfaceVisibility: 'visible',
+    WebkitBackfaceVisibility: 'visible',
+    transition: isShatter
+      ? 'transform 760ms cubic-bezier(0.16, 1, 0.3, 1), opacity 680ms ease-out, filter 680ms ease-out'
+      : 'transform 300ms ease-out',
+  };
+
+  return (
+    <div
+      className="relative flex items-center justify-center select-none pointer-events-none"
+      style={{
+        width: 340,
+        height: 340,
+        perspective: 1400,
+      }}
+    >
+      {/* Warm Brass Radial Core Glow */}
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={
+          isShatter
+            ? { scale: [1.1, 2.5, 3.2], opacity: [0.95, 0.45, 0] }
+            : { scale: [0.85, 1.15, 1.05], opacity: [0.4, 0.85, 0.75] }
+        }
+        transition={{ duration: isShatter ? 0.72 : 0.9, ease: 'easeOut' }}
+        className="absolute w-64 h-64 rounded-full blur-3xl"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(229, 201, 139, 0.55) 0%, rgba(200, 161, 90, 0.28) 45%, rgba(22, 63, 50, 0.18) 72%, transparent 100%)',
+        }}
+      />
+
+      {/* Outer Calibrated Brass Orbital Ring */}
+      <motion.div
+        initial={{ scale: 0.6, opacity: 0, rotateZ: 0 }}
+        animate={
+          isShatter
+            ? { scale: 2.35, opacity: 0, rotateZ: 190 }
+            : { scale: 1, opacity: 0.75, rotateZ: 120 }
+        }
+        transition={{ duration: isShatter ? 0.68 : 0.95, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute w-72 h-72 rounded-full border border-dashed border-[#C8A15A]/45"
+      />
+
+      {/* Inner Counter-Rotating Vernier Ring */}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0, rotateZ: 0 }}
+        animate={
+          isShatter
+            ? { scale: 1.95, opacity: 0, rotateZ: -160 }
+            : { scale: 1, opacity: 0.6, rotateZ: -95 }
+        }
+        transition={{ duration: isShatter ? 0.62 : 0.95, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute w-56 h-56 rounded-full border border-[#163F32]/35 dark:border-[#E5C98B]/30"
+      />
+
+      {/* Shatter Shockwave Ring */}
+      {isShatter && (
+        <motion.div
+          initial={{ scale: 0.35, opacity: 1 }}
+          animate={{ scale: 2.9, opacity: 0 }}
+          transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute w-52 h-52 rounded-full border-2 border-[#E5C98B] shadow-[0_0_50px_rgba(200,161,90,0.8)]"
+        />
+      )}
+
+      {/* 24 Exploding Golden Brass & Emerald Shards on Shatter */}
+      {isShatter &&
+        CUBE_SHATTER_SHARDS.map((shard) => (
+          <motion.span
+            key={shard.id}
+            initial={{ x: 0, y: 0, scale: 0.4, opacity: 1, rotate: 0 }}
+            animate={{
+              x: shard.tx,
+              y: shard.ty,
+              scale: [1.2, 0.85, 0],
+              opacity: [1, 0.85, 0],
+              rotate: shard.rot,
+            }}
+            transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'absolute',
+              width: shard.size,
+              height: shard.size,
+              backgroundColor: shard.color,
+              borderRadius: shard.isDiamond ? '2px' : '9999px',
+              boxShadow: '0 0 12px rgba(229, 201, 139, 0.75)',
+            }}
+          />
+        ))}
+
+      {/* 6-FACED 3D GUTENBERG TYPE-BLOCK MATRIX */}
+      <motion.div
+        initial={{
+          rotateX: -18,
+          rotateY: -32,
+          rotateZ: -8,
+          scale: 0.72,
+        }}
+        animate={
+          isShatter
+            ? {
+                rotateX: 28,
+                rotateY: 410,
+                rotateZ: 18,
+                scale: 1.08,
+              }
+            : {
+                rotateX: [-18, 22, -14],
+                rotateY: [-32, 165, 338],
+                rotateZ: [-8, 12, 0],
+                scale: [0.72, 1.04, 1],
+              }
+        }
+        transition={{
+          duration: isShatter ? 0.68 : 0.95,
+          ease: isShatter ? [0.16, 1, 0.3, 1] : [0.22, 1, 0.36, 1],
+        }}
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          position: 'relative',
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        {/* 1. FRONT FACE: Raised 'B' Gutenberg Serif Monogram */}
+        <span
+          style={{
+            ...faceCommonStyle,
+            transform: isShatter
+              ? `translate3d(-195px, -110px, 260px) rotateX(42deg) rotateY(-58deg) rotateZ(-28deg) scale(0.74)`
+              : `rotateY(0deg) translateZ(${half}px)`,
+            opacity: isShatter ? 0 : 1,
+            filter: isShatter ? 'blur(4px)' : 'none',
+            background: 'linear-gradient(145deg, #184537 0%, #0E2920 65%, #091B15 100%)',
+            border: '2px solid #C8A15A',
+            boxShadow:
+              '0 18px 40px rgba(0,0,0,0.45), inset 0 1px 3px rgba(229, 201, 139, 0.5)',
+          }}
+        >
+          <span className="absolute top-3 left-3 w-2 h-2 rounded-full bg-[#C8A15A]/80" />
+          <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#C8A15A]/80" />
+          <span
+            style={{
+              fontFamily: "'Fraunces', 'Playfair Display', Georgia, serif",
+              fontSize: '92px',
+              fontWeight: 700,
+              lineHeight: 1,
+              color: '#F7F4EC',
+              textShadow: '0 2px 0 #C8A15A, 0 6px 14px rgba(0,0,0,0.65)',
+            }}
+          >
+            B
+          </span>
+          <span
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-full bg-[#C8A15A]"
+            style={{ width: '52px', height: '5px' }}
+          />
+        </span>
+
+        {/* 2. RIGHT FACE: Brushed-Brass Fountain Pen Nib */}
+        <span
+          style={{
+            ...faceCommonStyle,
+            transform: isShatter
+              ? `translate3d(240px, -85px, 190px) rotateX(-38deg) rotateY(142deg) rotateZ(34deg) scale(0.72)`
+              : `rotateY(90deg) translateZ(${half}px)`,
+            opacity: isShatter ? 0 : 1,
+            filter: isShatter ? 'blur(4px)' : 'none',
+            background: 'linear-gradient(135deg, #E5C98B 0%, #C8A15A 52%, #8F6D2E 100%)',
+            border: '2px solid #F7F4EC',
+            boxShadow: '0 18px 40px rgba(0,0,0,0.4)',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" style={{ width: '96px', height: '96px' }}>
+            <path
+              d="M12 3L18 14L15 21H9L6 14L12 3Z"
+              stroke="#0E2920"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <line x1="12" y1="3" x2="12" y2="13" stroke="#0E2920" strokeWidth="1.8" />
+            <circle cx="12" cy="14" r="2" fill="#0E2920" />
+          </svg>
+        </span>
+
+        {/* 3. BACK FACE: Editorial Section Mark '§' */}
+        <span
+          style={{
+            ...faceCommonStyle,
+            transform: isShatter
+              ? `translate3d(175px, 165px, -210px) rotateX(-52deg) rotateY(235deg) rotateZ(-40deg) scale(0.68)`
+              : `rotateY(180deg) translateZ(${half}px)`,
+            opacity: isShatter ? 0 : 1,
+            filter: isShatter ? 'blur(5px)' : 'none',
+            background: 'linear-gradient(145deg, #123328 0%, #0A1D16 100%)',
+            border: '2px solid #C8A15A',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontSize: '90px',
+              fontWeight: 700,
+              lineHeight: 1,
+              color: '#C8A15A',
+            }}
+          >
+            §
+          </span>
+        </span>
+
+        {/* 4. LEFT FACE: Calibrated Optical Loupe */}
+        <span
+          style={{
+            ...faceCommonStyle,
+            transform: isShatter
+              ? `translate3d(-245px, 105px, 175px) rotateX(34deg) rotateY(-148deg) rotateZ(-32deg) scale(0.72)`
+              : `rotateY(-90deg) translateZ(${half}px)`,
+            opacity: isShatter ? 0 : 1,
+            filter: isShatter ? 'blur(4px)' : 'none',
+            background: 'linear-gradient(135deg, #163F32 0%, #0D261E 100%)',
+            border: '2px solid #C8A15A',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" style={{ width: '92px', height: '92px' }}>
+            <circle cx="10.5" cy="10.5" r="6.5" stroke="#C8A15A" strokeWidth="2" />
+            <line
+              x1="15.5"
+              y1="15.5"
+              x2="20.5"
+              y2="20.5"
+              stroke="#F7F4EC"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            />
+            <circle cx="10.5" cy="10.5" r="2" fill="#F7F4EC" />
+          </svg>
+        </span>
+
+        {/* 5. TOP FACE: Fluted Brass Approval Seal */}
+        <span
+          style={{
+            ...faceCommonStyle,
+            transform: isShatter
+              ? `translate3d(35px, -225px, 210px) rotateX(145deg) rotateY(38deg) rotateZ(45deg) scale(0.72)`
+              : `rotateX(90deg) translateZ(${half}px)`,
+            opacity: isShatter ? 0 : 1,
+            filter: isShatter ? 'blur(4px)' : 'none',
+            background: 'radial-gradient(circle at 50% 50%, #E5C98B 0%, #C8A15A 65%, #8A6829 100%)',
+            border: '2px solid #163F32',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" style={{ width: '98px', height: '98px' }}>
+            <circle
+              cx="12"
+              cy="12"
+              r="8"
+              stroke="#0E2920"
+              strokeWidth="1.8"
+              strokeDasharray="3 2"
+            />
+            <path
+              d="M8.5 12.5L11 15L15.8 9.5"
+              stroke="#0E2920"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+
+        {/* 6. BOTTOM FACE: Cast Foundry Base Plate */}
+        <span
+          style={{
+            ...faceCommonStyle,
+            transform: isShatter
+              ? `translate3d(-45px, 230px, 180px) rotateX(-145deg) rotateY(-32deg) rotateZ(-36deg) scale(0.7)`
+              : `rotateX(-90deg) translateZ(${half}px)`,
+            opacity: isShatter ? 0 : 1,
+            filter: isShatter ? 'blur(4px)' : 'none',
+            background: '#091510',
+            border: '2px solid rgba(200, 161, 90, 0.65)',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'monospace',
+              fontSize: '34px',
+              fontWeight: 700,
+              color: '#C8A15A',
+              letterSpacing: '0.08em',
+            }}
+          >
+            1450
+          </span>
+        </span>
+      </motion.div>
+    </div>
+  );
+}
+
 function HeroSection({
   activeDeskStage,
   onSelectDeskStage,
+  replayKey,
 }: {
   activeDeskStage: DeskStage;
   onSelectDeskStage: (stage: DeskStage) => void;
+  replayKey: number;
 }) {
-  const [heroStage, setHeroStage] = useState<'center' | 'split'>('center');
+  const [heroStage, setHeroStage] = useState<'spin' | 'shatter' | 'split'>('spin');
   const heroSectionRef = useRef<HTMLElement | null>(null);
 
   const { scrollYProgress: heroScrollProgress } = useScroll({
@@ -343,19 +699,30 @@ function HeroSection({
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReduced) {
+    if (prefersReduced && replayKey === 0) {
       setHeroStage('split');
       return;
     }
 
-    const timer = setTimeout(() => {
+    setHeroStage('spin');
+
+    const shatterTimer = setTimeout(() => {
+      setHeroStage('shatter');
+    }, 920);
+
+    const splitTimer = setTimeout(() => {
       setHeroStage('split');
-    }, 850);
+    }, 1620);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(shatterTimer);
+      clearTimeout(splitTimer);
+    };
+  }, [replayKey]);
 
-  const isSplit = heroStage === 'split';
+  // Begin revealing the Hero content as the 3D cube shatters outward
+  const isRevealed = heroStage === 'shatter' || heroStage === 'split';
+  const showCubeOverlay = heroStage === 'spin' || heroStage === 'shatter';
   const activeChapter =
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
 
@@ -368,77 +735,23 @@ function HeroSection({
     >
       <div className="lp-hero-bg" aria-hidden="true" />
 
-      {/* ACT I: Center-Stage Keynote Reveal Overlay (0.0s -> 0.85s) */}
+      {/* ACT I: 3D Gutenberg Cube Spin & 6-Face Shatter Reveal Stage */}
       <AnimatePresence>
-        {!isSplit && (
+        {showCubeOverlay && (
           <motion.div
-            key="hero-center-keynote"
+            key={`cube-shatter-stage-${replayKey}`}
             className="lp-hero-center-stage"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.42, ease: HERO_REVEAL_EASE }}
+            transition={{ duration: 0.35, ease: HERO_REVEAL_EASE }}
             aria-hidden="true"
           >
-            <div className="lp-hero-center-inner">
-              <motion.div
-                layoutId="hero-kicker-morph"
-                transition={{ duration: 0.82, ease: HERO_MORPH_EASE }}
-                className="lp-hero-kicker lp-hero-kicker-center"
-              >
-                AI-Powered Editorial Automation · Interactive 3D Studio
-              </motion.div>
-
-              <motion.div
-                layoutId="hero-headline-morph"
-                transition={{ duration: 0.88, ease: HERO_MORPH_EASE }}
-                className="lp-hero-headline lp-hero-headline-center"
-              >
-                <span className="lp-hero-headline-row">
-                  <span className="lp-hero-word-mask">
-                    <motion.span
-                      className="lp-hero-word-inner"
-                      initial={{ y: '110%', opacity: 0 }}
-                      animate={{ y: '0%', opacity: 1 }}
-                      transition={{ duration: 0.52, delay: 0.04, ease: HERO_REVEAL_EASE }}
-                    >
-                      Research.
-                    </motion.span>
-                  </span>{' '}
-                  <span className="lp-hero-word-mask">
-                    <motion.span
-                      className="lp-hero-word-inner"
-                      initial={{ y: '110%', opacity: 0 }}
-                      animate={{ y: '0%', opacity: 1 }}
-                      transition={{ duration: 0.52, delay: 0.18, ease: HERO_REVEAL_EASE }}
-                    >
-                      Think.
-                    </motion.span>
-                  </span>
-                </span>
-                <span className="lp-hero-word-mask">
-                  <motion.em
-                    className="lp-hero-word-inner italic text-[var(--lp-primary)]"
-                    initial={{ y: '110%', opacity: 0 }}
-                    animate={{ y: '0%', opacity: 1 }}
-                    transition={{ duration: 0.56, delay: 0.32, ease: HERO_REVEAL_EASE }}
-                  >
-                    Publish.
-                  </motion.em>
-                </span>
-              </motion.div>
-
-              <motion.div
-                className="lp-hero-center-seam"
-                initial={{ scaleX: 0, opacity: 0 }}
-                animate={{ scaleX: 1, opacity: 1 }}
-                transition={{ duration: 0.58, delay: 0.24, ease: HERO_REVEAL_EASE }}
-              />
-            </div>
+            <HeroShatterCube3D phase={heroStage === 'shatter' ? 'shatter' : 'spin'} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ACT II: Split-Column Studio Layout (Clean Editorial Copy Left, 3D Desk Right) */}
+      {/* ACT II: Split-Column Studio Layout (Emerges from the shattering 3D cube core) */}
       <motion.div
         className="lp-container lp-hero-dive-stage"
         style={{
@@ -450,58 +763,39 @@ function HeroSection({
         }}
       >
         <div className="lp-hero-inner">
-
-          {/* Left: Uncluttered Editorial Copy + CTAs + Social Proof */}
+          {/* Left: Leads directly with "Research. Think. Publish." (No kicker text) */}
           <div className="lp-hero-left">
-            {isSplit ? (
-              <motion.div
-                layoutId="hero-kicker-morph"
-                transition={{ duration: 0.82, ease: HERO_MORPH_EASE }}
-                className="lp-hero-kicker"
-              >
-                AI-Powered Editorial Automation · Interactive 3D Studio
-              </motion.div>
-            ) : (
-              <div className="lp-hero-kicker opacity-0 pointer-events-none">
-                AI-Powered Editorial Automation · Interactive 3D Studio
-              </div>
-            )}
-
-            {isSplit ? (
-              <motion.h1
-                layoutId="hero-headline-morph"
-                transition={{ duration: 0.88, ease: HERO_MORPH_EASE }}
-                className="lp-hero-headline"
-                id="hero-headline"
-              >
-                <span className="lp-hero-headline-row">
-                  <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
-                  <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
-                </span>
-                <KineticText
-                  text="Publish."
-                  as="em"
-                  className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
-                />
-              </motion.h1>
-            ) : (
-              <h1 className="lp-hero-headline opacity-0 pointer-events-none" id="hero-headline">
-                <span className="lp-hero-headline-row">
-                  <span>Research.</span> <span>Think.</span>
-                </span>
-                <em>Publish.</em>
-              </h1>
-            )}
+            <motion.h1
+              className="lp-hero-headline"
+              id="hero-headline"
+              initial={false}
+              animate={
+                isRevealed
+                  ? { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+                  : { opacity: 0, y: 28, scale: 0.94, filter: 'blur(10px)' }
+              }
+              transition={{ duration: 0.72, ease: HERO_MORPH_EASE }}
+            >
+              <span className="lp-hero-headline-row">
+                <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
+                <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
+              </span>
+              <KineticText
+                text="Publish."
+                as="em"
+                className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
+              />
+            </motion.h1>
 
             <motion.p
               className="lp-hero-desc"
               initial={false}
               animate={
-                isSplit
+                isRevealed
                   ? { opacity: 1, y: 0 }
                   : { opacity: 0, y: 18 }
               }
-              transition={{ duration: 0.62, delay: isSplit ? 0.22 : 0, ease: HERO_REVEAL_EASE }}
+              transition={{ duration: 0.62, delay: isRevealed ? 0.14 : 0, ease: HERO_REVEAL_EASE }}
             >
               BlogFlow AI transforms any website, topic, or brief into citation-grounded,
               SEO-optimized articles — orchestrating live web research, long-form drafting,
@@ -512,8 +806,8 @@ function HeroSection({
             <motion.div
               className="lp-hero-ctas"
               initial={false}
-              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.34 : 0, ease: HERO_REVEAL_EASE }}
+              animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.58, delay: isRevealed ? 0.24 : 0, ease: HERO_REVEAL_EASE }}
             >
               <Link
                 href="/generator"
@@ -533,8 +827,8 @@ function HeroSection({
             <motion.div
               className="lp-hero-social"
               initial={false}
-              animate={isSplit ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-              transition={{ duration: 0.58, delay: isSplit ? 0.44 : 0, ease: HERO_REVEAL_EASE }}
+              animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.58, delay: isRevealed ? 0.34 : 0, ease: HERO_REVEAL_EASE }}
             >
               <AvatarCircles
                 avatarUrls={CREATOR_AVATARS}
@@ -558,11 +852,11 @@ function HeroSection({
             className="lp-hero-right-3d"
             initial={false}
             animate={
-              isSplit
+              isRevealed
                 ? { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
-                : { opacity: 0, x: 56, scale: 0.94, filter: 'blur(12px)' }
+                : { opacity: 0, x: 56, scale: 0.92, filter: 'blur(12px)' }
             }
-            transition={{ duration: 0.92, delay: isSplit ? 0.08 : 0, ease: HERO_MORPH_EASE }}
+            transition={{ duration: 0.85, delay: isRevealed ? 0.06 : 0, ease: HERO_MORPH_EASE }}
           >
             <FloatingEditorialDesk
               currentStage={activeDeskStage}
@@ -580,8 +874,8 @@ function HeroSection({
         className="lp-trust"
         style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         initial={false}
-        animate={isSplit ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.65, delay: isSplit ? 0.56 : 0, ease: HERO_REVEAL_EASE }}
+        animate={isRevealed ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ duration: 0.65, delay: isRevealed ? 0.44 : 0, ease: HERO_REVEAL_EASE }}
       >
         <div className="lp-trust-inner">
           {[
@@ -1809,14 +2103,23 @@ function LandingFooter() {
    ============================================================ */
 export default function LandingPage() {
   const [activeDeskStage, setActiveDeskStage] = useState<DeskStage>('research');
+  const [replayKey, setReplayKey] = useState(0);
+
+  const handleReplayHero = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setReplayKey((prev) => prev + 1);
+  };
 
   return (
     <div className="lp-root">
-      <LandingNavbar />
+      <LandingNavbar onReplayHero={handleReplayHero} />
       <main>
         <HeroSection
           activeDeskStage={activeDeskStage}
           onSelectDeskStage={setActiveDeskStage}
+          replayKey={replayKey}
         />
         <ProductXRaySection />
         <WorkflowSection onSyncDeskStage={setActiveDeskStage} />
