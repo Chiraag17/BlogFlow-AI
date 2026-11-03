@@ -59,7 +59,8 @@ const TELEMETRY_SERIES = [
 ];
 
 /**
- * 3D Sculpted Metric Monolith with SVG Radial Ring & 1-Word Label
+ * 3D Sculpted Metric Monolith with Multi-Layer Parallax, Counter-Moving Depth Plane,
+ * Dynamic Brass Specular Glare & Edge Rim Glow, and Independent Z-Depth Elements
  */
 function MetricMonolith3D({
   label,
@@ -81,17 +82,30 @@ function MetricMonolith3D({
   href?: string;
 }) {
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, hovered: false });
+  const [tilt, setTilt] = useState({
+    rx: 0,
+    ry: 0,
+    dx: 0,
+    dy: 0,
+    gx: 50,
+    gy: 50,
+    hovered: false,
+  });
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = cardRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;
-    const py = (e.clientY - rect.top) / rect.height;
+    const px = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const py = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    const dx = px - 0.5; // [-0.5, 0.5]
+    const dy = py - 0.5; // [-0.5, 0.5]
+
     setTilt({
-      rx: (0.5 - py) * 15,
-      ry: (px - 0.5) * 15,
+      rx: -dy * 14,
+      ry: dx * 14,
+      dx,
+      dy,
       gx: px * 100,
       gy: py * 100,
       hovered: true,
@@ -99,7 +113,15 @@ function MetricMonolith3D({
   };
 
   const handlePointerLeave = () => {
-    setTilt({ rx: 0, ry: 0, gx: 50, gy: 50, hovered: false });
+    setTilt({
+      rx: 0,
+      ry: 0,
+      dx: 0,
+      dy: 0,
+      gx: 50,
+      gy: 50,
+      hovered: false,
+    });
   };
 
   const radius = 28;
@@ -107,54 +129,137 @@ function MetricMonolith3D({
   const clamped = Math.max(8, Math.min(100, progressPct));
   const strokeDashoffset = circumference - (clamped / 100) * circumference;
 
+  const layerTransition = tilt.hovered
+    ? 'transform 65ms linear, text-shadow 200ms ease, filter 200ms ease'
+    : 'transform 460ms cubic-bezier(0.16, 1, 0.3, 1), text-shadow 300ms ease, filter 300ms ease';
+
   const content = (
     <div
       ref={cardRef}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       onClick={onClick}
-      className={`card p-5 relative overflow-hidden cursor-pointer select-none transition-colors ${
+      className={`card p-5 relative cursor-pointer select-none transition-colors ${
         active
-          ? 'border-[#C8A15A] ring-1 ring-[#C8A15A]/40'
-          : 'hover:border-[var(--color-primary)]'
+          ? 'border-[#C8A15A] ring-1 ring-[#C8A15A]/45'
+          : 'hover:border-[#C8A15A]/50'
       }`}
       style={{
-        transform: `perspective(1000px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${tilt.hovered ? '8px' : '0px'})`,
+        transform: `perspective(1000px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${
+          tilt.hovered ? '10px' : '0px'
+        })`,
         transformStyle: 'preserve-3d',
+        boxShadow: tilt.hovered
+          ? `${(-tilt.dx * 16).toFixed(1)}px ${(-tilt.dy * 16 + 14).toFixed(
+              1
+            )}px 32px -8px rgba(0, 0, 0, 0.34), 0 0 22px -6px rgba(200, 161, 90, 0.22)`
+          : undefined,
         transition: tilt.hovered
-          ? 'transform 60ms linear, border-color 200ms ease'
-          : 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease',
+          ? 'transform 65ms linear, box-shadow 120ms linear, border-color 200ms ease'
+          : 'transform 460ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 460ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease',
       }}
     >
-      {/* Cursor-tracked 3D Specular Brass Highlight */}
+      {/* Clipped Surface Backdrop for Counter-Moving Plane & Specular Glare */}
+      <div className="pointer-events-none absolute inset-0 rounded-[inherit] overflow-hidden">
+        {/* Layer 0: Counter-Moving Recessed Ambient Depth Plane (-dx, -dy) */}
+        <div
+          className="absolute -inset-6 transition-opacity duration-300"
+          style={{
+            opacity: tilt.hovered ? 1 : 0,
+            transform: `translate3d(${(-tilt.dx * 22).toFixed(1)}px, ${(
+              -tilt.dy * 22
+            ).toFixed(1)}px, -12px)`,
+            transition: layerTransition,
+            background: `radial-gradient(180px circle at ${100 - tilt.gx}% ${
+              100 - tilt.gy
+            }%, ${accentColor}22, transparent 70%)`,
+          }}
+        />
+
+        {/* Layer 1A: Cursor-Tracked Dynamic Brass Specular Glare */}
+        <div
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{
+            opacity: tilt.hovered ? 1 : 0,
+            background: `radial-gradient(240px circle at ${tilt.gx}% ${tilt.gy}%, rgba(200, 161, 90, 0.24), ${accentColor}14 45%, transparent 72%)`,
+          }}
+        />
+      </div>
+
+      {/* Layer 1B: Dynamic Brass & Accent Edge Rim Glow */}
       <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] transition-opacity duration-300"
         style={{
           opacity: tilt.hovered ? 1 : 0,
-          background: `radial-gradient(240px circle at ${tilt.gx}% ${tilt.gy}%, rgba(200, 161, 90, 0.20), transparent 70%)`,
+          padding: '1.25px',
+          background: `radial-gradient(170px circle at ${tilt.gx}% ${tilt.gy}%, #C8A15A, ${accentColor} 55%, transparent 80%)`,
+          WebkitMask:
+            'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
         }}
       />
 
       <div
-        className="flex items-center justify-between gap-4"
-        style={{ transform: 'translateZ(22px)', transformStyle: 'preserve-3d' }}
+        className="relative flex items-center justify-between gap-4"
+        style={{ transformStyle: 'preserve-3d' }}
       >
-        {/* Left: 1-Word Label & Bold Tabular Number */}
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] block mb-1">
+        {/* Left Column: Independent Z-Depth Label & Tabular Metric Number */}
+        <div style={{ transformStyle: 'preserve-3d' }}>
+          {/* Layer 2: 1-Word Label (Z: 20px) */}
+          <span
+            className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] block mb-1"
+            style={{
+              transform: `translate3d(${(tilt.dx * 6).toFixed(1)}px, ${(
+                tilt.dy * 6
+              ).toFixed(1)}px, ${tilt.hovered ? '20px' : '0px'})`,
+              transition: layerTransition,
+            }}
+          >
             {label}
           </span>
-          <div className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-[var(--color-text)] leading-none">
+
+          {/* Layer 3: Tabular Metric Number (Z: 36px) */}
+          <div
+            className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-[var(--color-text)] leading-none"
+            style={{
+              transform: `translate3d(${(tilt.dx * 13).toFixed(1)}px, ${(
+                tilt.dy * 13
+              ).toFixed(1)}px, ${tilt.hovered ? '36px' : '0px'})`,
+              textShadow: tilt.hovered
+                ? `${(-tilt.dx * 6).toFixed(1)}px ${(-tilt.dy * 6 + 4).toFixed(
+                    1
+                  )}px 14px rgba(0, 0, 0, 0.28)`
+                : 'none',
+              transition: layerTransition,
+            }}
+          >
             {value}
           </div>
         </div>
 
-        {/* Right: 3D Floating Radial Ring Gauge */}
+        {/* Right Column: Independent Z-Depth Radial Ring & Floating Center Icon */}
         <div
           className="relative w-16 h-16 flex items-center justify-center shrink-0"
-          style={{ transform: 'translateZ(14px)' }}
+          style={{ transformStyle: 'preserve-3d' }}
         >
-          <svg className="w-16 h-16 -rotate-90" viewBox="0 0 68 68">
+          {/* Layer 4: 3D SVG Radial Progress Ring (Z: 28px) */}
+          <svg
+            className="w-16 h-16 -rotate-90"
+            viewBox="0 0 68 68"
+            style={{
+              transform: `translate3d(${(tilt.dx * 9).toFixed(1)}px, ${(
+                tilt.dy * 9
+              ).toFixed(1)}px, ${tilt.hovered ? '28px' : '0px'})`,
+              filter: tilt.hovered
+                ? `drop-shadow(${(-tilt.dx * 5).toFixed(1)}px ${(
+                    -tilt.dy * 5 +
+                    4
+                  ).toFixed(1)}px 6px rgba(0, 0, 0, 0.28))`
+                : 'none',
+              transition: layerTransition,
+            }}
+          >
             <circle
               cx="34"
               cy="34"
@@ -178,9 +283,20 @@ function MetricMonolith3D({
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             />
           </svg>
+
+          {/* Layer 5: Highest-Depth Floating Center Icon (Z: 44px) */}
           <div
             className="absolute inset-0 flex items-center justify-center"
-            style={{ color: accentColor }}
+            style={{
+              color: accentColor,
+              transform: `translate3d(${(tilt.dx * 17).toFixed(1)}px, ${(
+                tilt.dy * 17
+              ).toFixed(1)}px, ${tilt.hovered ? '44px' : '0px'})`,
+              filter: tilt.hovered
+                ? `drop-shadow(0 4px 8px ${accentColor}55)`
+                : 'none',
+              transition: layerTransition,
+            }}
           >
             <Icon size={18} />
           </div>

@@ -1,61 +1,75 @@
-# Spatial 3D Dashboard Redesign Plan
+# 3D Parallax Metric Monoliths Enhancement
 
-Transform `/dashboard` (and `/studio`) from a text-heavy admin page into a visual-first **3D Spatial Studio** featuring an interactive **3D Coverflow Manuscript Carousel**, **3D Metric Monoliths** with radial progress rings and 1-word labels, and a **Clean 3D Command Header** stripped of instructional and telemetry clutter.
+Upgrade the 4 Dashboard Metric Monolith cards (`Articles`, `Review`, `Published`, `Sites`) with a multi-layer 3D parallax hover effect featuring independent Z-depth translation, counter-moving foreground/background planes, and dynamic brass specular glare with edge rim lighting.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> Summary of choices confirmed for the Dashboard UI/UX redesign:
+> The following interactive 3D parallax decisions have been confirmed and govern the implementation:
 
-- **Confirmed Decision 1 (3D Coverflow Manuscript Carousel)**: Replace the vertical text list of articles and wordy side tables with an interactive **3D Coverflow Carousel** (`perspective: 1400px`, `preserve-3d`) that users can click, drag/swipe, or flip through with left/right controls. Each 3D card displays a visual circular SEO ring gauge, clean title, publication tag, and one-click 3D Stamp/Publish or Unfold actions.
-- **Confirmed Decision 2 (3D Metric Monoliths with Radial Rings & 1-Word Labels)**: Replace the wordy KPI boxes (`01 · Total Manuscripts ... Filter all ->`) with 4 cursor-tilted **3D Metric Monoliths** displaying an animated SVG radial ring, bold tabular number, and a 1-word label (`Articles`, `Review`, `Published`, `Sites`).
-- **Confirmed Decision 3 (Clean 3D Command Header & 70% Word Reduction)**: Remove all instructional subtext (*"Typing spins the 3D Research Calibration Ring..."*, *"Switch between manuscript velocity..."*, *"Daily generation vs. WordPress..."*, *"PostgreSQL Persistent Mode"*, and wordy audit tables) across the dashboard and inside the 3D Orrery header so visuals and 3D interactions lead.
+- **Confirmed Decision 1 (3D Parallax Style)**: **Multi-layer depth shift with counter-moving elements** — As the cursor moves across each monolith, the outer card tilts in 3D space (`perspective(1000px) rotateX / rotateY`) while inner layers translate along the X, Y, and Z axes at distinct parallax multipliers, creating genuine stereographic depth.
+- **Confirmed Decision 2 (Visual Depth Enhancements)**: **Dynamic brass specular glare & edge rim glow + Independent Z-depth parallax on ring and number** — A cursor-tracked radial specular sheen and directional rim border light up the card edges, while the tabular number, 1-word label, SVG radial ring, and center icon float at separate Z-depths (`translate3d`).
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Elevates the main dashboard into a tactile, low-text 3D command studio where users launch drafts, orbit the 3D Editorial Orrery, inspect 3D radial metric monoliths, and flip through their manuscripts in a 3D Coverflow stage.
-- **Target Audience / Persona**: Creators and editors who want an inspiring, visual-first workspace without walls of repetitive text.
-- **Key Value**: Cuts ~70% of static text labels while making every primary workflow (launching a brief, filtering by stage, approving/publishing articles) tactile and immediate in 3D space.
+- **What It Does**: Transforms the 4 Metric Monoliths on the dashboard into tactile, multi-plane 3D instruments. Moving the pointer across a monolith tilts the chassis while shifting the background shadow plane in the opposite direction (counter-parallax) and elevating the tabular counter and radial progress gauge at independent Z-depths.
+- **Target Audience / Persona**: Editorial directors and content operators monitoring pipeline health who want responsive, physical spatial feedback without visual clutter.
+- **Key Value**: Enhances spatial depth and interactivity while preserving the clean, 1-word typographic discipline and tabular numeral legibility of the dashboard.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Clean 3D Command Stage**: A concise greeting (`Good morning, [Name]`), a single-line prompt bar (`Topic` + `Site` + `Create`), and 3 compact 1-word topic pills sit beside the interactive 3D WebGL Editorial Orrery (with its top-left text badge simplified to a clean `Stamp` button).
-  2. **3D Metric Monoliths**: Four 3D cursor-tracked monolith cards (`Articles`, `Review`, `Published`, `Sites`). Each monolith renders a 3D floating SVG radial ring gauge around a large tabular figure. Clicking a monolith filters the 3D Coverflow deck below.
-  3. **3D Coverflow Manuscript Deck**:
-     - Displays manuscripts in a 3D perspective Coverflow fan: the active center card faces forward at `translateZ(60px) scale(1.04)`, while adjacent cards angle outward in 3D space (`rotateY(±38deg) translateZ(-90px)`).
-     - Users can click any side card to bring it center-stage, use Previous/Next buttons, or filter by stage (`All`, `Review`, `Approved`, `Published`).
-     - The center 3D card features a circular SVG SEO ring, word count, and direct **Approve** / **Publish** / **Preview** buttons with a 3D brass stamp animation.
-  4. **Streamlined Visual Telemetry**: Clean chart headers (`Output`, `Cadence`) with zero subtitle paragraphs or footer explanations.
+  1. **Idle State**: Each monolith rests cleanly on the surface grid with a 1-word uppercase label, monospace tabular figure (`tabular-nums`), and animated SVG radial progress ring.
+  2. **Pointer Enter & Move (Multi-Layer Parallax)**:
+     - **Outer Chassis**: Smoothly tilts up to `±14deg` on the X/Y axes and lifts `translateZ(10px)` with an elevated ambient drop shadow that shifts opposite to the tilt angle.
+     - **Counter-Moving Depth Plane**: A subtle recessed ambient glow layer shifts in the opposite X/Y direction (`-dx * 10px, -dy * 10px, translateZ(-12px)`) to amplify stereo separation.
+     - **Independent Z-Depth Foreground Elements**:
+       - **1-Word Label**: Floats at `translateZ(20px)` with slight forward XY shift (`dx * 4px, dy * 4px`).
+       - **Tabular Metric Value**: Floats higher at `translateZ(36px)` with stronger XY parallax (`dx * 8px, dy * 8px`) and subtle brass text-shadow depth on hover.
+       - **SVG Radial Ring**: Floats at `translateZ(28px)` with independent XY drift (`dx * 6px, dy * 6px`).
+       - **Center Icon**: Floats at the highest focal plane (`translateZ(44px)`) with `dx * 10px, dy * 10px` displacement so it visibly hovers inside the ring as you tilt the card.
+     - **Brass Specular Glare & Edge Rim Glow**: A dual-layer radial gradient follows the normalized cursor coordinates (`gx%`, `gy%`) across both the card surface and a `1px` perimeter rim mask, casting a warm antique-brass (`#C8A15A`) and accent-colored edge reflection near the cursor.
+  3. **Pointer Leave (Spring Reset)**: Releasing or leaving the card smoothly interpolates all rotation, translation, and glare states back to neutral (`0deg`, `0px`) using an exponential ease-out curve (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- **Visual Identity & Theme**:
+  - *Color Palette & Mood*: Warm editorial obsidian/ivory surface tokens paired with `#C8A15A` brass specular highlights and each monolith's semantic accent color (`#C8A15A`, `#D97706`, `#16A34A`, `#2563EB`).
+  - *Typography & Hierarchy*: `font-mono tabular-nums` for zero-jitter counters paired with crisp uppercase tracking for the 1-word labels.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: 3D Coverflow Carousel Over Flat Table Rows**
-  - *Chosen Approach*: Render filtered manuscripts inside a `transform-style: preserve-3d` stage where each card's `x`, `z`, `rotateY`, and `opacity` are driven by its offset from `activeIndex`.
-  - *Why*: Eliminates repetitive row metadata and turns manuscript triage into a spatial, tactile flip-through experience.
+- **Decision 1: Normalized Pointer Delta (`dx`, `dy` in `[-0.5, 0.5]`) Driving Multi-Plane `translate3d`**
+  - *Chosen Approach*: Compute normalized pointer offsets `dx = px - 0.5` and `dy = py - 0.5` from `getBoundingClientRect()` and drive each child layer via GPU-accelerated `translate3d(x, y, z)` transforms inside a `transform-style: preserve-3d` container.
+  - *Why*: Pure CSS 3D matrix transforms run on the compositor thread at 60fps without triggering layout recalculation or text blurring.
+  - *Alternatives Considered*: Heavy WebGL canvases per KPI card (excessive WebGL context overhead alongside the main 3D Editorial Orrery).
+- **Decision 2: Counter-Moving Backdrop + Directional Rim Mask**
+  - *Chosen Approach*: Pair a counter-translating inner glow (`-dx`, `-dy`) with a cursor-positioned radial rim highlight along the card border.
+  - *Why*: Counter-motion between the recessed plane and the elevated foreground elements creates an unmistakable parallax depth illusion even with small cursor movements.
 
 ---
 
-## 4. Technical Architecture & Data Strategy
+## 4. Technical Architecture & Data Strategy *(Technical Reference)*
 
+- **Architecture & Component Diagram**:
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         DashboardPage (/dashboard)                   │
-├──────────────────────────────────┬───────────────────────────────────┤
-│  1. Clean 3D Command Stage       │  2. 4x 3D Metric Monoliths        │
-│  • Concise greeting + input      │  • Cursor 3D tilt + SVG radial    │
-│  • 3D WebGL EditorialOrrery3D    │    ring + 1-word label            │
-├──────────────────────────────────┴───────────────────────────────────┤
-│  3. 3D Coverflow Manuscript Carousel                                 │
-│  • Interactive 3D perspective deck (prev/next, click card, filter)   │
-│  • Visual SEO ring gauge + 1-click 3D Brass Stamp Approve/Publish    │
-├──────────────────────────────────┬───────────────────────────────────┤
-│  4. Clean Telemetry (Output)     │  5. Clean Cadence + Site Pills    │
-└──────────────────────────────────┴───────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                    MetricMonolith3D (preserve-3d)                     │
+│  perspective(1000px) rotateX(rx) rotateY(ry) translateZ(10px)         │
+├───────────────────────────────────────────────────────────────────────┤
+│  ├─ Layer 0: Counter-Moving Recessed Glow (translateZ(-12px), -dx/-dy)│
+│  ├─ Layer 1: Dynamic Brass Specular Glare & Perimeter Rim Light       │
+│  ├─ Layer 2: 1-Word Label (translate3d(dx*4, dy*4, 20px))             │
+│  ├─ Layer 3: Tabular Metric Number (translate3d(dx*8, dy*8, 36px))    │
+│  ├─ Layer 4: Radial SVG Ring Gauge (translate3d(dx*6, dy*6, 28px))    │
+│  └─ Layer 5: Floating Center Icon (translate3d(dx*10, dy*10, 44px))   │
+└───────────────────────────────────────────────────────────────────────┘
 ```
+- **Interactive Component & State Mapping**:
+  - `tilt` state tracks `{ rx, ry, dx, dy, gx, gy, hovered }`.
+  - `onPointerMove` updates normalized cursor coordinates `(px, py)` and derives rotation (`rx`, `ry`), directional parallax deltas (`dx`, `dy`), and glare percentages (`gx`, `gy`).
+  - `onPointerLeave` resets all axes to `0` and `hovered: false`, activating a `450ms cubic-bezier(0.16, 1, 0.3, 1)` return transition across all child planes.
+  - Existing click filtering (`Articles`, `Review`, `Published`) and navigation (`Sites` -> `/websites`) remain fully intact.
