@@ -1,45 +1,44 @@
-# 3D Gutenberg Cube Spin & Shatter Hero Reveal Plan
+# Spatial 3D Dashboard Redesign Plan
 
-Make the landing page Hero entrance a signature spatial experience by removing the `"AI-Powered Editorial Automation · Interactive 3D Studio"` text entirely and replacing the initial load stage with a **3D Gutenberg Type-Block Cube** that spins across its 6 engraved faces, shatters outward in 3D space with golden stardust, and unveils the Hero headline (*"Research. Think. Publish."*) and 3D Editorial Desk from within its core.
+Transform `/dashboard` (and `/studio`) from a text-heavy admin page into a visual-first **3D Spatial Studio** featuring an interactive **3D Coverflow Manuscript Carousel**, **3D Metric Monoliths** with radial progress rings and 1-word labels, and a **Clean 3D Command Header** stripped of instructional and telemetry clutter.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> Summary of choices confirmed for the Hero redesign:
+> Summary of choices confirmed for the Dashboard UI/UX redesign:
 
-- **Confirmed Decision 1 (3D Cube Spin & 6-Face Shatter Reveal)**: On load, a large 3D Gutenberg Type-Block cube (`168px` in 3D perspective space) spins rapidly at the center of the Hero, builds up golden orbital energy, and shatters outward — its 6 engraved brass and forest-emerald faces (`B` Monogram, Fountain Nib, `§` Silcrow, Optical Loupe, Fluted Brass Seal, and `1450` Base Plate) separate along 3D vectors (`translate3d` + `rotate3d`) with golden stardust particles and a shockwave ring as the Hero stage crystallizes into view.
-- **Confirmed Decision 2 (Zero Kicker Clutter)**: Completely remove `"AI-Powered Editorial Automation · Interactive 3D Studio"` from both the intro overlay and the split Hero column so the left column leads directly with the serif headline **"Research. Think. Publish."**
-- **Confirmed Decision 3 (Auto-Play + Click Logo to Replay Anytime)**: The 3D cube spin-and-shatter sequence plays automatically on load, and clicking the 3D Gutenberg cube brand logo in the top navigation bar smoothly scrolls to the top and replays the full 3D shatter reveal on demand.
+- **Confirmed Decision 1 (3D Coverflow Manuscript Carousel)**: Replace the vertical text list of articles and wordy side tables with an interactive **3D Coverflow Carousel** (`perspective: 1400px`, `preserve-3d`) that users can click, drag/swipe, or flip through with left/right controls. Each 3D card displays a visual circular SEO ring gauge, clean title, publication tag, and one-click 3D Stamp/Publish or Unfold actions.
+- **Confirmed Decision 2 (3D Metric Monoliths with Radial Rings & 1-Word Labels)**: Replace the wordy KPI boxes (`01 · Total Manuscripts ... Filter all ->`) with 4 cursor-tilted **3D Metric Monoliths** displaying an animated SVG radial ring, bold tabular number, and a 1-word label (`Articles`, `Review`, `Published`, `Sites`).
+- **Confirmed Decision 3 (Clean 3D Command Header & 70% Word Reduction)**: Remove all instructional subtext (*"Typing spins the 3D Research Calibration Ring..."*, *"Switch between manuscript velocity..."*, *"Daily generation vs. WordPress..."*, *"PostgreSQL Persistent Mode"*, and wordy audit tables) across the dashboard and inside the 3D Orrery header so visuals and 3D interactions lead.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Transforms the landing page arrival into a tactile 3D choreography where the signature 6-faced Gutenberg Type-Block cube is the focal anchor that physically breaks open to reveal the editorial studio.
-- **Target Audience / Persona**: Writers, content leads, and editorial teams arriving on the landing page.
-- **Key Value**: Eliminates generic SaaS kicker text and replaces it with an unforgettable, brand-native 3D reveal tied directly to the Gutenberg Type-Block identity.
+- **What It Does**: Elevates the main dashboard into a tactile, low-text 3D command studio where users launch drafts, orbit the 3D Editorial Orrery, inspect 3D radial metric monoliths, and flip through their manuscripts in a 3D Coverflow stage.
+- **Target Audience / Persona**: Creators and editors who want an inspiring, visual-first workspace without walls of repetitive text.
+- **Key Value**: Cuts ~70% of static text labels while making every primary workflow (launching a brief, filtering by stage, approving/publishing articles) tactile and immediate in 3D space.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Phase 1 — 3D Cube Spin & Charge (`0.0s – 0.95s`)**: The large 6-faced 3D Gutenberg cube materializes at the center of the Hero surrounded by dual counter-rotating golden vernier rings, tumbling smoothly through its engraved emerald and brushed-brass faces.
-  2. **Phase 2 — 6-Face 3D Shatter & Shockwave (`0.95s – 1.65s`)**: At peak spin, a golden shockwave ring expands from the core and all 6 faces detach outward in 3D perspective space (`translateZ`, radial `X/Y` trajectories, and 3D tumble angles) accompanied by a burst of 24 golden stardust fragments.
-  3. **Phase 3 — Hero Crystallization (`1.35s+`)**: As the 6 shattered brass/emerald plates disperse and dissolve into the periphery, the split Hero stage (*"Research. Think. Publish."* on the left, interactive 3D `FloatingEditorialDesk` on the right) emerges from the center with zero layout jump.
-  4. **Replay Anytime**: Clicking the top-left `BlogFlow AI` 3D cube logo in the navbar triggers a replay of the 3D cube spin-and-shatter reveal.
-- **Visual Identity & Theme**:
-  - *Aesthetic Direction*: Tactile archival typography meets spatial 3D mechanics.
-  - *Color Palette & Mood*: Warm Archival Paper (`#F7F4EC`) and Deep Forest Obsidian (`#0C1511`) canvas, Forest Green (`#163F32`) relief plates, and Brushed Brass (`#C8A15A` / `#E5C98B`) bevels and stardust particles.
-  - *Typography & Hierarchy*: Leads immediately with the `Fraunces` display headline (*"Research. Think. Publish."*) with no uppercase kicker above it.
+  1. **Clean 3D Command Stage**: A concise greeting (`Good morning, [Name]`), a single-line prompt bar (`Topic` + `Site` + `Create`), and 3 compact 1-word topic pills sit beside the interactive 3D WebGL Editorial Orrery (with its top-left text badge simplified to a clean `Stamp` button).
+  2. **3D Metric Monoliths**: Four 3D cursor-tracked monolith cards (`Articles`, `Review`, `Published`, `Sites`). Each monolith renders a 3D floating SVG radial ring gauge around a large tabular figure. Clicking a monolith filters the 3D Coverflow deck below.
+  3. **3D Coverflow Manuscript Deck**:
+     - Displays manuscripts in a 3D perspective Coverflow fan: the active center card faces forward at `translateZ(60px) scale(1.04)`, while adjacent cards angle outward in 3D space (`rotateY(±38deg) translateZ(-90px)`).
+     - Users can click any side card to bring it center-stage, use Previous/Next buttons, or filter by stage (`All`, `Review`, `Approved`, `Published`).
+     - The center 3D card features a circular SVG SEO ring, word count, and direct **Approve** / **Publish** / **Preview** buttons with a 3D brass stamp animation.
+  4. **Streamlined Visual Telemetry**: Clean chart headers (`Output`, `Cadence`) with zero subtitle paragraphs or footer explanations.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: True 6-Face CSS 3D Matrix Explosion (`preserve-3d`)**
-  - *Chosen Approach*: Build a dedicated 3D shattering cube stage where each of the 6 faces is an independent 3D-transformed plate inside a `transform-style: preserve-3d` scene. During the `spin` phase, the 6 faces form a sealed cube; during the `shatter` phase, each face animates along its own outward normal vector and 3D rotation vector while golden shard particles radiate outward.
-  - *Why*: Gives authentic 3D depth and physical weight while running at a locked 60fps and respecting `prefers-reduced-motion`.
+- **Decision 1: 3D Coverflow Carousel Over Flat Table Rows**
+  - *Chosen Approach*: Render filtered manuscripts inside a `transform-style: preserve-3d` stage where each card's `x`, `z`, `rotateY`, and `opacity` are driven by its offset from `activeIndex`.
+  - *Why*: Eliminates repetitive row metadata and turns manuscript triage into a spatial, tactile flip-through experience.
 
 ---
 
@@ -47,22 +46,16 @@ Make the landing page Hero entrance a signature spatial experience by removing t
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                         LandingPage Root                             │
-│   [replayTrigger state] ──► Passed to LandingNavbar & HeroSection    │
-└───────────────────┬──────────────────────────────────┬───────────────┘
-                    │                                  │
-                    ▼                                  ▼
-┌───────────────────────────────────┐  ┌───────────────────────────────┐
-│           LandingNavbar           │  │          HeroSection          │
-│ • Clicking 3D Cube Logo scrolls   │  │ • Phase 1: 'spin' (0–0.95s)   │
-│   to top & increments             │  │ • Phase 2: 'shatter' (0.95–   │
-│   replayTrigger                   │  │   1.65s) — 6 faces explode    │
-│                                   │  │   outward + stardust shards   │
-│                                   │  │ • Phase 3: 'split' — Headline │
-│                                   │  │   (no kicker) + 3D Desk       │
-└───────────────────────────────────┘  └───────────────────────────────┘
+│                         DashboardPage (/dashboard)                   │
+├──────────────────────────────────┬───────────────────────────────────┤
+│  1. Clean 3D Command Stage       │  2. 4x 3D Metric Monoliths        │
+│  • Concise greeting + input      │  • Cursor 3D tilt + SVG radial    │
+│  • 3D WebGL EditorialOrrery3D    │    ring + 1-word label            │
+├──────────────────────────────────┴───────────────────────────────────┤
+│  3. 3D Coverflow Manuscript Carousel                                 │
+│  • Interactive 3D perspective deck (prev/next, click card, filter)   │
+│  • Visual SEO ring gauge + 1-click 3D Brass Stamp Approve/Publish    │
+├──────────────────────────────────┬───────────────────────────────────┤
+│  4. Clean Telemetry (Output)     │  5. Clean Cadence + Site Pills    │
+└──────────────────────────────────┴───────────────────────────────────┘
 ```
-
-- **Interactive Component & State Mapping**:
-  - `HeroStage`: `'spin' | 'shatter' | 'split'`
-  - Clicking the navbar brand logo or pressing the subtle replay button resets `HeroStage` to `'spin'`, sequences `'shatter'` at `950ms`, and settles into `'split'` at `1650ms`.

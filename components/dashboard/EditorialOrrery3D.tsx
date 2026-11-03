@@ -696,25 +696,16 @@ export default function EditorialOrrery3D({
 
   return (
     <div className="relative w-full h-[272px] rounded-xl border border-[var(--color-border)] overflow-hidden bg-[#F4F0E6] dark:bg-[#101714] select-none">
-      {/* Top-Left Minimal Spec Header (100% Unobstructed Center) */}
-      <div className="absolute top-3 left-3.5 right-3.5 z-10 flex items-center justify-between pointer-events-none">
-        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#F7F4EC]/90 dark:bg-[#151E1A]/90 border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-text)]">
-          <Sparkles size={12} className="text-[var(--color-accent)]" />
-          <span>3D Editorial Orrery & Press</span>
-          <span className="text-[var(--color-text-muted)]">·</span>
-          <span className="font-mono tabular-nums text-[var(--color-primary)]">
-            Stage 0{activeStageIndex + 1}
-          </span>
-        </div>
-
+      {/* Top-Right Compact Stamp Button */}
+      <div className="absolute top-3 right-3.5 z-10 flex items-center justify-end pointer-events-none">
         <button
           type="button"
           onClick={() => setLocalStampCount((c) => c + 1)}
-          className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714] text-[11px] font-semibold hover:opacity-90 transition-opacity cursor-pointer"
-          title="Trigger 3D Brass Press Stamp"
+          className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714] text-[11px] font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
+          title="Stamp 3D Press"
         >
           <Stamp size={12} />
-          <span>Stamp Press</span>
+          <span>Stamp</span>
         </button>
       </div>
 
@@ -725,12 +716,12 @@ export default function EditorialOrrery3D({
         title="Drag to orbit 3D Editorial Orrery"
       />
 
-      {/* Unified Collapsible Bottom Control Dock (No backdrop-filter over WebGL) */}
+      {/* Minimal 4-Stage Dock */}
       <div
-        className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-10 w-[94%] max-w-[440px] transition-transform duration-200"
+        className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-10 w-[92%] max-w-[400px] transition-transform duration-200"
         style={{
           transform: dockCollapsed
-            ? 'translate(-50%, calc(100% - 24px))'
+            ? 'translate(-50%, calc(100% - 22px))'
             : 'translate(-50%, 0)',
         }}
       >
@@ -738,10 +729,10 @@ export default function EditorialOrrery3D({
           <button
             type="button"
             onClick={() => setDockCollapsed((v) => !v)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-t-md bg-[#F7F4EC] dark:bg-[#151E1A] border border-b-0 border-[var(--color-border)] text-[10px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+            aria-label={dockCollapsed ? 'Expand dock' : 'Collapse dock'}
+            className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-t-md bg-[#F7F4EC] dark:bg-[#151E1A] border border-b-0 border-[var(--color-border)] text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
           >
             {dockCollapsed ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-            <span>{dockCollapsed ? 'Show Stage Controls' : 'Hide Dock'}</span>
           </button>
         </div>
 
@@ -756,21 +747,18 @@ export default function EditorialOrrery3D({
                   onSelectStage(st.index);
                   setLocalStampCount((c) => c + 1);
                 }}
-                className={`px-2 py-1.5 rounded-md text-left transition-colors cursor-pointer ${
+                className={`px-2 py-1.5 rounded-md flex items-center justify-between transition-colors cursor-pointer ${
                   active
                     ? 'bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714]'
                     : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)]'
                 }`}
               >
-                <div className="flex items-center justify-between text-[10px] font-mono opacity-80">
-                  <span>{st.code}</span>
-                  <span className="tabular-nums font-semibold">
-                    {stageCounts[st.index]}
-                  </span>
-                </div>
-                <div className="text-[11px] font-semibold truncate mt-0.5">
+                <span className="text-[11px] font-semibold truncate">
                   {st.label}
-                </div>
+                </span>
+                <span className="text-[10px] font-mono tabular-nums font-bold opacity-80">
+                  {stageCounts[st.index]}
+                </span>
               </button>
             );
           })}

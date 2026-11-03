@@ -4,16 +4,36 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FileText, Globe, Clock, CheckCircle, BarChart3,
-  TrendingUp, ArrowRight, Send,
-  CheckCircle2, Download, Search,
-  X, ExternalLink, PenTool, Stamp,
+  FileText,
+  Globe,
+  Clock,
+  CheckCircle,
+  BarChart3,
+  TrendingUp,
+  ArrowRight,
+  Send,
+  CheckCircle2,
+  Download,
+  Search,
+  X,
+  ExternalLink,
+  Stamp,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
 } from 'lucide-react';
 import {
-  AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 import { useAppStore } from '@/lib/store';
 import { DEMO_ANALYTICS } from '@/lib/mock-data';
@@ -21,20 +41,12 @@ import { getStatusLabel, timeAgo, truncate } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
 import { BlogStatus } from '@/types';
 import EditorialOrrery3D from '@/components/dashboard/EditorialOrrery3D';
+import GutenbergTypeBlock3D from '@/components/brand/GutenbergTypeBlock3D';
 
-const TOPIC_SUGGESTIONS = [
-  {
-    topic: 'Agentic RAG Architectures in Production Systems',
-    category: 'Artificial Intelligence',
-  },
-  {
-    topic: 'Zero-Trust Cloud Security Posture in 2026',
-    category: 'Cloud & Security',
-  },
-  {
-    topic: 'Edge Compute & Core Web Vitals Optimization Guide',
-    category: 'Web Engineering',
-  },
+const TOPIC_PRESETS = [
+  { label: 'Agentic RAG', topic: 'Agentic RAG Architectures in Production Systems' },
+  { label: 'Zero-Trust Cloud', topic: 'Zero-Trust Cloud Security Posture in 2026' },
+  { label: 'Edge Compute', topic: 'Edge Compute & Core Web Vitals Optimization Guide' },
 ];
 
 const TELEMETRY_SERIES = [
@@ -46,18 +58,30 @@ const TELEMETRY_SERIES = [
   { month: 'Sep', generated: 15, published: 12, seoAvg: 92, readabilityAvg: 88, words: 24800 },
 ];
 
-// Cursor-tracked 3D Perspective Tilt Card for KPI Ledger
-function Tilt3DCard({
-  children,
+/**
+ * 3D Sculpted Metric Monolith with SVG Radial Ring & 1-Word Label
+ */
+function MetricMonolith3D({
+  label,
+  value,
+  progressPct,
+  accentColor,
+  icon: Icon,
+  active,
   onClick,
   href,
 }: {
-  children: React.ReactNode;
+  label: string;
+  value: number | string;
+  progressPct: number;
+  accentColor: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  active?: boolean;
   onClick?: () => void;
   href?: string;
 }) {
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, hovered: false });
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = cardRef.current;
@@ -65,40 +89,102 @@ function Tilt3DCard({
     const rect = el.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
-    const ry = (px - 0.5) * 11;
-    const rx = (0.5 - py) * 11;
-    setTilt({ rx, ry, gx: px * 100, gy: py * 100, active: true });
+    setTilt({
+      rx: (0.5 - py) * 15,
+      ry: (px - 0.5) * 15,
+      gx: px * 100,
+      gy: py * 100,
+      hovered: true,
+    });
   };
 
   const handlePointerLeave = () => {
-    setTilt({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
+    setTilt({ rx: 0, ry: 0, gx: 50, gy: 50, hovered: false });
   };
 
-  const innerContent = (
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.max(8, Math.min(100, progressPct));
+  const strokeDashoffset = circumference - (clamped / 100) * circumference;
+
+  const content = (
     <div
       ref={cardRef}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       onClick={onClick}
-      className="card p-5 text-left relative overflow-hidden cursor-pointer group transition-colors hover:border-[var(--color-primary)]"
+      className={`card p-5 relative overflow-hidden cursor-pointer select-none transition-colors ${
+        active
+          ? 'border-[#C8A15A] ring-1 ring-[#C8A15A]/40'
+          : 'hover:border-[var(--color-primary)]'
+      }`}
       style={{
-        transform: `perspective(1050px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${tilt.active ? '6px' : '0px'})`,
+        transform: `perspective(1000px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${tilt.hovered ? '8px' : '0px'})`,
         transformStyle: 'preserve-3d',
-        transition: tilt.active
+        transition: tilt.hovered
           ? 'transform 60ms linear, border-color 200ms ease'
-          : 'transform 380ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease',
+          : 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease',
       }}
     >
-      {/* Dynamic Brass Specular Reflection */}
+      {/* Cursor-tracked 3D Specular Brass Highlight */}
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-300"
         style={{
-          opacity: tilt.active ? 1 : 0,
-          background: `radial-gradient(260px circle at ${tilt.gx}% ${tilt.gy}%, rgba(200, 161, 90, 0.16), transparent 70%)`,
+          opacity: tilt.hovered ? 1 : 0,
+          background: `radial-gradient(240px circle at ${tilt.gx}% ${tilt.gy}%, rgba(200, 161, 90, 0.20), transparent 70%)`,
         }}
       />
-      <div style={{ transform: 'translateZ(18px)', transformStyle: 'preserve-3d' }}>
-        {children}
+
+      <div
+        className="flex items-center justify-between gap-4"
+        style={{ transform: 'translateZ(22px)', transformStyle: 'preserve-3d' }}
+      >
+        {/* Left: 1-Word Label & Bold Tabular Number */}
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] block mb-1">
+            {label}
+          </span>
+          <div className="text-3xl sm:text-4xl font-bold font-mono tabular-nums text-[var(--color-text)] leading-none">
+            {value}
+          </div>
+        </div>
+
+        {/* Right: 3D Floating Radial Ring Gauge */}
+        <div
+          className="relative w-16 h-16 flex items-center justify-center shrink-0"
+          style={{ transform: 'translateZ(14px)' }}
+        >
+          <svg className="w-16 h-16 -rotate-90" viewBox="0 0 68 68">
+            <circle
+              cx="34"
+              cy="34"
+              r={radius}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4.5"
+              className="text-[var(--color-border)] opacity-45"
+            />
+            <motion.circle
+              cx="34"
+              cy="34"
+              r={radius}
+              fill="none"
+              stroke={accentColor}
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              initial={{ strokeDashoffset: circumference }}
+              animate={{ strokeDashoffset }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            />
+          </svg>
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ color: accentColor }}
+          >
+            <Icon size={18} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -106,12 +192,12 @@ function Tilt3DCard({
   if (href) {
     return (
       <Link href={href} className="block">
-        {innerContent}
+        {content}
       </Link>
     );
   }
 
-  return innerContent;
+  return content;
 }
 
 export default function DashboardPage() {
@@ -130,7 +216,6 @@ export default function DashboardPage() {
   // Quick-Dispatch Brief Launcher state
   const [quickTopic, setQuickTopic] = useState('');
   const [selectedSiteId, setSelectedSiteId] = useState('');
-  const [selectedLength, setSelectedLength] = useState<'short' | 'medium' | 'long'>('medium');
 
   // 3D Orrery Reactive Impulses
   const [typingPulse, setTypingPulse] = useState(0);
@@ -141,16 +226,20 @@ export default function DashboardPage() {
   const [chartMetric, setChartMetric] = useState<'velocity' | 'seo' | 'words'>('velocity');
   const [timeframe, setTimeframe] = useState<'3M' | '6M'>('6M');
 
-  // Interactive Pipeline Table Controls
+  // 3D Coverflow Carousel Controls
   const [statusFilter, setStatusFilter] = useState<'all' | BlogStatus>('all');
   const [siteFilter, setSiteFilter] = useState<string>('all');
   const [articleSearch, setArticleSearch] = useState('');
+  const [coverflowIndex, setCoverflowIndex] = useState(0);
   const [inspectBlog, setInspectBlog] = useState<any | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Pointer drag state for 3D Coverflow swipe
+  const dragStartXRef = useRef<number | null>(null);
+
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3200);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   useEffect(() => {
@@ -167,7 +256,7 @@ export default function DashboardPage() {
       });
   }, []);
 
-  // Merge DB blogs with store blogs so interactive triage works seamlessly
+  // Merge DB blogs with store blogs
   const allBlogs = useMemo(() => {
     if (isDbConnected && dbData?.recentBlogs?.length > 0) {
       return dbData.recentBlogs.map((b: any) => ({
@@ -193,12 +282,16 @@ export default function DashboardPage() {
     }
   }, [activeWebsites, selectedSiteId]);
 
-  const totalBlogsCount = isDbConnected && dbData?.stats ? dbData.stats.totalBlogs : storeBlogs.length;
+  const totalBlogsCount =
+    isDbConnected && dbData?.stats ? dbData.stats.totalBlogs : storeBlogs.length;
   const pendingCount = storeBlogs.filter((b) => b.status === 'pending_approval').length;
   const approvedCount = storeBlogs.filter((b) => b.status === 'approved').length;
-  const publishedCount = isDbConnected && dbData?.stats ? dbData.stats.publishedBlogs : storeBlogs.filter((b) => b.status === 'published').length;
-  const draftCount = storeBlogs.filter((b) => b.status === 'draft').length;
-  const websitesCount = isDbConnected && dbData?.stats ? dbData.stats.connectedWebsites : storeWebsites.length;
+  const publishedCount =
+    isDbConnected && dbData?.stats
+      ? dbData.stats.publishedBlogs
+      : storeBlogs.filter((b) => b.status === 'published').length;
+  const websitesCount =
+    isDbConnected && dbData?.stats ? dbData.stats.connectedWebsites : storeWebsites.length;
 
   const avgSeoScore = useMemo(() => {
     if (!storeQualityReports.length) return 88;
@@ -207,10 +300,6 @@ export default function DashboardPage() {
         storeQualityReports.length
     );
   }, [storeQualityReports]);
-
-  const totalWordsGenerated = useMemo(() => {
-    return storeBlogs.reduce((acc, b) => acc + (b.wordCount || 1500), 0);
-  }, [storeBlogs]);
 
   // Map statusFilter <-> 3D Orrery stage index (0..3)
   const activeStageIndex = useMemo(() => {
@@ -251,6 +340,27 @@ export default function DashboardPage() {
     });
   }, [allBlogs, statusFilter, siteFilter, articleSearch]);
 
+  // Reset coverflow index when filter changes
+  useEffect(() => {
+    setCoverflowIndex(0);
+  }, [statusFilter, siteFilter, articleSearch]);
+
+  const safeCoverflowIndex = useMemo(() => {
+    if (filteredBlogs.length === 0) return 0;
+    return Math.min(coverflowIndex, filteredBlogs.length - 1);
+  }, [coverflowIndex, filteredBlogs.length]);
+
+  const stepCoverflow = (dir: -1 | 1) => {
+    if (filteredBlogs.length === 0) return;
+    setCoverflowIndex((prev) => {
+      const next = prev + dir;
+      if (next < 0) return filteredBlogs.length - 1;
+      if (next >= filteredBlogs.length) return 0;
+      return next;
+    });
+    setTypingPulse((c) => c + 1);
+  };
+
   // Quick-Dispatch Handler
   const handleQuickDispatch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +373,7 @@ export default function DashboardPage() {
 
   // CSV Export Handler
   const handleExportCsv = () => {
-    const headers = ['Month,Generated Articles,Published Articles,Avg SEO Score,Avg Readability,Total Words'];
+    const headers = ['Month,Generated,Published,SEO,Readability,Words'];
     const rows = chartData.map(
       (r) => `${r.month},${r.generated},${r.published},${r.seoAvg},${r.readabilityAvg},${r.words}`
     );
@@ -271,14 +381,14 @@ export default function DashboardPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `blogflow-editorial-telemetry-${timeframe.toLowerCase()}.csv`);
+    link.setAttribute('download', `blogflow-telemetry-${timeframe.toLowerCase()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    triggerToast(`Exported ${timeframe} editorial telemetry report to CSV.`);
+    triggerToast(`Exported ${timeframe} CSV`);
   };
 
-  // Inline Status Change Handler with 3D Folio Stamp-and-Glide Choreography
+  // Inline Status Change Handler with 3D Stamp Animation
   const handleInlineStatusUpdate = (blog: any, nextStatus: BlogStatus) => {
     setStampingBlogId(blog.id);
     setStampPulse((p) => p + 1);
@@ -297,26 +407,17 @@ export default function DashboardPage() {
         setInspectBlog((prev: any) => (prev ? { ...prev, status: nextStatus } : null));
       }
       setStampingBlogId(null);
-      const actionLabel =
-        nextStatus === 'approved'
-          ? '3D Brass Seal Stamped — Approved'
-          : '3D Press Dispatched — Published Live';
-      triggerToast(`${actionLabel}: "${truncate(blog.title, 36)}"`);
+      triggerToast(
+        `${nextStatus === 'approved' ? 'Approved' : 'Published'}: "${truncate(blog.title, 32)}"`
+      );
     }, 340);
   };
 
-  const firstName = ((session?.user as any)?.name || 'Editor').split(' ')[0];
+  const firstName = ((session?.user as any)?.name || 'Creator').split(' ')[0];
   const primaryStroke = isDark ? '#B8D5C5' : '#163F32';
   const brassStroke = isDark ? '#D4AF67' : '#C8A15A';
   const gridStroke = isDark ? 'rgba(235, 242, 237, 0.08)' : '#E8E4DA';
   const tickColor = isDark ? '#8E9E95' : '#68736D';
-
-  const pipelineChapters = [
-    { num: '01', label: 'Research & Briefs', count: activeWebsites.length * 3, filter: 'all' as const },
-    { num: '02', label: 'Drafts & Pending', count: draftCount + pendingCount, filter: 'pending_approval' as const },
-    { num: '03', label: 'Approved Gate', count: approvedCount, filter: 'approved' as const },
-    { num: '04', label: 'Published Live', count: publishedCount, filter: 'published' as const },
-  ];
 
   return (
     <div className="space-y-6 pb-8">
@@ -329,62 +430,47 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================
-          SECTION 1: EXECUTIVE COMMAND DESK (2-COL SPLIT WITH 3D ORRERY)
+          SECTION 1: CLEAN 3D COMMAND STAGE (ZERO INSTRUCTIONAL CLUTTER)
           ============================================================ */}
       <div className="card p-6 sm:p-7">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* Left 7 Cols: Greeting + Quick-Dispatch Brief Launcher */}
-          <div className="lg:col-span-7 flex flex-col justify-between">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[var(--color-border)]">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
-                  <span>Editorial Command Desk</span>
-                  <span>·</span>
-                  <span>
-                    {new Date().toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </span>
-                  <span>·</span>
-                  <span className="text-[var(--color-primary)] font-medium">
-                    {isDbConnected ? 'PostgreSQL Persistent Mode' : 'Live Studio Workspace'}
-                  </span>
-                </div>
-                <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight font-editorial text-[var(--color-text)]">
-                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {firstName}.
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          {/* Left 7 Cols: Minimal Greeting + Single-Line Prompt Bar */}
+          <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <GutenbergTypeBlock3D
+                  size={38}
+                  activeFace={
+                    activeStageIndex === 0
+                      ? 'loupe'
+                      : activeStageIndex === 1
+                      ? 'nib'
+                      : activeStageIndex === 2
+                      ? 'seal'
+                      : 'monogram'
+                  }
+                  activityPulse={typingPulse + stampPulse}
+                  interactiveStamp={true}
+                />
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-editorial text-[var(--color-text)]">
+                  Hello, {firstName}.
                 </h2>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Link href="/research" className="btn btn-secondary btn-sm">
                   <Search size={14} />
-                  <span>Topics</span>
+                  <span>Research</span>
                 </Link>
                 <Link href="/approvals" className="btn btn-secondary btn-sm">
                   <CheckCircle size={14} />
-                  <span>Queue ({pendingCount})</span>
+                  <span>Review ({pendingCount})</span>
                 </Link>
               </div>
             </div>
 
-            {/* Inline Quick-Dispatch Topic Bar (Reacts with 3D Orrery) */}
-            <form onSubmit={handleQuickDispatch} className="pt-5">
-              <div className="flex items-center justify-between mb-2.5">
-                <label
-                  htmlFor="quick-dispatch-input"
-                  className="text-xs font-semibold text-[var(--color-text)] flex items-center gap-2"
-                >
-                  <PenTool size={13} className="text-[var(--color-accent)]" />
-                  <span>Quick-Dispatch Article Brief</span>
-                </label>
-                <span className="text-xs text-[var(--color-text-muted)] hidden sm:inline">
-                  Typing spins the 3D Research Calibration Ring in real time
-                </span>
-              </div>
-
+            {/* Clean Single-Line Brief Launcher */}
+            <form onSubmit={handleQuickDispatch} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                 <div className="sm:col-span-6">
                   <input
@@ -395,8 +481,8 @@ export default function DashboardPage() {
                       setQuickTopic(e.target.value);
                       setTypingPulse((c) => c + 1);
                     }}
-                    placeholder="Enter a headline, keyword, or research thesis…"
-                    className="form-input h-10 text-sm"
+                    placeholder="New article topic or keyword…"
+                    className="form-input h-11 text-sm"
                   />
                 </div>
 
@@ -407,61 +493,49 @@ export default function DashboardPage() {
                       setSelectedSiteId(e.target.value);
                       setTypingPulse((c) => c + 1);
                     }}
-                    className="form-select h-10 text-sm"
-                    aria-label="Target publication"
+                    className="form-select h-11 text-sm"
+                    aria-label="Target site"
                   >
                     {activeWebsites.map((site) => (
                       <option key={site.id} value={site.id}>
-                        {site.name} ({site.niche})
+                        {site.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div className="sm:col-span-3 flex items-center gap-2">
-                  <select
-                    value={selectedLength}
-                    onChange={(e) => setSelectedLength(e.target.value as any)}
-                    className="form-select h-10 text-sm flex-1"
-                    aria-label="Target length"
-                  >
-                    <option value="short">~800w</option>
-                    <option value="medium">~1,500w</option>
-                    <option value="long">~2,500w</option>
-                  </select>
-
+                <div className="sm:col-span-3">
                   <button
                     type="submit"
-                    className="btn btn-primary h-10 px-4 whitespace-nowrap shrink-0"
+                    className="btn btn-primary w-full h-11 px-4 justify-center whitespace-nowrap"
                   >
-                    <span>Draft</span>
+                    <span>Create</span>
                     <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
 
-              {/* Clickable Trending Brief Suggestions */}
-              <div className="mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--color-text-muted)]">
-                <span className="font-medium text-[var(--color-text-secondary)]">Suggested briefs:</span>
-                {TOPIC_SUGGESTIONS.map((item, idx) => (
+              {/* Compact 2-Word Topic Presets */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {TOPIC_PRESETS.map((item) => (
                   <button
-                    key={item.topic}
+                    key={item.label}
                     type="button"
                     onClick={() => {
                       setQuickTopic(item.topic);
                       setTypingPulse((c) => c + 1);
                       setStampPulse((p) => p + 1);
                     }}
-                    className="text-left hover:text-[var(--color-primary)] transition-colors cursor-pointer underline decoration-[var(--color-border)] underline-offset-4 hover:decoration-[var(--color-primary)]"
+                    className="px-2.5 py-1 rounded-md border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[#C8A15A] hover:text-[var(--color-text)] transition-colors cursor-pointer"
                   >
-                    0{idx + 1}. {truncate(item.topic, 38)}
+                    {item.label}
                   </button>
                 ))}
               </div>
             </form>
           </div>
 
-          {/* Right 5 Cols: 3D Brass Editorial Orrery & Multi-Agent Press */}
+          {/* Right 5 Cols: Interactive 3D WebGL Orrery & Press */}
           <div className="lg:col-span-5 flex items-center">
             <EditorialOrrery3D
               activeStageIndex={activeStageIndex}
@@ -471,7 +545,7 @@ export default function DashboardPage() {
               isDark={isDark}
               stageCounts={[
                 activeWebsites.length * 3,
-                draftCount + pendingCount,
+                pendingCount,
                 approvedCount,
                 publishedCount,
               ]}
@@ -481,113 +555,375 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================
-          SECTION 2: 3D PERSPECTIVE KPI LEDGER (CURSOR-TRACKED TILT)
+          SECTION 2: 3D METRIC MONOLITHS (RADIAL RINGS + 1-WORD LABELS)
           ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Tilt3DCard onClick={() => setStatusFilter('all')}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-              01 · Total Manuscripts
-            </span>
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#163F32]/10 dark:bg-[#B8D5C5]/15 text-[#163F32] dark:text-[#B8D5C5]">
-              <FileText size={17} />
-            </div>
-          </div>
-          <div className="text-3xl font-bold font-mono tabular-nums text-[var(--color-text)]">
-            {totalBlogsCount}
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span className="tabular-nums">{totalWordsGenerated.toLocaleString()} total words</span>
-            <span className="text-[var(--color-primary)] font-medium group-hover:translate-x-0.5 transition-transform">
-              Filter all →
-            </span>
-          </div>
-        </Tilt3DCard>
+        <MetricMonolith3D
+          label="Articles"
+          value={totalBlogsCount}
+          progressPct={Math.min(100, totalBlogsCount * 12)}
+          accentColor={isDark ? '#B8D5C5' : '#163F32'}
+          icon={FileText}
+          active={statusFilter === 'all'}
+          onClick={() => setStatusFilter('all')}
+        />
 
-        <Tilt3DCard onClick={() => setStatusFilter('pending_approval')}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-              02 · Pending Editorial Review
-            </span>
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#C8A15A]/15 text-[#9A7332] dark:text-[#D4AF67]">
-              <Clock size={17} />
-            </div>
-          </div>
-          <div className="text-3xl font-bold font-mono tabular-nums text-[var(--color-text)]">
-            {pendingCount}
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span className="tabular-nums">{approvedCount} approved & ready</span>
-            <span className="text-[var(--color-primary)] font-medium group-hover:translate-x-0.5 transition-transform">
-              Triage queue →
-            </span>
-          </div>
-        </Tilt3DCard>
+        <MetricMonolith3D
+          label="Review"
+          value={pendingCount}
+          progressPct={totalBlogsCount ? Math.round((pendingCount / totalBlogsCount) * 100) : 35}
+          accentColor="#C8A15A"
+          icon={Clock}
+          active={statusFilter === 'pending_approval'}
+          onClick={() => setStatusFilter('pending_approval')}
+        />
 
-        <Tilt3DCard onClick={() => setStatusFilter('published')}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-              03 · Published Articles
-            </span>
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714]">
-              <CheckCircle size={17} />
-            </div>
-          </div>
-          <div className="text-3xl font-bold font-mono tabular-nums text-[var(--color-text)]">
-            {publishedCount}
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span className="tabular-nums">Avg SEO {avgSeoScore}/100</span>
-            <span className="text-[var(--color-primary)] font-medium group-hover:translate-x-0.5 transition-transform">
-              View live →
-            </span>
-          </div>
-        </Tilt3DCard>
+        <MetricMonolith3D
+          label="Published"
+          value={publishedCount}
+          progressPct={avgSeoScore}
+          accentColor={isDark ? '#52B788' : '#163F32'}
+          icon={CheckCircle}
+          active={statusFilter === 'published'}
+          onClick={() => setStatusFilter('published')}
+        />
 
-        <Tilt3DCard href="/websites">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-              04 · Connected Publications
-            </span>
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#C8A15A]/20 text-[#8A6421] dark:text-[#D4AF67]">
-              <Globe size={17} />
-            </div>
-          </div>
-          <div className="text-3xl font-bold font-mono tabular-nums text-[var(--color-text)]">
-            {websitesCount}
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-            <span>WordPress REST & Webhooks</span>
-            <span className="text-[var(--color-primary)] font-medium group-hover:translate-x-0.5 transition-transform">
-              Configure →
-            </span>
-          </div>
-        </Tilt3DCard>
+        <MetricMonolith3D
+          label="Sites"
+          value={websitesCount}
+          progressPct={Math.min(100, websitesCount * 25)}
+          accentColor="#C8A15A"
+          icon={Globe}
+          href="/websites"
+        />
       </div>
 
       {/* ============================================================
-          SECTION 3: INTERACTIVE TELEMETRY & WEEKLY CADENCE STUDIO
+          SECTION 3: 3D COVERFLOW MANUSCRIPT CAROUSEL
           ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left 7 Cols: Interactive Telemetry Studio */}
-        <div className="lg:col-span-7 card flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-[var(--color-border)]">
-            <div>
-              <h3 className="card-title flex items-center gap-2">
-                <TrendingUp size={16} className="text-[var(--color-primary)]" />
-                <span>Editorial Output & Quality Telemetry</span>
-              </h3>
-              <p className="card-subtitle">
-                Switch between manuscript velocity, SEO quality trajectory, and word volume
-              </p>
+      <div className="card p-6 sm:p-7 overflow-hidden">
+        {/* Minimalist Coverflow Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-[var(--color-border)]">
+          {/* 1-Word Stage Filter Tabs */}
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)] overflow-x-auto">
+            {(
+              [
+                { key: 'all', label: 'All' },
+                { key: 'pending_approval', label: 'Review' },
+                { key: 'approved', label: 'Approved' },
+                { key: 'published', label: 'Published' },
+                { key: 'draft', label: 'Drafts' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(tab.key);
+                  setTypingPulse((c) => c + 1);
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                  statusFilter === tab.key
+                    ? 'bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714] shadow-xs'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search + Carousel Prev/Next Controls */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search
+                size={14}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+              />
+              <input
+                type="text"
+                value={articleSearch}
+                onChange={(e) => {
+                  setArticleSearch(e.target.value);
+                  setTypingPulse((c) => c + 1);
+                }}
+                placeholder="Search…"
+                className="form-input py-1.5 pl-8 pr-3 text-xs w-36 sm:w-44"
+              />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => stepCoverflow(-1)}
+                aria-label="Previous manuscript"
+                className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text)] hover:border-[#C8A15A] transition-colors cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-xs font-mono tabular-nums px-2 text-[var(--color-text-muted)]">
+                {filteredBlogs.length > 0 ? `${safeCoverflowIndex + 1}/${filteredBlogs.length}` : '0/0'}
+              </span>
+              <button
+                type="button"
+                onClick={() => stepCoverflow(1)}
+                aria-label="Next manuscript"
+                className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text)] hover:border-[#C8A15A] transition-colors cursor-pointer"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 3D Coverflow Stage */}
+        {filteredBlogs.length === 0 ? (
+          <div className="py-14 text-center">
+            <p className="text-sm font-medium text-[var(--color-text)] mb-3">
+              No articles in this view.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter('all');
+                setSiteFilter('all');
+                setArticleSearch('');
+              }}
+              className="btn btn-secondary btn-sm"
+            >
+              Reset
+            </button>
+          </div>
+        ) : (
+          <div
+            className="relative h-[300px] sm:h-[310px] w-full flex items-center justify-center select-none overflow-visible mt-2"
+            style={{ perspective: '1400px' }}
+            onPointerDown={(e) => {
+              dragStartXRef.current = e.clientX;
+            }}
+            onPointerUp={(e) => {
+              if (dragStartXRef.current === null) return;
+              const delta = e.clientX - dragStartXRef.current;
+              dragStartXRef.current = null;
+              if (Math.abs(delta) > 40) {
+                stepCoverflow(delta < 0 ? 1 : -1);
+              }
+            }}
+          >
+            {/* Subtle Ambient Brass Floor Reflection under Center Card */}
+            <div
+              className="pointer-events-none absolute bottom-2 w-72 h-12 rounded-full blur-2xl"
+              style={{
+                background: isDark
+                  ? 'radial-gradient(circle, rgba(200, 161, 90, 0.25) 0%, transparent 75%)'
+                  : 'radial-gradient(circle, rgba(22, 63, 50, 0.16) 0%, transparent 75%)',
+              }}
+            />
+
+            <div
+              className="relative w-full h-full flex items-center justify-center"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              {filteredBlogs.map((blog: any, idx: number) => {
+                const offset = idx - safeCoverflowIndex;
+                if (Math.abs(offset) > 2) return null;
+
+                const isCenter = offset === 0;
+                const rawStatus = (blog.status || 'draft').toLowerCase() as BlogStatus;
+                const seo = blog.seoScore || 88;
+                const words = blog.wordCount || 1650;
+                const isStamping = stampingBlogId === blog.id;
+
+                const translateX = offset * 240;
+                const translateZ = isCenter ? 55 : -95 - Math.abs(offset) * 45;
+                const rotateY = offset * -36;
+                const scale = isCenter ? 1 : 0.84;
+                const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.68 : 0.35;
+
+                const ringRadius = 20;
+                const ringCirc = 2 * Math.PI * ringRadius;
+                const ringOffset = ringCirc - (seo / 100) * ringCirc;
+
+                return (
+                  <motion.div
+                    key={blog.id}
+                    initial={false}
+                    animate={{
+                      x: translateX,
+                      z: translateZ,
+                      rotateY,
+                      scale: isStamping ? 0.92 : scale,
+                      opacity,
+                    }}
+                    transition={{
+                      duration: 0.52,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    onClick={() => {
+                      if (!isCenter) {
+                        setCoverflowIndex(idx);
+                        setTypingPulse((c) => c + 1);
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      width: 'min(90vw, 410px)',
+                      zIndex: 20 - Math.abs(offset),
+                      transformStyle: 'preserve-3d',
+                    }}
+                    className={`rounded-2xl border p-6 transition-shadow ${
+                      isCenter ? 'cursor-default' : 'cursor-pointer'
+                    } ${
+                      isDark
+                        ? isCenter
+                          ? 'bg-[#121D18] border-[#C8A15A]/65 shadow-[0_26px_60px_-15px_rgba(0,0,0,0.85)]'
+                          : 'bg-[#0E1713]/90 border-[var(--color-border)]'
+                        : isCenter
+                        ? 'bg-[#FCFBF7] border-[#163F32]/45 shadow-[0_24px_55px_-15px_rgba(22,63,50,0.22)]'
+                        : 'bg-[#F5F2E9]/90 border-[var(--color-border)]'
+                    }`}
+                  >
+                    {/* Top Row: Site + Status + 3D Circular SEO Gauge */}
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                        <span className="font-semibold text-[var(--color-text)]">
+                          {blog.websiteName || 'TechPulse'}
+                        </span>
+                        <span>·</span>
+                        <span>{getStatusLabel(rawStatus)}</span>
+                      </div>
+
+                      {/* Circular SVG SEO Gauge */}
+                      <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                        <svg className="w-12 h-12 -rotate-90" viewBox="0 0 50 50">
+                          <circle
+                            cx="25"
+                            cy="25"
+                            r={ringRadius}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3.5"
+                            className="text-[var(--color-border)] opacity-40"
+                          />
+                          <circle
+                            cx="25"
+                            cy="25"
+                            r={ringRadius}
+                            fill="none"
+                            stroke="#C8A15A"
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            strokeDasharray={ringCirc}
+                            strokeDashoffset={ringOffset}
+                          />
+                        </svg>
+                        <span className="absolute text-[11px] font-mono font-bold tabular-nums text-[var(--color-text)]">
+                          {seo}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="text-base sm:text-lg font-bold font-editorial text-[var(--color-text)] line-clamp-2 leading-snug mb-3">
+                      {blog.title}
+                    </h4>
+
+                    {/* Concise Meta */}
+                    <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] font-mono tabular-nums mb-5">
+                      <span>{words.toLocaleString()}w</span>
+                      <span>·</span>
+                      <span>{timeAgo(blog.updatedAt)}</span>
+                    </div>
+
+                    {/* Bottom Action Bar */}
+                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-[var(--color-border)]">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInspectBlog(blog);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+                      >
+                        <Eye size={13} />
+                        <span>Preview</span>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        {(rawStatus === 'pending_approval' || rawStatus === 'draft') && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleInlineStatusUpdate(blog, 'approved');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714] hover:opacity-90 transition-opacity cursor-pointer"
+                          >
+                            <Stamp size={13} />
+                            <span>Approve</span>
+                          </button>
+                        )}
+
+                        {rawStatus === 'approved' && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleInlineStatusUpdate(blog, 'published');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#C8A15A] text-[#101714] hover:opacity-90 transition-opacity cursor-pointer"
+                          >
+                            <Send size={13} />
+                            <span>Publish</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Coverflow Dots Indicator */}
+        {filteredBlogs.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 pt-2">
+            {filteredBlogs.slice(0, 10).map((b: any, idx: number) => (
+              <button
+                key={b.id}
+                type="button"
+                aria-label={`Select manuscript ${idx + 1}`}
+                onClick={() => setCoverflowIndex(idx)}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  idx === safeCoverflowIndex
+                    ? 'w-6 bg-[#C8A15A]'
+                    : 'w-1.5 bg-[var(--color-border)] hover:bg-[var(--color-text-muted)]'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================
+          SECTION 4: MINIMALIST VISUAL TELEMETRY (OUTPUT & CADENCE)
+          ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Left 7 Cols: Output Trajectory */}
+        <div className="lg:col-span-7 card flex flex-col justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-[var(--color-border)]">
+            <h3 className="card-title flex items-center gap-2">
+              <TrendingUp size={16} className="text-[var(--color-primary)]" />
+              <span>Output</span>
+            </h3>
+
+            <div className="flex items-center gap-2">
               <div className="inline-flex items-center p-0.5 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)]">
                 {(
                   [
-                    { id: 'velocity', label: 'Velocity' },
-                    { id: 'seo', label: 'SEO Score' },
+                    { id: 'velocity', label: 'Articles' },
+                    { id: 'seo', label: 'SEO' },
                     { id: 'words', label: 'Words' },
                   ] as const
                 ).map((tab) => (
@@ -627,15 +963,14 @@ export default function DashboardPage() {
                 type="button"
                 onClick={handleExportCsv}
                 className="btn btn-secondary btn-sm py-1.5 px-2.5 text-xs"
-                title="Export telemetry CSV"
+                title="Export CSV"
               >
                 <Download size={13} />
-                <span>CSV</span>
               </button>
             </div>
           </div>
 
-          <div style={{ width: '100%', height: 250 }}>
+          <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer>
               <AreaChart data={chartData}>
                 <defs>
@@ -674,7 +1009,7 @@ export default function DashboardPage() {
                     <Area
                       type="monotone"
                       dataKey="generated"
-                      name="Generated Drafts"
+                      name="Drafted"
                       stroke={brassStroke}
                       strokeWidth={2}
                       fill="url(#editorialBrassFill)"
@@ -682,7 +1017,7 @@ export default function DashboardPage() {
                     <Area
                       type="monotone"
                       dataKey="published"
-                      name="Published Live"
+                      name="Published"
                       stroke={primaryStroke}
                       strokeWidth={2.2}
                       fill="url(#editorialPrimaryFill)"
@@ -694,7 +1029,7 @@ export default function DashboardPage() {
                     <Area
                       type="monotone"
                       dataKey="seoAvg"
-                      name="Avg SEO Score"
+                      name="SEO"
                       stroke={primaryStroke}
                       strokeWidth={2.2}
                       fill="url(#editorialPrimaryFill)"
@@ -702,7 +1037,7 @@ export default function DashboardPage() {
                     <Area
                       type="monotone"
                       dataKey="readabilityAvg"
-                      name="Readability Index"
+                      name="Readability"
                       stroke={brassStroke}
                       strokeWidth={2}
                       fill="url(#editorialBrassFill)"
@@ -713,7 +1048,7 @@ export default function DashboardPage() {
                   <Area
                     type="monotone"
                     dataKey="words"
-                    name="Words Drafted"
+                    name="Words"
                     stroke={primaryStroke}
                     strokeWidth={2.2}
                     fill="url(#editorialPrimaryFill)"
@@ -722,47 +1057,24 @@ export default function DashboardPage() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="pt-3 mt-2 border-t border-[var(--color-border-light)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
-            <div className="flex items-center gap-4">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-2.5 h-0.5 inline-block" style={{ background: primaryStroke }} />
-                <span>{chartMetric === 'velocity' ? 'Published Live' : chartMetric === 'seo' ? 'Avg SEO Score' : 'Total Words'}</span>
-              </span>
-              {chartMetric !== 'words' && (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2.5 h-0.5 inline-block" style={{ background: brassStroke }} />
-                  <span>{chartMetric === 'velocity' ? 'Generated Drafts' : 'Readability Index'}</span>
-                </span>
-              )}
-            </div>
-            <span className="font-mono tabular-nums">
-              Peak output: 24,800 words / month
-            </span>
-          </div>
         </div>
 
-        {/* Right 5 Cols: Weekly Publishing Cadence & 7-Day Schedule Strip */}
+        {/* Right 5 Cols: Weekly Cadence & Interactive Site Nodes */}
         <div className="lg:col-span-5 card flex flex-col justify-between">
           <div className="pb-4 mb-4 border-b border-[var(--color-border)] flex items-center justify-between">
-            <div>
-              <h3 className="card-title flex items-center gap-2">
-                <BarChart3 size={16} className="text-[var(--color-accent)]" />
-                <span>Weekly Publishing Cadence</span>
-              </h3>
-              <p className="card-subtitle">
-                Daily generation vs. WordPress publication throughput
-              </p>
-            </div>
+            <h3 className="card-title flex items-center gap-2">
+              <BarChart3 size={16} className="text-[var(--color-accent)]" />
+              <span>Cadence</span>
+            </h3>
             <Link
               href="/automation"
               className="text-xs font-semibold text-[var(--color-primary)] hover:underline whitespace-nowrap"
             >
-              Automation →
+              Schedule →
             </Link>
           </div>
 
-          <div style={{ width: '100%', height: 195 }}>
+          <div style={{ width: '100%', height: 165 }}>
             <ResponsiveContainer>
               <BarChart data={DEMO_ANALYTICS.publishingActivity} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
@@ -790,7 +1102,7 @@ export default function DashboardPage() {
                   dataKey="generated"
                   fill={isDark ? 'rgba(212, 175, 103, 0.45)' : '#E5DEC9'}
                   radius={[4, 4, 0, 0]}
-                  name="Generated"
+                  name="Drafted"
                 />
                 <Bar
                   dataKey="published"
@@ -802,507 +1114,136 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* 7-Day Cadence Strip */}
-          <div className="pt-3 mt-2 border-t border-[var(--color-border-light)]">
-            <div className="flex items-center justify-between text-[11px] text-[var(--color-text-muted)] mb-2">
-              <span>7-Day Editorial Slot Matrix</span>
-              <Link href="/generator" className="text-[var(--color-primary)] font-medium hover:underline">
-                + Fill open slot
-              </Link>
-            </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {DEMO_ANALYTICS.publishingActivity.map((day) => {
-                const active = day.published > 0;
-                return (
-                  <div
-                    key={day.date}
-                    className={`rounded-md p-1.5 text-center border ${
-                      active
-                        ? 'border-[var(--color-border)] bg-[var(--color-bg-muted)]'
-                        : 'border-dashed border-[var(--color-border)] opacity-60'
-                    }`}
-                  >
-                    <div className="text-[10px] text-[var(--color-text-muted)]">{day.date}</div>
-                    <div className="text-xs font-mono font-semibold tabular-nums text-[var(--color-text)] mt-0.5">
-                      {day.published}/{day.generated}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================
-          SECTION 4: 3D ARCHIVAL FOLIO STACK & CONTENT HEALTH LEDGER
-          ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left 8 Cols: 3D Archival Folio Stack + Inline Approval Triage */}
-        <div className="lg:col-span-8 card">
-          {/* Hairline Chapter Index Header (Synced with 3D Orrery) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pb-4 mb-5 border-b border-[var(--color-border)]">
-            {pipelineChapters.map((ch) => {
-              const isSelected = statusFilter === ch.filter;
+          {/* Clickable Site Nodes */}
+          <div className="pt-3 mt-3 border-t border-[var(--color-border-light)] flex flex-wrap items-center gap-2">
+            {activeWebsites.slice(0, 4).map((site) => {
+              const isSelected = siteFilter === site.name;
               return (
                 <button
-                  key={ch.num}
+                  key={site.id}
                   type="button"
-                  onClick={() => {
-                    setStatusFilter(ch.filter);
-                    setStampPulse((p) => p + 1);
-                  }}
-                  className={`text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
+                  onClick={() => setSiteFilter(isSelected ? 'all' : site.name)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)] -translate-y-0.5 shadow-sm'
-                      : 'border-[var(--color-border-light)] hover:border-[var(--color-border)] bg-[var(--color-bg)]/50'
+                      ? 'bg-[#163F32] text-[#F3F0E8] border-[#C8A15A]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[#C8A15A]'
                   }`}
                 >
-                  <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
-                    <span>{ch.num}</span>
-                    <span className="tabular-nums font-semibold text-[var(--color-text)]">
-                      {ch.count}
-                    </span>
-                  </div>
-                  <div className="text-xs font-semibold text-[var(--color-text)] mt-1 truncate">
-                    {ch.label}
-                  </div>
+                  {site.name}
                 </button>
               );
             })}
           </div>
-
-          {/* Filter & Search Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)] overflow-x-auto">
-              {(
-                [
-                  { key: 'all', label: 'All Folios' },
-                  { key: 'pending_approval', label: 'Pending Review' },
-                  { key: 'approved', label: 'Approved' },
-                  { key: 'published', label: 'Published' },
-                  { key: 'draft', label: 'Drafts' },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => {
-                    setStatusFilter(tab.key);
-                    setTypingPulse((c) => c + 1);
-                  }}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                    statusFilter === tab.key
-                      ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-xs'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search
-                  size={14}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-                />
-                <input
-                  type="text"
-                  value={articleSearch}
-                  onChange={(e) => {
-                    setArticleSearch(e.target.value);
-                    setTypingPulse((c) => c + 1);
-                  }}
-                  placeholder="Filter manuscripts…"
-                  className="form-input py-1.5 pl-8 pr-3 text-xs w-44 sm:w-52"
-                />
-              </div>
-
-              <select
-                value={siteFilter}
-                onChange={(e) => setSiteFilter(e.target.value)}
-                className="form-select py-1.5 px-2.5 text-xs w-36"
-                aria-label="Filter by website"
-              >
-                <option value="all">All Publications</option>
-                {activeWebsites.map((w) => (
-                  <option key={w.id} value={w.name}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* 3D Archival Folio Stack Stage */}
-          {filteredBlogs.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-[var(--color-border)] rounded-lg">
-              <p className="text-sm font-medium text-[var(--color-text)]">
-                No archival folios match the active filter.
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1 mb-4">
-                Try clearing the filter or dispatch a new article brief above.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setStatusFilter('all');
-                  setSiteFilter('all');
-                  setArticleSearch('');
-                }}
-                className="btn btn-secondary btn-sm"
-              >
-                Reset Filters
-              </button>
-            </div>
-          ) : (
-            <div className="perspective-stage space-y-3">
-              {filteredBlogs.slice(0, 6).map((blog: any, idx: number) => {
-                const rawStatus = (blog.status || 'draft').toLowerCase() as BlogStatus;
-                const seo = blog.seoScore || 88;
-                const words = blog.wordCount || 1650;
-                const isStamping = stampingBlogId === blog.id;
-
-                return (
-                  <motion.div
-                    key={`${blog.id}-${statusFilter}`}
-                    initial={{
-                      opacity: 0,
-                      y: 16,
-                      rotateX: -12,
-                      z: -30 * idx,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      rotateX: 0,
-                      z: 0,
-                    }}
-                    transition={{
-                      duration: 0.36,
-                      delay: idx * 0.045,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                    className={`folio-card-3d p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                      isStamping ? 'folio-stamping' : ''
-                    }`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono tabular-nums text-[var(--color-accent)] font-semibold">
-                          FOLIO 0{idx + 1}
-                        </span>
-                        <span className="text-xs text-[var(--color-text-muted)]">·</span>
-                        <button
-                          type="button"
-                          onClick={() => setInspectBlog(blog)}
-                          className="text-sm font-semibold text-[var(--color-text)] hover:text-[var(--color-primary)] text-left truncate block max-w-full cursor-pointer"
-                        >
-                          {blog.title}
-                        </button>
-                      </div>
-
-                      {/* Zero-Pill Unboxed Metadata */}
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1.5">
-                        <span className="font-medium text-[var(--color-text-secondary)]">
-                          {blog.websiteName || 'TechPulse'}
-                        </span>
-                        <span>·</span>
-                        <span>{blog.category || 'Editorial'}</span>
-                        <span>·</span>
-                        <span className="font-mono tabular-nums">{words.toLocaleString()}w</span>
-                        <span>·</span>
-                        <span className="font-mono tabular-nums">SEO {seo}/100</span>
-                        <span>·</span>
-                        <span>{timeAgo(blog.updatedAt)}</span>
-                      </div>
-                    </div>
-
-                    {/* Right: Status & One-Click 3D Stamp Actions */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs font-medium text-[var(--color-text-secondary)] mr-1">
-                        {getStatusLabel(rawStatus)}
-                      </span>
-
-                      {(rawStatus === 'pending_approval' || rawStatus === 'draft') && (
-                        <button
-                          type="button"
-                          onClick={() => handleInlineStatusUpdate(blog, 'approved')}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-[#163F32]/10 dark:bg-[#B8D5C5]/15 text-[#163F32] dark:text-[#B8D5C5] hover:bg-[#163F32] hover:text-white dark:hover:bg-[#B8D5C5] dark:hover:text-[#101714] transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          <Stamp size={12} />
-                          <span>Approve</span>
-                        </button>
-                      )}
-
-                      {rawStatus === 'approved' && (
-                        <button
-                          type="button"
-                          onClick={() => handleInlineStatusUpdate(blog, 'published')}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-[#163F32] text-white dark:bg-[#B8D5C5] dark:text-[#101714] hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap"
-                        >
-                          <Send size={12} />
-                          <span>Publish</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => setInspectBlog(blog)}
-                        className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-text)] transition-colors cursor-pointer whitespace-nowrap"
-                      >
-                        Unfold 3D
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="pt-4 mt-4 border-t border-[var(--color-border)] flex items-center justify-between text-xs">
-            <span className="text-[var(--color-text-muted)] tabular-nums">
-              Showing {Math.min(6, filteredBlogs.length)} of {filteredBlogs.length} archival folios
-            </span>
-            <Link
-              href="/content"
-              className="font-semibold text-[var(--color-primary)] hover:underline inline-flex items-center gap-1"
-            >
-              <span>Open Full Content Library</span>
-              <ArrowRight size={13} />
-            </Link>
-          </div>
-        </div>
-
-        {/* Right 4 Cols: Content Health Audit + Connected Publications Ledger */}
-        <div className="lg:col-span-4 space-y-5">
-          {/* Card A: Editorial Pipeline Distribution & Quality Audit */}
-          <div className="card">
-            <div className="card-header">
-              <div>
-                <h3 className="card-title">Pipeline Health & SEO Audit</h3>
-                <p className="card-subtitle">Stage allocation & quality guardrails</p>
-              </div>
-              <span className="text-xs font-mono tabular-nums font-semibold text-[var(--color-primary)]">
-                {avgSeoScore}/100 Avg
-              </span>
-            </div>
-
-            <div className="h-2.5 w-full rounded-full bg-[var(--color-bg-muted)] overflow-hidden flex mb-4">
-              <div
-                style={{ width: '52%', background: isDark ? '#B8D5C5' : '#163F32' }}
-                title="Published (52%)"
-              />
-              <div
-                style={{ width: '24%', background: isDark ? '#D4AF67' : '#C8A15A' }}
-                title="Approved & Scheduled (24%)"
-              />
-              <div
-                style={{ width: '24%', background: isDark ? '#4B6358' : '#94A69C' }}
-                title="Drafts & Pending Review (24%)"
-              />
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              {[
-                { label: 'Published Manuscripts', count: publishedCount, pct: '52%', color: isDark ? '#B8D5C5' : '#163F32' },
-                { label: 'Approved & Ready', count: approvedCount, pct: '24%', color: isDark ? '#D4AF67' : '#C8A15A' },
-                { label: 'Pending Editorial Gate', count: pendingCount, pct: '14%', color: isDark ? '#76877E' : '#76827C' },
-                { label: 'Working Drafts', count: draftCount, pct: '10%', color: isDark ? '#4B6358' : '#A5B2AA' },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between py-1 border-b border-[var(--color-border-light)] last:border-0">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-xs inline-block" style={{ background: row.color }} />
-                    <span className="text-[var(--color-text-secondary)]">{row.label}</span>
-                  </div>
-                  <div className="font-mono tabular-nums text-[var(--color-text)] font-semibold">
-                    {row.count} <span className="text-[var(--color-text-muted)] font-normal">({row.pct})</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border-light)]">
-                <div className="text-[11px] text-[var(--color-text-muted)]">SEO Threshold</div>
-                <div className="text-base font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
-                  {avgSeoScore}% <span className="text-xs font-normal text-[var(--color-primary)]">Pass</span>
-                </div>
-              </div>
-              <div className="p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border-light)]">
-                <div className="text-[11px] text-[var(--color-text-muted)]">Primary Citations</div>
-                <div className="text-base font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
-                  100% <span className="text-xs font-normal text-[var(--color-primary)]">Verified</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card B: Connected Publications Ledger */}
-          <div className="card">
-            <div className="card-header">
-              <div>
-                <h3 className="card-title">Connected Publications</h3>
-                <p className="card-subtitle">Click a site to launch a targeted draft</p>
-              </div>
-              <Link
-                href="/websites"
-                className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
-              >
-                + Add Site
-              </Link>
-            </div>
-
-            <div className="divide-y divide-[var(--color-border-light)]">
-              {activeWebsites.slice(0, 4).map((site) => (
-                <div
-                  key={site.id}
-                  className="py-2.5 flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold text-[var(--color-text)] truncate">
-                      {site.name}
-                    </div>
-                    <div className="text-[11px] text-[var(--color-text-muted)] truncate">
-                      {site.url} · {site.niche}
-                    </div>
-                  </div>
-                  <Link
-                    href={`/generator?websiteId=${encodeURIComponent(site.id)}`}
-                    className="px-2.5 py-1 rounded-md text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors whitespace-nowrap shrink-0"
-                  >
-                    Draft →
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 
       {/* ============================================================
-          3D UNFOLDING BROADSHEET MANUSCRIPT INSPECTOR MODAL
+          3D UNFOLDING MANUSCRIPT PREVIEW MODAL
           ============================================================ */}
-      {inspectBlog && (
-        <div
-          className="modal-overlay perspective-stage"
-          onClick={() => setInspectBlog(null)}
-        >
+      <AnimatePresence>
+        {inspectBlog && (
           <div
-            className="modal modal-lg modal-unfold-3d border border-[var(--color-border)]"
-            onClick={(e) => e.stopPropagation()}
+            className="modal-overlay perspective-stage"
+            onClick={() => setInspectBlog(null)}
           >
-            <div className="modal-header">
-              <div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  Archival Broadsheet Folio · {inspectBlog.websiteName || 'TechPulse'} ·{' '}
-                  {inspectBlog.category || 'Editorial'} ·{' '}
-                  {getStatusLabel((inspectBlog.status || 'draft').toLowerCase())}
-                </div>
-                <h3 className="modal-title font-editorial mt-0.5">{inspectBlog.title}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setInspectBlog(null)}
-                className="btn-ghost p-1.5 rounded-lg cursor-pointer"
-                aria-label="Close inspector"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="modal-body space-y-4">
-              {/* 3D Extruded Telemetry Strip */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="folio-card-3d p-3.5">
-                  <div className="text-xs text-[var(--color-text-muted)]">Word Count</div>
-                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
-                    {(inspectBlog.wordCount || 1650).toLocaleString()} words
+            <motion.div
+              initial={{ opacity: 0, rotateX: 22, scale: 0.92, y: 24 }}
+              animate={{ opacity: 1, rotateX: 0, scale: 1, y: 0 }}
+              exit={{ opacity: 0, rotateX: -16, scale: 0.94, y: 16 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="modal modal-lg border border-[var(--color-border)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div>
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    {inspectBlog.websiteName || 'TechPulse'} ·{' '}
+                    {getStatusLabel((inspectBlog.status || 'draft').toLowerCase())}
                   </div>
+                  <h3 className="modal-title font-editorial mt-0.5">{inspectBlog.title}</h3>
                 </div>
-                <div className="folio-card-3d p-3.5">
-                  <div className="text-xs text-[var(--color-text-muted)]">SEO Score</div>
-                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-primary)] mt-0.5">
-                    {inspectBlog.seoScore || 88}/100
-                  </div>
-                </div>
-                <div className="folio-card-3d p-3.5">
-                  <div className="text-xs text-[var(--color-text-muted)]">Readability</div>
-                  <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
-                    {inspectBlog.readabilityScore || 84}/100
-                  </div>
-                </div>
-              </div>
-
-              {/* Meta Description */}
-              {inspectBlog.metaDescription && (
-                <div className="p-3.5 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)]">
-                  <div className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                    SEO Meta Description
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                    {inspectBlog.metaDescription}
-                  </p>
-                </div>
-              )}
-
-              {/* Excerpt / Content Preview */}
-              <div>
-                <div className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">
-                  Manuscript Broadsheet Preview
-                </div>
-                <div className="p-4 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] leading-relaxed max-h-56 overflow-y-auto shadow-inner">
-                  {inspectBlog.excerpt ||
-                    'This long-form editorial manuscript is structured with primary-source citations, H2/H3 hierarchy, and automated FAQ schema ready for WordPress REST publication.'}
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer justify-between">
-              <Link
-                href="/content"
-                className="text-xs font-semibold text-[var(--color-primary)] hover:underline inline-flex items-center gap-1"
-              >
-                <span>Open in Content Library</span>
-                <ExternalLink size={13} />
-              </Link>
-
-              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setInspectBlog(null)}
-                  className="btn btn-secondary btn-sm"
+                  className="btn-ghost p-1.5 rounded-lg cursor-pointer"
+                  aria-label="Close preview"
                 >
-                  Fold Folio
+                  <X size={18} />
                 </button>
-                {((inspectBlog.status || '').toLowerCase() === 'pending_approval' ||
-                  (inspectBlog.status || '').toLowerCase() === 'draft') && (
-                  <button
-                    type="button"
-                    onClick={() => handleInlineStatusUpdate(inspectBlog, 'approved')}
-                    className="btn btn-primary btn-sm"
-                  >
-                    <Stamp size={14} />
-                    <span>Stamp & Approve</span>
-                  </button>
-                )}
-                {(inspectBlog.status || '').toLowerCase() === 'approved' && (
-                  <button
-                    type="button"
-                    onClick={() => handleInlineStatusUpdate(inspectBlog, 'published')}
-                    className="btn btn-primary btn-sm"
-                  >
-                    <Send size={14} />
-                    <span>Publish to WordPress</span>
-                  </button>
-                )}
               </div>
-            </div>
+
+              <div className="modal-body space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="folio-card-3d p-3.5">
+                    <div className="text-xs text-[var(--color-text-muted)]">Words</div>
+                    <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
+                      {(inspectBlog.wordCount || 1650).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="folio-card-3d p-3.5">
+                    <div className="text-xs text-[var(--color-text-muted)]">SEO</div>
+                    <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-primary)] mt-0.5">
+                      {inspectBlog.seoScore || 88}/100
+                    </div>
+                  </div>
+                  <div className="folio-card-3d p-3.5">
+                    <div className="text-xs text-[var(--color-text-muted)]">Readability</div>
+                    <div className="text-lg font-bold font-mono tabular-nums text-[var(--color-text)] mt-0.5">
+                      {inspectBlog.readabilityScore || 84}/100
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] leading-relaxed max-h-56 overflow-y-auto">
+                  {inspectBlog.excerpt ||
+                    'Citation-grounded manuscript structured with H2/H3 sections and ready for WordPress publication.'}
+                </div>
+              </div>
+
+              <div className="modal-footer justify-between">
+                <Link
+                  href="/content"
+                  className="text-xs font-semibold text-[var(--color-primary)] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Library</span>
+                  <ExternalLink size={13} />
+                </Link>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setInspectBlog(null)}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Close
+                  </button>
+                  {((inspectBlog.status || '').toLowerCase() === 'pending_approval' ||
+                    (inspectBlog.status || '').toLowerCase() === 'draft') && (
+                    <button
+                      type="button"
+                      onClick={() => handleInlineStatusUpdate(inspectBlog, 'approved')}
+                      className="btn btn-primary btn-sm"
+                    >
+                      <Stamp size={14} />
+                      <span>Approve</span>
+                    </button>
+                  )}
+                  {(inspectBlog.status || '').toLowerCase() === 'approved' && (
+                    <button
+                      type="button"
+                      onClick={() => handleInlineStatusUpdate(inspectBlog, 'published')}
+                      className="btn btn-primary btn-sm"
+                    >
+                      <Send size={14} />
+                      <span>Publish</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
