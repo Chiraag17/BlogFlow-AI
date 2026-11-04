@@ -1,54 +1,47 @@
-# 3D Parallax Metric Monoliths Enhancement
+# 3D Astrolabe & Volumetric Nebula Login Background
 
-Upgrade the 4 Dashboard Metric Monolith cards (`Articles`, `Review`, `Published`, `Sites`) with a multi-layer 3D parallax hover effect featuring independent Z-depth translation, counter-moving foreground/background planes, and dynamic brass specular glare with edge rim lighting.
+Elevate the login and signup portal background by layering a **3D Orbital Brass Astrolabe** around the Gutenberg Cube, **Volumetric Gold & Emerald Nebula Clouds** with diagonal god-rays, and **Keystroke Shockwave Ripples** on top of the existing 60fps 3D starfield and post-login warp transition.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following interactive 3D parallax decisions have been confirmed and govern the implementation:
+> The following user-confirmed choices govern this background upgrade:
 
-- **Confirmed Decision 1 (3D Parallax Style)**: **Multi-layer depth shift with counter-moving elements** — As the cursor moves across each monolith, the outer card tilts in 3D space (`perspective(1000px) rotateX / rotateY`) while inner layers translate along the X, Y, and Z axes at distinct parallax multipliers, creating genuine stereographic depth.
-- **Confirmed Decision 2 (Visual Depth Enhancements)**: **Dynamic brass specular glare & edge rim glow + Independent Z-depth parallax on ring and number** — A cursor-tracked radial specular sheen and directional rim border light up the card edges, while the tabular number, 1-word label, SVG radial ring, and center icon float at separate Z-depths (`translate3d`).
+- **Confirmed Decision 1 (3D Background Centerpiece)**: **3D Orbital Brass Astrolabe Rings around the Cube** — Multi-axis tilted 3D brass gyroscope rings (`rotateX`, `rotateY`, `rotateZ` in `preserve-3d` space) with degree ticks, orbital nodes, and engraved SVG markings that react to cursor parallax, input field focus, and warp lock.
+- **Confirmed Decision 2 (Interactive Lighting & Reactive Effects)**:
+  1. **Volumetric Gold & Emerald Nebula Clouds**: Animated multi-layer volumetric nebula plumes (`#C8A15A` antique brass, `#E5C98B` champagne gold, and `#163F32` forest emerald) paired with soft diagonal light beams radiating from behind the 3D Cube stage.
+  2. **Keystroke Shockwave Ripples**: Every keystroke emits an expanding 3D perspective shockwave ring across the background canvas from the active input and around the 3D Cube, gently displacing nearby stardust particles as the wave passes.
+- **Confirmed Decision 3 (Integration with Existing Starfield & Warp)**: **Layered on top of existing 3D starfield and warp jump** — Preserves the 260-star 3D cosmos, keystroke energy comet trails, and post-login starfield warp jump while syncing the astrolabe rings to lock and accelerate during warp.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Transforms the 4 Metric Monoliths on the dashboard into tactile, multi-plane 3D instruments. Moving the pointer across a monolith tilts the chassis while shifting the background shadow plane in the opposite direction (counter-parallax) and elevating the tabular counter and radial progress gauge at independent Z-depths.
-- **Target Audience / Persona**: Editorial directors and content operators monitoring pipeline health who want responsive, physical spatial feedback without visual clutter.
-- **Key Value**: Enhances spatial depth and interactivity while preserving the clean, 1-word typographic discipline and tabular numeral legibility of the dashboard.
+- **What It Does**: Transforms the authentication backdrop into a living, celestial mechanical observatory. Behind the form and around the 3D Gutenberg Cube, concentric 3D brass astrolabe rings rotate on tilted axes inside swirling gold-and-emerald volumetric nebula clouds, while typing sends luminous golden shockwaves rippling across the cosmos.
+- **Target Audience / Persona**: Writers, editors, and publishing teams signing into their studio.
+- **Key Value**: Creates an unforgettable, tactile first impression where every cursor movement, field focus, and keystroke visibly energizes the 3D environment.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Idle State**: Each monolith rests cleanly on the surface grid with a 1-word uppercase label, monospace tabular figure (`tabular-nums`), and animated SVG radial progress ring.
-  2. **Pointer Enter & Move (Multi-Layer Parallax)**:
-     - **Outer Chassis**: Smoothly tilts up to `±14deg` on the X/Y axes and lifts `translateZ(10px)` with an elevated ambient drop shadow that shifts opposite to the tilt angle.
-     - **Counter-Moving Depth Plane**: A subtle recessed ambient glow layer shifts in the opposite X/Y direction (`-dx * 10px, -dy * 10px, translateZ(-12px)`) to amplify stereo separation.
-     - **Independent Z-Depth Foreground Elements**:
-       - **1-Word Label**: Floats at `translateZ(20px)` with slight forward XY shift (`dx * 4px, dy * 4px`).
-       - **Tabular Metric Value**: Floats higher at `translateZ(36px)` with stronger XY parallax (`dx * 8px, dy * 8px`) and subtle brass text-shadow depth on hover.
-       - **SVG Radial Ring**: Floats at `translateZ(28px)` with independent XY drift (`dx * 6px, dy * 6px`).
-       - **Center Icon**: Floats at the highest focal plane (`translateZ(44px)`) with `dx * 10px, dy * 10px` displacement so it visibly hovers inside the ring as you tilt the card.
-     - **Brass Specular Glare & Edge Rim Glow**: A dual-layer radial gradient follows the normalized cursor coordinates (`gx%`, `gy%`) across both the card surface and a `1px` perimeter rim mask, casting a warm antique-brass (`#C8A15A`) and accent-colored edge reflection near the cursor.
-  3. **Pointer Leave (Spring Reset)**: Releasing or leaving the card smoothly interpolates all rotation, translation, and glare states back to neutral (`0deg`, `0px`) using an exponential ease-out curve (`cubic-bezier(0.16, 1, 0.3, 1)`).
-- **Visual Identity & Theme**:
-  - *Color Palette & Mood*: Warm editorial obsidian/ivory surface tokens paired with `#C8A15A` brass specular highlights and each monolith's semantic accent color (`#C8A15A`, `#D97706`, `#16A34A`, `#2563EB`).
-  - *Typography & Hierarchy*: `font-mono tabular-nums` for zero-jitter counters paired with crisp uppercase tracking for the 1-word labels.
+  1. **Ambient Cosmic Observatory**:
+     - Swirling **Volumetric Gold & Emerald Nebula Clouds** breathe slowly in the deep background (`#050B09` in dark mode, `#F5F2E8` in light mode) with subtle diagonal volumetric light rays behind the left 3D stage.
+     - Around the 3D Gutenberg Cube, a **Large-Scale 3D Brass Astrolabe** (spanning `520px × 520px` in the background plane plus inner gyroscope rings) orbits on three intersecting 3D planes (`rotateX(62deg)`, `rotateY(-38deg)`, `rotateZ`) with SVG degree ticks, cardinal markers, and glowing brass satellites.
+  2. **Field Focus & Typing Reactivity**:
+     - Focusing `Email`, `Password`, or `OTP` smoothly shifts the tilt angles of the 3D Astrolabe rings into distinct geometric alignments.
+     - Each keystroke triggers a **Background Shockwave Ripple** in the 60fps canvas—an expanding golden elliptical wave that radiates across the viewport and pushes nearby 3D stars outward with a brief luminous flare.
+  3. **Post-Login Warp Climax**:
+     - When login or signup succeeds, the 3D Astrolabe rings snap into concentric alignment around the centering Cube, spin up to high speed, and fire a multi-ring golden shockwave burst as the 3D starfield accelerates into warp streaks.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Normalized Pointer Delta (`dx`, `dy` in `[-0.5, 0.5]`) Driving Multi-Plane `translate3d`**
-  - *Chosen Approach*: Compute normalized pointer offsets `dx = px - 0.5` and `dy = py - 0.5` from `getBoundingClientRect()` and drive each child layer via GPU-accelerated `translate3d(x, y, z)` transforms inside a `transform-style: preserve-3d` container.
-  - *Why*: Pure CSS 3D matrix transforms run on the compositor thread at 60fps without triggering layout recalculation or text blurring.
-  - *Alternatives Considered*: Heavy WebGL canvases per KPI card (excessive WebGL context overhead alongside the main 3D Editorial Orrery).
-- **Decision 2: Counter-Moving Backdrop + Directional Rim Mask**
-  - *Chosen Approach*: Pair a counter-translating inner glow (`-dx`, `-dy`) with a cursor-positioned radial rim highlight along the card border.
-  - *Why*: Counter-motion between the recessed plane and the elevated foreground elements creates an unmistakable parallax depth illusion even with small cursor movements.
+- **Decision 1: Hybrid CSS `preserve-3d` SVG Astrolabe + 60fps Canvas Shockwaves**
+  - *Chosen Approach*: Render the tilted 3D Astrolabe rings with crisp SVG degree markings inside Framer Motion `preserve-3d` planes (synced to `stageRotateX`/`stageRotateY` and `focusedField`), while rendering the expanding keystroke shockwaves and star displacement directly inside the existing 60fps `<canvas>` loop.
+  - *Why*: SVG rings stay razor-sharp at any scale and tilt angle in 3D CSS space, while canvas shockwaves can directly interact with the 260 3D star coordinates at zero extra DOM cost.
 
 ---
 
@@ -56,20 +49,21 @@ Upgrade the 4 Dashboard Metric Monolith cards (`Articles`, `Review`, `Published`
 
 - **Architecture & Component Diagram**:
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                    MetricMonolith3D (preserve-3d)                     │
-│  perspective(1000px) rotateX(rx) rotateY(ry) translateZ(10px)         │
-├───────────────────────────────────────────────────────────────────────┤
-│  ├─ Layer 0: Counter-Moving Recessed Glow (translateZ(-12px), -dx/-dy)│
-│  ├─ Layer 1: Dynamic Brass Specular Glare & Perimeter Rim Light       │
-│  ├─ Layer 2: 1-Word Label (translate3d(dx*4, dy*4, 20px))             │
-│  ├─ Layer 3: Tabular Metric Number (translate3d(dx*8, dy*8, 36px))    │
-│  ├─ Layer 4: Radial SVG Ring Gauge (translate3d(dx*6, dy*6, 28px))    │
-│  └─ Layer 5: Floating Center Icon (translate3d(dx*10, dy*10, 44px))   │
-└───────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     MorphingAuthPortal Background                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ├─ Layer 1A: Volumetric Gold & Emerald Nebula Clouds + God-Ray Beams   │
+│  ├─ Layer 1B: 60fps 3D Canvas                                           │
+│  │    ├─ 260 3D Stars (react to Shockwave Ripples + Warp Streaks)       │
+│  │    ├─ Keystroke Shockwave Ripples (expanding golden radial waves)    │
+│  │    └─ Keystroke Energy Comet Particles & Cube Absorption Rings       │
+│  └─ Layer 1C: 3D Orbital Brass Astrolabe (preserve-3d gyroscope rings)  │
+│       ├─ Equatorial Degree Ring (SVG ticks + cardinal brass nodes)      │
+│       ├─ Tilted Meridian Ring (rotateX 64deg, rotateY -28deg)           │
+│       └─ Ecliptic Gyroscope Ring (reacts to focusedField & isWarping)   │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 - **Interactive Component & State Mapping**:
-  - `tilt` state tracks `{ rx, ry, dx, dy, gx, gy, hovered }`.
-  - `onPointerMove` updates normalized cursor coordinates `(px, py)` and derives rotation (`rx`, `ry`), directional parallax deltas (`dx`, `dy`), and glare percentages (`gx`, `gy`).
-  - `onPointerLeave` resets all axes to `0` and `hovered: false`, activating a `450ms cubic-bezier(0.16, 1, 0.3, 1)` return transition across all child planes.
-  - Existing click filtering (`Articles`, `Review`, `Published`) and navigation (`Sites` -> `/websites`) remain fully intact.
+  - `shockwavesRef`: Array of active `BackgroundShockwave` objects (`{ x, y, radius, maxRadius, alpha, color, speed }`) spawned inside `pulseCube()` on every keystroke and mode switch, and in a triple burst inside `triggerWarpToStudio()`.
+  - Star-wave interaction: In the 60fps canvas loop, stars near an active shockwave wavefront (`|dist - wave.radius| < 36`) receive a subtle radial push and brightness boost.
+  - 3D Astrolabe rings respond dynamically to `focusedField` (`name` | `email` | `password` | `otp`), `completionPct`, and `isWarping`.

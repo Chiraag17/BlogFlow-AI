@@ -74,6 +74,17 @@ interface AbsorptionRing {
   color: string;
 }
 
+interface BackgroundShockwave {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  speed: number;
+  alpha: number;
+  color: string;
+  tiltRatio: number;
+}
+
 const EMAIL_DOMAINS = ['@gmail.com', '@outlook.com', '@blogflow.ai'];
 
 const MODE_COPY: Record<
@@ -165,9 +176,10 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const cubeStageRef = useRef<HTMLDivElement>(null);
   const formCardRef = useRef<HTMLDivElement>(null);
 
-  // Particle & Starfield Refs for 60fps Canvas Loop
+  // Particle, Shockwave & Starfield Refs for 60fps Canvas Loop
   const particlesRef = useRef<KeystrokeParticle[]>([]);
   const ringsRef = useRef<AbsorptionRing[]>([]);
+  const shockwavesRef = useRef<BackgroundShockwave[]>([]);
   const pointerNormRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
 
   // Cursor-reactive 3D stage & spotlight coordinates
@@ -294,14 +306,74 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   }, []);
 
+  // Spawn a 3D Background Shockwave Ripple across the starfield
+  const spawnShockwaveRipple = useCallback((origin: 'cube' | 'form' | 'burst' = 'cube') => {
+    if (typeof window === 'undefined') return;
+    const cubeRect = cubeStageRef.current?.getBoundingClientRect();
+    const formRect = formCardRef.current?.getBoundingClientRect();
+
+    const cubeX = cubeRect
+      ? cubeRect.left + cubeRect.width / 2
+      : window.innerWidth * 0.3;
+    const cubeY = cubeRect
+      ? cubeRect.top + cubeRect.height / 2
+      : window.innerHeight * 0.45;
+
+    const formX = formRect
+      ? formRect.left + formRect.width / 2
+      : window.innerWidth * 0.68;
+    const formY = formRect
+      ? formRect.top + formRect.height * 0.45
+      : window.innerHeight * 0.5;
+
+    const maxViewportSpan = Math.hypot(window.innerWidth, window.innerHeight) * 0.72;
+
+    if (origin === 'burst') {
+      const burstColors = ['#E5C98B', '#C8A15A', '#52B788'];
+      burstColors.forEach((color, idx) => {
+        shockwavesRef.current.push({
+          x: cubeX,
+          y: cubeY,
+          radius: 24 + idx * 28,
+          maxRadius: maxViewportSpan,
+          speed: 11 + idx * 3.5,
+          alpha: 0.52 - idx * 0.1,
+          color,
+          tiltRatio: 1,
+        });
+      });
+      return;
+    }
+
+    // Primary shockwave radiating from the 3D Cube Astrolabe
+    shockwavesRef.current.push({
+      x: origin === 'form' ? formX : cubeX,
+      y: origin === 'form' ? formY : cubeY,
+      radius: 32,
+      maxRadius: maxViewportSpan * 0.85,
+      speed: 8.5,
+      alpha: 0.38,
+      color: origin === 'form' ? '#52B788' : '#E5C98B',
+      tiltRatio: 0.82,
+    });
+
+    // Cap concurrent shockwaves for crisp 60fps rendering
+    if (shockwavesRef.current.length > 7) {
+      shockwavesRef.current.shift();
+    }
+  }, []);
+
   const pulseCube = useCallback(
     (emitParticles = true) => {
       setKeystrokePulse((prev) => prev + 1);
       if (emitParticles) {
         spawnKeystrokeParticles(2);
+        spawnShockwaveRipple('cube');
+      } else {
+        spawnShockwaveRipple('form');
       }
     },
-    [spawnKeystrokeParticles]
+    [spawnKeystrokeParticles, spawnShockwaveRipple]
   );
 
   // Trigger the 3D Cube Spin & Starfield Warp Jump into the Studio
@@ -310,10 +382,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     setIsWarping(true);
     setWarpStage('align');
     spawnKeystrokeParticles(14);
+    spawnShockwaveRipple('burst');
 
     // Stage 2: Engage high-speed starfield warp streaks
     setTimeout(() => {
       setWarpStage('jump');
+      spawnShockwaveRipple('burst');
     }, 520);
 
     // Stage 3: Navigate to Dashboard after warp climax
@@ -321,7 +395,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       router.push(targetRedirect);
       router.refresh();
     }, 1850);
-  }, [router, spawnKeystrokeParticles, targetRedirect]);
+  }, [router, spawnKeystrokeParticles, spawnShockwaveRipple, targetRedirect]);
 
   // --- 60FPS 3D GOLDEN STARDUST COSMOS & PARTICLE CANVAS ---
   useEffect(() => {
@@ -376,7 +450,43 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       const centerX = width / 2 + (px - 0.5) * 90;
       const centerY = height / 2 + (py - 0.5) * 70;
 
-      // 1. Draw 3D Starfield
+      // 0. Advance & Draw Keystroke Background Shockwave Ripples
+      for (let w = shockwavesRef.current.length - 1; w >= 0; w--) {
+        const wave = shockwavesRef.current[w];
+        wave.radius += wave.speed;
+        const progress = wave.radius / wave.maxRadius;
+        wave.alpha = Math.max(0, (1 - progress) * 0.36);
+
+        if (wave.radius >= wave.maxRadius || wave.alpha <= 0.01) {
+          shockwavesRef.current.splice(w, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.translate(wave.x, wave.y);
+        ctx.scale(1, wave.tiltRatio);
+
+        // Outer luminous brass shockwave wavefront
+        ctx.beginPath();
+        ctx.arc(0, 0, wave.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = wave.color;
+        ctx.globalAlpha = isDark ? wave.alpha : wave.alpha * 0.75;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+
+        // Soft trailing echo ring
+        if (wave.radius > 28) {
+          ctx.beginPath();
+          ctx.arc(0, 0, wave.radius - 18, 0, Math.PI * 2);
+          ctx.strokeStyle = '#C8A15A';
+          ctx.globalAlpha = (isDark ? wave.alpha : wave.alpha * 0.6) * 0.45;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // 1. Draw 3D Starfield (with real-time Shockwave Ripple Displacement)
       const focalLength = width * 0.75;
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
@@ -391,17 +501,35 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
           star.y = (Math.random() - 0.5) * height * 2.2;
         }
 
-        const sx = (star.x / star.z) * focalLength + centerX;
-        const sy = (star.y / star.z) * focalLength + centerY;
+        let sx = (star.x / star.z) * focalLength + centerX;
+        let sy = (star.y / star.z) * focalLength + centerY;
 
         const pxScreen = (star.x / star.pz) * focalLength + centerX;
         const pyScreen = (star.y / star.pz) * focalLength + centerY;
 
+        // Displace stars and boost luminosity when a Keystroke Shockwave passes over them
+        let waveBoost = 0;
+        for (let w = 0; w < shockwavesRef.current.length; w++) {
+          const wave = shockwavesRef.current[w];
+          const dx = sx - wave.x;
+          const dy = (sy - wave.y) / wave.tiltRatio;
+          const dist = Math.hypot(dx, dy);
+          const band = 48;
+          const delta = Math.abs(dist - wave.radius);
+          if (delta < band && dist > 1) {
+            const influence = (1 - delta / band) * (wave.alpha / 0.36);
+            const push = influence * 11;
+            sx += (dx / dist) * push;
+            sy += (dy / dist) * push;
+            waveBoost = Math.max(waveBoost, influence);
+          }
+        }
+
         if (sx >= 0 && sx <= width && sy >= 0 && sy <= height) {
           const depthRatio = 1 - star.z / width;
           const twinkle = 0.65 + 0.35 * Math.sin(star.twinklePhase);
-          const alpha = Math.min(1, Math.max(0.1, depthRatio * twinkle));
-          const radius = Math.max(0.4, star.size * depthRatio * 1.6);
+          const alpha = Math.min(1, Math.max(0.1, depthRatio * twinkle + waveBoost * 0.45));
+          const radius = Math.max(0.4, star.size * depthRatio * 1.6 + waveBoost * 1.3);
 
           if (warpSpeedMultiplier > 3.2) {
             // Draw high-speed 3D warp starlight streaks
@@ -417,16 +545,16 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
             // Draw glowing 3D stardust point
             ctx.beginPath();
             ctx.arc(sx, sy, radius, 0, Math.PI * 2);
-            ctx.fillStyle = star.color;
+            ctx.fillStyle = waveBoost > 0.25 ? '#FFF8E7' : star.color;
             ctx.globalAlpha = isDark ? alpha : alpha * 0.75;
             ctx.fill();
 
-            // Subtle golden halo on larger foreground stars
-            if (radius > 1.8 && isDark) {
+            // Subtle golden halo on larger foreground stars or shockwave-excited stars
+            if ((radius > 1.8 || waveBoost > 0.2) && isDark) {
               ctx.beginPath();
-              ctx.arc(sx, sy, radius * 2.6, 0, Math.PI * 2);
+              ctx.arc(sx, sy, radius * (2.6 + waveBoost * 1.4), 0, Math.PI * 2);
               ctx.fillStyle = star.color;
-              ctx.globalAlpha = alpha * 0.16;
+              ctx.globalAlpha = alpha * (0.16 + waveBoost * 0.22);
               ctx.fill();
             }
           }
@@ -856,22 +984,70 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
           : 'bg-[#F5F2E8] text-[#18211D]'
       }`}
     >
-      {/* --- LAYER 1: Golden Stardust Cosmos & Interactive 3D Starfield --- */}
+      {/* --- LAYER 1: Volumetric Gold & Emerald Nebula + 3D Starfield + Shockwaves --- */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        {/* Deep Cosmic Nebula Clouds */}
+        {/* Base Cosmic Atmospheric Gradient */}
         <div
           className="absolute inset-0 transition-opacity duration-700"
           style={{
             background: isDark
               ? [
-                  'radial-gradient(circle 760px at 28% 46%, rgba(200, 161, 90, 0.19), rgba(22, 63, 50, 0.32) 46%, transparent 78%)',
-                  'radial-gradient(circle 680px at 76% 38%, rgba(34, 97, 74, 0.24), rgba(200, 161, 90, 0.10) 48%, transparent 80%)',
-                  'radial-gradient(ellipse 110% 75% at 50% 100%, rgba(16, 48, 37, 0.45), transparent 70%)',
+                  'radial-gradient(circle 820px at 26% 46%, rgba(200, 161, 90, 0.22), rgba(22, 63, 50, 0.36) 46%, transparent 78%)',
+                  'radial-gradient(circle 740px at 76% 36%, rgba(34, 97, 74, 0.28), rgba(200, 161, 90, 0.12) 48%, transparent 80%)',
+                  'radial-gradient(ellipse 115% 80% at 50% 100%, rgba(16, 48, 37, 0.52), transparent 72%)',
                 ].join(', ')
               : [
-                  'radial-gradient(circle 760px at 28% 46%, rgba(200, 161, 90, 0.26), rgba(22, 63, 50, 0.08) 48%, transparent 78%)',
-                  'radial-gradient(circle 640px at 76% 42%, rgba(200, 161, 90, 0.18), rgba(22, 63, 50, 0.06) 50%, transparent 80%)',
+                  'radial-gradient(circle 820px at 26% 46%, rgba(200, 161, 90, 0.28), rgba(22, 63, 50, 0.10) 48%, transparent 78%)',
+                  'radial-gradient(circle 680px at 76% 42%, rgba(200, 161, 90, 0.20), rgba(22, 63, 50, 0.08) 50%, transparent 80%)',
                 ].join(', '),
+          }}
+        />
+
+        {/* Animated Volumetric Gold Nebula Plume (Left Observatory Core) */}
+        <motion.div
+          animate={{
+            x: [-25, 30, -25],
+            y: [-18, 22, -18],
+            scale: [1, 1.14, 1],
+            rotate: [0, 12, 0],
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -left-24 top-[12%] w-[680px] h-[680px] rounded-full blur-[130px]"
+          style={{
+            background: isDark
+              ? 'radial-gradient(circle, rgba(229, 201, 139, 0.22) 0%, rgba(200, 161, 90, 0.12) 42%, rgba(22, 63, 50, 0.18) 70%, transparent 100%)'
+              : 'radial-gradient(circle, rgba(200, 161, 90, 0.26) 0%, rgba(22, 63, 50, 0.08) 60%, transparent 100%)',
+          }}
+        />
+
+        {/* Animated Volumetric Forest Emerald Nebula Plume (Right Horizon) */}
+        <motion.div
+          animate={{
+            x: [30, -28, 30],
+            y: [20, -24, 20],
+            scale: [1.08, 0.94, 1.08],
+            rotate: [0, -15, 0],
+          }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute right-[-8%] bottom-[6%] w-[740px] h-[740px] rounded-full blur-[145px]"
+          style={{
+            background: isDark
+              ? 'radial-gradient(circle, rgba(42, 107, 83, 0.28) 0%, rgba(22, 63, 50, 0.22) 45%, rgba(200, 161, 90, 0.09) 72%, transparent 100%)'
+              : 'radial-gradient(circle, rgba(22, 63, 50, 0.12) 0%, rgba(200, 161, 90, 0.16) 55%, transparent 100%)',
+          }}
+        />
+
+        {/* Diagonal Volumetric Light Beams (God-Rays) behind the 3D Astrolabe */}
+        <motion.div
+          animate={{
+            opacity: isDark ? [0.26, 0.44, 0.26] : [0.18, 0.3, 0.18],
+            rotate: [-26, -22, -26],
+          }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-36 left-[8%] w-[520px] h-[980px] blur-[75px] origin-top"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(229, 201, 139, 0.24) 0%, rgba(200, 161, 90, 0.08) 52%, transparent 100%)',
           }}
         />
 
@@ -882,12 +1058,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
             left: spotlightX,
             top: spotlightY,
             background: isDark
-              ? 'radial-gradient(circle, rgba(229, 201, 139, 0.16) 0%, rgba(22, 63, 50, 0.14) 45%, transparent 72%)'
+              ? 'radial-gradient(circle, rgba(229, 201, 139, 0.17) 0%, rgba(22, 63, 50, 0.15) 45%, transparent 72%)'
               : 'radial-gradient(circle, rgba(200, 161, 90, 0.22) 0%, rgba(22, 63, 50, 0.06) 45%, transparent 72%)',
           }}
         />
 
-        {/* 60fps 3D Starfield & Keystroke Energy Particle Canvas */}
+        {/* 60fps 3D Starfield, Shockwave Ripples & Keystroke Energy Particle Canvas */}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -979,9 +1155,9 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
         </div>
       </motion.header>
 
-      {/* --- LAYER 3: Split Main Stage (Unboxed 3D Cube + Clean Form Card) --- */}
+      {/* --- LAYER 3: Split Main Stage (3D Astrolabe + Cube + Form Card) --- */}
       <main className="relative z-10 flex-1 w-full max-w-6xl mx-auto px-6 sm:px-10 py-6 lg:py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-        {/* LEFT COLUMN: Unboxed Floating 3D Gutenberg Cube + Short Welcome Copy */}
+        {/* LEFT COLUMN: Unboxed Floating 3D Gutenberg Cube + 3D Orbital Brass Astrolabe */}
         <motion.div
           animate={
             isWarping
@@ -994,11 +1170,11 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
           className="lg:col-span-6 flex flex-col justify-center items-center lg:items-start text-center lg:text-left space-y-6"
         >
-          {/* Unboxed 3D Cube Stage with Cosmic Golden Rings */}
+          {/* Unboxed 3D Cube Stage with Multi-Plane 3D Orbital Brass Astrolabe Rings */}
           <div
             ref={cubeStageRef}
-            className="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72 lg:-ml-2"
-            style={{ perspective: 1200 }}
+            className="relative flex items-center justify-center w-72 h-72 sm:w-80 sm:h-80 lg:-ml-4"
+            style={{ perspective: 1300 }}
           >
             <motion.div
               style={{
@@ -1016,49 +1192,180 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     : { scale: 1, opacity: 1 }
                 }
                 transition={{ duration: 1.5 }}
-                className="absolute w-56 h-56 rounded-full blur-3xl pointer-events-none"
+                className="absolute w-64 h-64 rounded-full blur-3xl pointer-events-none"
                 style={{
                   background: isDark
-                    ? 'radial-gradient(circle, rgba(229, 201, 139, 0.38) 0%, rgba(200, 161, 90, 0.20) 45%, rgba(22, 63, 50, 0.18) 70%, transparent 100%)'
-                    : 'radial-gradient(circle, rgba(200, 161, 90, 0.42) 0%, rgba(22, 63, 50, 0.15) 55%, transparent 100%)',
+                    ? 'radial-gradient(circle, rgba(229, 201, 139, 0.42) 0%, rgba(200, 161, 90, 0.22) 45%, rgba(22, 63, 50, 0.20) 70%, transparent 100%)'
+                    : 'radial-gradient(circle, rgba(200, 161, 90, 0.44) 0%, rgba(22, 63, 50, 0.15) 55%, transparent 100%)',
                 }}
               />
 
-              {/* Outer Celestial Orbital Ring */}
+              {/* ASTROLABE RING 1: Outer Engraved Degree Dial (Background 3D Plane Z: -36px) */}
               <motion.div
                 animate={{
                   rotateZ: 360,
-                  scale: isWarping ? 1.45 : 1,
+                  scale: isWarping ? 1.55 : 1 + completionPct * 0.05,
                 }}
                 transition={{
                   rotateZ: {
-                    duration: isWarping ? 4 : 50,
+                    duration: isWarping ? 3.5 : 58,
                     repeat: Infinity,
                     ease: 'linear',
                   },
-                  scale: { duration: 0.8 },
+                  scale: { duration: 0.7 },
                 }}
-                className={`absolute inset-2 rounded-full border border-dashed pointer-events-none ${
-                  isDark ? 'border-[#C8A15A]/30' : 'border-[#163F32]/25'
-                }`}
-              />
+                style={{ transform: 'translateZ(-36px)' }}
+                className="absolute -inset-12 sm:-inset-16 pointer-events-none flex items-center justify-center"
+              >
+                <svg
+                  viewBox="0 0 400 400"
+                  className={`w-full h-full ${
+                    isDark ? 'text-[#C8A15A]/45' : 'text-[#163F32]/35'
+                  }`}
+                >
+                  {/* Outer hairline ring */}
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="190"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="0.9"
+                    strokeDasharray="3 7"
+                  />
+                  {/* Inner degree track */}
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="172"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeOpacity="0.65"
+                  />
+                  {/* 24 Astrolabe Degree Ticks */}
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const angle = (i * 15 * Math.PI) / 180;
+                    const isMajor = i % 6 === 0;
+                    const r1 = isMajor ? 162 : 167;
+                    const r2 = 178;
+                    const x1 = 200 + Math.cos(angle) * r1;
+                    const y1 = 200 + Math.sin(angle) * r1;
+                    const x2 = 200 + Math.cos(angle) * r2;
+                    const y2 = 200 + Math.sin(angle) * r2;
+                    return (
+                      <line
+                        key={i}
+                        x1={x1}
+                        y1={y1}
+                        x2={x2}
+                        y2={y2}
+                        stroke="currentColor"
+                        strokeWidth={isMajor ? '2' : '1'}
+                        strokeOpacity={isMajor ? '0.95' : '0.55'}
+                      />
+                    );
+                  })}
+                  {/* 4 Cardinal Brass Nodes */}
+                  <circle cx="200" cy="28" r="3.5" fill="#E5C98B" />
+                  <circle cx="372" cy="200" r="3.5" fill="#C8A15A" />
+                  <circle cx="200" cy="372" r="3.5" fill="#E5C98B" />
+                  <circle cx="28" cy="200" r="3.5" fill="#52B788" />
+                </svg>
+              </motion.div>
 
-              {/* Inner Celestial Ring */}
+              {/* ASTROLABE RING 2: 3D Tilted Meridian Gyroscope Ring (Reacts to Field Focus) */}
+              <motion.div
+                animate={{
+                  rotateX: isWarping
+                    ? 0
+                    : focusedField === 'email'
+                    ? 56
+                    : focusedField === 'password' || focusedField === 'confirm'
+                    ? 72
+                    : 64,
+                  rotateY: isWarping
+                    ? 0
+                    : focusedField === 'email'
+                    ? -34
+                    : focusedField === 'password'
+                    ? 28
+                    : -24,
+                  rotateZ: -360,
+                  scale: isWarping ? 1.38 : 1,
+                }}
+                transition={{
+                  rotateX: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+                  rotateY: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+                  rotateZ: {
+                    duration: isWarping ? 2.6 : 32,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  },
+                  scale: { duration: 0.7 },
+                }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className={`absolute -inset-4 sm:-inset-6 rounded-full border pointer-events-none ${
+                  isDark
+                    ? 'border-[#E5C98B]/40 shadow-[0_0_24px_rgba(200,161,90,0.16)]'
+                    : 'border-[#C8A15A]/55'
+                }`}
+              >
+                {/* Orbiting Brass Satellite Bead */}
+                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#E5C98B] shadow-[0_0_12px_#E5C98B]" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#52B788] shadow-[0_0_10px_#52B788]" />
+              </motion.div>
+
+              {/* ASTROLABE RING 3: Counter-Tilted Ecliptic Brass Ring */}
+              <motion.div
+                animate={{
+                  rotateX: isWarping
+                    ? 0
+                    : focusedField === 'password' || focusedField === 'otp'
+                    ? -66
+                    : -54,
+                  rotateY: isWarping
+                    ? 0
+                    : focusedField === 'name'
+                    ? -36
+                    : 32,
+                  rotateZ: 360,
+                  scale: isWarping ? 1.24 : 1,
+                }}
+                transition={{
+                  rotateX: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+                  rotateY: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+                  rotateZ: {
+                    duration: isWarping ? 2.2 : 24,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  },
+                  scale: { duration: 0.7 },
+                }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className={`absolute inset-3 sm:inset-4 rounded-full border border-dashed pointer-events-none ${
+                  isDark ? 'border-[#C8A15A]/45' : 'border-[#163F32]/35'
+                }`}
+              >
+                <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#C8A15A] shadow-[0_0_10px_#C8A15A]" />
+              </motion.div>
+
+              {/* ASTROLABE RING 4: Inner Celestial Locking Collar */}
               <motion.div
                 animate={{
                   rotateZ: -360,
-                  scale: isWarping ? 1.25 : 1,
+                  scale: isWarping ? 1.18 : 1,
                 }}
                 transition={{
                   rotateZ: {
-                    duration: isWarping ? 3 : 34,
+                    duration: isWarping ? 2.8 : 36,
                     repeat: Infinity,
                     ease: 'linear',
                   },
                   scale: { duration: 0.8 },
                 }}
-                className={`absolute inset-9 rounded-full border pointer-events-none ${
-                  isDark ? 'border-[#E5C98B]/20' : 'border-[#C8A15A]/40'
+                className={`absolute inset-10 rounded-full border pointer-events-none ${
+                  isDark ? 'border-[#E5C98B]/25' : 'border-[#C8A15A]/45'
                 }`}
               />
 
