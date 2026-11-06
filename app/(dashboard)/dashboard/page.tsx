@@ -58,6 +58,360 @@ const TELEMETRY_SERIES = [
   { month: 'Sep', generated: 15, published: 12, seoAvg: 92, readabilityAvg: 88, words: 24800 },
 ];
 
+interface AtelierDustMote3D {
+  x: number;
+  y: number;
+  z: number; // 0.15 (far) .. 1.0 (near foreground bokeh)
+  vx: number;
+  vy: number;
+  baseRadius: number;
+  color: string;
+  shimmerPhase: number;
+  shimmerSpeed: number;
+}
+
+interface AtelierRippleWave {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  speed: number;
+  alpha: number;
+  maxAlpha: number;
+  color: string;
+  secondaryColor?: string;
+  tiltY: number;
+  lineWidth: number;
+}
+
+/**
+ * Volumetric Atelier Light Beams + 60fps 3D Gold Dust Motes & Reactive Ripple Canvas
+ */
+function DashboardAtelierBackdrop3D({
+  isDark,
+  typingPulse,
+  stampPulse,
+  coverflowPulse,
+  coverflowDir,
+}: {
+  isDark: boolean;
+  typingPulse: number;
+  stampPulse: number;
+  coverflowPulse: number;
+  coverflowDir: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const ripplesRef = useRef<AtelierRippleWave[]>([]);
+  const breezeVxRef = useRef<number>(0);
+
+  // 1. Keystroke Energy Ripples from the Command Stage
+  useEffect(() => {
+    if (typingPulse === 0 || typeof window === 'undefined') return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    ripplesRef.current.push({
+      x: w * 0.42 + (Math.random() - 0.5) * 90,
+      y: h * 0.24 + (Math.random() - 0.5) * 40,
+      radius: 18,
+      maxRadius: Math.hypot(w, h) * 0.42,
+      speed: 6.8,
+      alpha: 0.34,
+      maxAlpha: 0.34,
+      color: '#E5C98B',
+      secondaryColor: '#C8A15A',
+      tiltY: 0.78,
+      lineWidth: 1.4,
+    });
+    if (ripplesRef.current.length > 10) ripplesRef.current.shift();
+  }, [typingPulse]);
+
+  // 2. 3D Coverflow Card Flip Energy Pulse + Horizontal Dust Breeze
+  useEffect(() => {
+    if (coverflowPulse === 0 || typeof window === 'undefined') return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    breezeVxRef.current = (coverflowDir >= 0 ? -1 : 1) * 4.2;
+
+    ripplesRef.current.push({
+      x: w * 0.55,
+      y: h * 0.58,
+      radius: 28,
+      maxRadius: Math.hypot(w, h) * 0.58,
+      speed: 9.2,
+      alpha: 0.44,
+      maxAlpha: 0.44,
+      color: '#C8A15A',
+      secondaryColor: '#52B788',
+      tiltY: 0.72,
+      lineWidth: 1.8,
+    });
+    if (ripplesRef.current.length > 10) ripplesRef.current.shift();
+  }, [coverflowPulse, coverflowDir]);
+
+  // 3. Approve / Publish Stamp Double Shockwave Burst
+  useEffect(() => {
+    if (stampPulse === 0 || typeof window === 'undefined') return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const maxSpan = Math.hypot(w, h) * 0.78;
+    breezeVxRef.current = (Math.random() > 0.5 ? 1 : -1) * 2.6;
+
+    const palette = [
+      { color: '#E5C98B', secondary: '#C8A15A', speed: 11.5, r0: 24, alpha: 0.52 },
+      { color: '#52B788', secondary: '#E5C98B', speed: 8.6, r0: 46, alpha: 0.4 },
+    ];
+    palette.forEach((p) => {
+      ripplesRef.current.push({
+        x: w * 0.54,
+        y: h * 0.52,
+        radius: p.r0,
+        maxRadius: maxSpan,
+        speed: p.speed,
+        alpha: p.alpha,
+        maxAlpha: p.alpha,
+        color: p.color,
+        secondaryColor: p.secondary,
+        tiltY: 0.85,
+        lineWidth: 2.2,
+      });
+    });
+  }, [stampPulse]);
+
+  // 60fps 3D Gold Dust Motes & Reactive Wave Loop
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const darkColors = ['#F7F4EC', '#E5C98B', '#C8A15A', '#D4AF67', '#68C39F'];
+    const lightColors = ['#C8A15A', '#9A732E', '#163F32', '#B5893D', '#2A6B53'];
+    const MOTE_COUNT = 110;
+
+    const motes: AtelierDustMote3D[] = Array.from({ length: MOTE_COUNT }, () => {
+      // Bias more motes toward mid/background with ~18% foreground bokeh motes
+      const z = Math.random() < 0.18 ? 0.75 + Math.random() * 0.25 : 0.16 + Math.random() * 0.58;
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        z,
+        vx: (Math.random() - 0.35) * 0.28 * z,
+        vy: (-0.18 - Math.random() * 0.26) * z,
+        baseRadius: z > 0.78 ? 2.6 + Math.random() * 2.2 : 0.8 + z * 1.8,
+        color: (isDark ? darkColors : lightColors)[Math.floor(Math.random() * 5)],
+        shimmerPhase: Math.random() * Math.PI * 2,
+        shimmerSpeed: 0.015 + Math.random() * 0.028,
+      };
+    });
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Decay Coverflow horizontal breeze smoothly
+      breezeVxRef.current *= 0.93;
+
+      // 1. Advance & Draw Reactive Ripple Waves
+      for (let r = ripplesRef.current.length - 1; r >= 0; r--) {
+        const wave = ripplesRef.current[r];
+        wave.radius += wave.speed;
+        const progress = wave.radius / wave.maxRadius;
+        wave.alpha = Math.max(0, (1 - progress) * wave.maxAlpha);
+
+        if (wave.radius >= wave.maxRadius || wave.alpha <= 0.01) {
+          ripplesRef.current.splice(r, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.translate(wave.x, wave.y);
+        ctx.scale(1, wave.tiltY);
+
+        // Primary golden wavefront
+        ctx.beginPath();
+        ctx.arc(0, 0, wave.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = wave.color;
+        ctx.globalAlpha = isDark ? wave.alpha : wave.alpha * 0.8;
+        ctx.lineWidth = wave.lineWidth;
+        ctx.stroke();
+
+        // Secondary harmonic echo ring
+        if (wave.secondaryColor && wave.radius > 32) {
+          ctx.beginPath();
+          ctx.arc(0, 0, wave.radius - 20, 0, Math.PI * 2);
+          ctx.strokeStyle = wave.secondaryColor;
+          ctx.globalAlpha = (isDark ? wave.alpha : wave.alpha * 0.7) * 0.45;
+          ctx.lineWidth = wave.lineWidth * 0.65;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // 2. Update & Draw 3D Gold Dust Motes
+      for (let i = 0; i < motes.length; i++) {
+        const m = motes[i];
+        m.shimmerPhase += m.shimmerSpeed;
+
+        // Drift + subtle sinusoidal float + Coverflow breeze scaled by 3D Z-depth
+        m.x += m.vx + Math.sin(m.shimmerPhase * 0.6) * 0.14 * m.z + breezeVxRef.current * m.z;
+        m.y += m.vy;
+
+        // Wrap around viewport edges
+        if (m.y < -20) {
+          m.y = height + 18;
+          m.x = Math.random() * width;
+        } else if (m.y > height + 20) {
+          m.y = -18;
+        }
+        if (m.x < -20) m.x = width + 18;
+        if (m.x > width + 20) m.x = -18;
+
+        let drawX = m.x;
+        let drawY = m.y;
+        let waveExcite = 0;
+
+        // Displace and brighten 3D gold dust motes when a ripple wave passes through them
+        for (let r = 0; r < ripplesRef.current.length; r++) {
+          const wave = ripplesRef.current[r];
+          const dx = drawX - wave.x;
+          const dy = (drawY - wave.y) / wave.tiltY;
+          const dist = Math.hypot(dx, dy);
+          const band = 56;
+          const delta = Math.abs(dist - wave.radius);
+          if (delta < band && dist > 1) {
+            const influence = (1 - delta / band) * (wave.alpha / wave.maxAlpha);
+            const push = influence * 14 * m.z;
+            drawX += (dx / dist) * push;
+            drawY += (dy / dist) * push;
+            waveExcite = Math.max(waveExcite, influence);
+          }
+        }
+
+        // Check if mote is inside the diagonal Volumetric Atelier Light Beam corridor
+        const beamCoord = drawX * 0.75 + drawY * 0.45;
+        const inPrimaryBeam =
+          beamCoord > width * 0.18 && beamCoord < width * 0.78 ? 0.25 : 0;
+
+        const shimmer = 0.55 + 0.45 * Math.sin(m.shimmerPhase);
+        const baseAlpha = m.z > 0.78 ? 0.28 : 0.22 + m.z * 0.48;
+        const alpha = Math.min(
+          0.95,
+          (baseAlpha * shimmer + inPrimaryBeam * 0.22 + waveExcite * 0.48) *
+            (isDark ? 1 : 0.78)
+        );
+        const radius = m.baseRadius * (1 + waveExcite * 0.55);
+
+        // Soft 3D bokeh halo for foreground motes or ripple-excited motes
+        if (m.z > 0.68 || waveExcite > 0.18 || inPrimaryBeam > 0) {
+          ctx.beginPath();
+          ctx.arc(drawX, drawY, radius * 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = m.color;
+          ctx.globalAlpha = alpha * 0.18;
+          ctx.fill();
+        }
+
+        // Crisp luminous gold core
+        ctx.beginPath();
+        ctx.arc(drawX, drawY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = waveExcite > 0.28 ? '#FFF9EA' : m.color;
+        ctx.globalAlpha = alpha;
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isDark]);
+
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden z-0 select-none">
+      {/* Ambient Deep Atelier Base Wash */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700"
+        style={{
+          background: isDark
+            ? [
+                'radial-gradient(circle 860px at 26% 18%, rgba(200, 161, 90, 0.16), rgba(22, 63, 50, 0.22) 48%, transparent 78%)',
+                'radial-gradient(circle 760px at 82% 58%, rgba(22, 63, 50, 0.28), rgba(200, 161, 90, 0.08) 52%, transparent 80%)',
+              ].join(', ')
+            : [
+                'radial-gradient(circle 860px at 26% 18%, rgba(200, 161, 90, 0.20), rgba(22, 63, 50, 0.06) 50%, transparent 78%)',
+                'radial-gradient(circle 720px at 82% 58%, rgba(200, 161, 90, 0.14), rgba(22, 63, 50, 0.05) 52%, transparent 80%)',
+              ].join(', '),
+        }}
+      />
+
+      {/* Volumetric Atelier Light Beam 1: Primary Golden Skylight Shaft */}
+      <motion.div
+        animate={{
+          opacity: isDark ? [0.28, 0.46, 0.28] : [0.22, 0.36, 0.22],
+          rotate: [-28, -24, -28],
+          x: [-15, 20, -15],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-44 left-[14%] w-[460px] h-[1200px] blur-[72px] origin-top"
+        style={{
+          background: isDark
+            ? 'linear-gradient(180deg, rgba(229, 201, 139, 0.26) 0%, rgba(200, 161, 90, 0.11) 48%, transparent 92%)'
+            : 'linear-gradient(180deg, rgba(200, 161, 90, 0.30) 0%, rgba(200, 161, 90, 0.10) 48%, transparent 92%)',
+        }}
+      />
+
+      {/* Volumetric Atelier Light Beam 2: Secondary Champagne & Emerald Ray */}
+      <motion.div
+        animate={{
+          opacity: isDark ? [0.2, 0.36, 0.2] : [0.14, 0.26, 0.14],
+          rotate: [-22, -26, -22],
+          x: [20, -18, 20],
+        }}
+        transition={{ duration: 23, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-36 left-[46%] w-[380px] h-[1100px] blur-[80px] origin-top"
+        style={{
+          background: isDark
+            ? 'linear-gradient(180deg, rgba(200, 161, 90, 0.18) 0%, rgba(42, 107, 83, 0.14) 52%, transparent 94%)'
+            : 'linear-gradient(180deg, rgba(200, 161, 90, 0.22) 0%, rgba(22, 63, 50, 0.07) 52%, transparent 94%)',
+        }}
+      />
+
+      {/* Volumetric Atelier Light Beam 3: Far-Right Ambient Column */}
+      <motion.div
+        animate={{
+          opacity: isDark ? [0.15, 0.28, 0.15] : [0.1, 0.2, 0.1],
+          rotate: [-30, -27, -30],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-32 right-[6%] w-[320px] h-[960px] blur-[76px] origin-top"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(229, 201, 139, 0.18) 0%, rgba(200, 161, 90, 0.06) 55%, transparent 95%)',
+        }}
+      />
+
+      {/* 60fps 3D Gold Dust Motes & Reactive Ripple Canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+      />
+    </div>
+  );
+}
+
 /**
  * 3D Sculpted Metric Monolith with Multi-Layer Parallax, Counter-Moving Depth Plane,
  * Dynamic Brass Specular Glare & Edge Rim Glow, and Independent Z-Depth Elements
@@ -139,10 +493,10 @@ function MetricMonolith3D({
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       onClick={onClick}
-      className={`card p-5 relative cursor-pointer select-none transition-colors ${
+      className={`card p-5 relative cursor-pointer select-none transition-colors backdrop-blur-xl !bg-[var(--color-surface)]/72 dark:!bg-[#111B16]/70 ${
         active
           ? 'border-[#C8A15A] ring-1 ring-[#C8A15A]/45'
-          : 'hover:border-[#C8A15A]/50'
+          : 'border-[#C8A15A]/20 hover:border-[#C8A15A]/55'
       }`}
       style={{
         transform: `perspective(1000px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${
@@ -333,9 +687,11 @@ export default function DashboardPage() {
   const [quickTopic, setQuickTopic] = useState('');
   const [selectedSiteId, setSelectedSiteId] = useState('');
 
-  // 3D Orrery Reactive Impulses
+  // 3D Orrery & Atelier Background Reactive Impulses
   const [typingPulse, setTypingPulse] = useState(0);
   const [stampPulse, setStampPulse] = useState(0);
+  const [coverflowPulse, setCoverflowPulse] = useState(0);
+  const [coverflowDir, setCoverflowDir] = useState<number>(1);
   const [stampingBlogId, setStampingBlogId] = useState<string | null>(null);
 
   // Interactive Telemetry Controls
@@ -468,6 +824,8 @@ export default function DashboardPage() {
 
   const stepCoverflow = (dir: -1 | 1) => {
     if (filteredBlogs.length === 0) return;
+    setCoverflowDir(dir);
+    setCoverflowPulse((p) => p + 1);
     setCoverflowIndex((prev) => {
       const next = prev + dir;
       if (next < 0) return filteredBlogs.length - 1;
@@ -535,8 +893,20 @@ export default function DashboardPage() {
   const gridStroke = isDark ? 'rgba(235, 242, 237, 0.08)' : '#E8E4DA';
   const tickColor = isDark ? '#8E9E95' : '#68736D';
 
+  const frostedCardClass =
+    'card backdrop-blur-xl !bg-[var(--color-surface)]/72 dark:!bg-[#111B16]/70 border-[#C8A15A]/20 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.18)]';
+
   return (
-    <div className="space-y-6 pb-8">
+    <div className="relative space-y-6 pb-8">
+      {/* LAYER 0: Volumetric Atelier Light Beams + 60fps 3D Gold Dust & Reactive Ripples */}
+      <DashboardAtelierBackdrop3D
+        isDark={isDark}
+        typingPulse={typingPulse}
+        stampPulse={stampPulse}
+        coverflowPulse={coverflowPulse}
+        coverflowDir={coverflowDir}
+      />
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[#163F32] text-[#F3F0E8] border border-[#C8A15A]/40 shadow-xl text-xs font-medium animate-slide-up">
@@ -548,7 +918,7 @@ export default function DashboardPage() {
       {/* ============================================================
           SECTION 1: CLEAN 3D COMMAND STAGE (ZERO INSTRUCTIONAL CLUTTER)
           ============================================================ */}
-      <div className="card p-6 sm:p-7">
+      <div className={`${frostedCardClass} relative z-10 p-6 sm:p-7`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left 7 Cols: Minimal Greeting + Single-Line Prompt Bar */}
           <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
@@ -673,7 +1043,7 @@ export default function DashboardPage() {
       {/* ============================================================
           SECTION 2: 3D METRIC MONOLITHS (RADIAL RINGS + 1-WORD LABELS)
           ============================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <MetricMonolith3D
           label="Articles"
           value={totalBlogsCount}
@@ -717,7 +1087,7 @@ export default function DashboardPage() {
       {/* ============================================================
           SECTION 3: 3D COVERFLOW MANUSCRIPT CAROUSEL
           ============================================================ */}
-      <div className="card p-6 sm:p-7 overflow-hidden">
+      <div className={`${frostedCardClass} relative z-10 p-6 sm:p-7 overflow-hidden`}>
         {/* Minimalist Coverflow Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-[var(--color-border)]">
           {/* 1-Word Stage Filter Tabs */}
@@ -877,6 +1247,8 @@ export default function DashboardPage() {
                     }}
                     onClick={() => {
                       if (!isCenter) {
+                        setCoverflowDir(idx > safeCoverflowIndex ? 1 : -1);
+                        setCoverflowPulse((p) => p + 1);
                         setCoverflowIndex(idx);
                         setTypingPulse((c) => c + 1);
                       }
@@ -887,16 +1259,16 @@ export default function DashboardPage() {
                       zIndex: 20 - Math.abs(offset),
                       transformStyle: 'preserve-3d',
                     }}
-                    className={`rounded-2xl border p-6 transition-shadow ${
+                    className={`rounded-2xl border p-6 transition-shadow backdrop-blur-xl ${
                       isCenter ? 'cursor-default' : 'cursor-pointer'
                     } ${
                       isDark
                         ? isCenter
-                          ? 'bg-[#121D18] border-[#C8A15A]/65 shadow-[0_26px_60px_-15px_rgba(0,0,0,0.85)]'
-                          : 'bg-[#0E1713]/90 border-[var(--color-border)]'
+                          ? 'bg-[#121D18]/88 border-[#C8A15A]/65 shadow-[0_26px_60px_-15px_rgba(0,0,0,0.85)]'
+                          : 'bg-[#0E1713]/75 border-[var(--color-border)]'
                         : isCenter
-                        ? 'bg-[#FCFBF7] border-[#163F32]/45 shadow-[0_24px_55px_-15px_rgba(22,63,50,0.22)]'
-                        : 'bg-[#F5F2E9]/90 border-[var(--color-border)]'
+                        ? 'bg-[#FCFBF7]/88 border-[#163F32]/45 shadow-[0_24px_55px_-15px_rgba(22,63,50,0.22)]'
+                        : 'bg-[#F5F2E9]/78 border-[var(--color-border)]'
                     }`}
                   >
                     {/* Top Row: Site + Status + 3D Circular SEO Gauge */}
@@ -1010,7 +1382,11 @@ export default function DashboardPage() {
                 key={b.id}
                 type="button"
                 aria-label={`Select manuscript ${idx + 1}`}
-                onClick={() => setCoverflowIndex(idx)}
+                onClick={() => {
+                  setCoverflowDir(idx > safeCoverflowIndex ? 1 : -1);
+                  setCoverflowPulse((p) => p + 1);
+                  setCoverflowIndex(idx);
+                }}
                 className={`h-1.5 rounded-full transition-all cursor-pointer ${
                   idx === safeCoverflowIndex
                     ? 'w-6 bg-[#C8A15A]'
@@ -1025,9 +1401,9 @@ export default function DashboardPage() {
       {/* ============================================================
           SECTION 4: MINIMALIST VISUAL TELEMETRY (OUTPUT & CADENCE)
           ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left 7 Cols: Output Trajectory */}
-        <div className="lg:col-span-7 card flex flex-col justify-between">
+        <div className={`lg:col-span-7 ${frostedCardClass} flex flex-col justify-between`}>
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-[var(--color-border)]">
             <h3 className="card-title flex items-center gap-2">
               <TrendingUp size={16} className="text-[var(--color-primary)]" />
@@ -1176,7 +1552,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right 5 Cols: Weekly Cadence & Interactive Site Nodes */}
-        <div className="lg:col-span-5 card flex flex-col justify-between">
+        <div className={`lg:col-span-5 ${frostedCardClass} flex flex-col justify-between`}>
           <div className="pb-4 mb-4 border-b border-[var(--color-border)] flex items-center justify-between">
             <h3 className="card-title flex items-center gap-2">
               <BarChart3 size={16} className="text-[var(--color-accent)]" />

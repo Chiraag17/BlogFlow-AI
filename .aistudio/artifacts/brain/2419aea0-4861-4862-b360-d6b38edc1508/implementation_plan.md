@@ -1,47 +1,49 @@
-# 3D Astrolabe & Volumetric Nebula Login Background
+# Volumetric Atelier Light Beams & 3D Gold Dust Dashboard Atmosphere
 
-Elevate the login and signup portal background by layering a **3D Orbital Brass Astrolabe** around the Gutenberg Cube, **Volumetric Gold & Emerald Nebula Clouds** with diagonal god-rays, and **Keystroke Shockwave Ripples** on top of the existing 60fps 3D starfield and post-login warp transition.
+Transform the Dashboard backdrop into a living **Volumetric Atelier** featuring diagonal museum-grade golden light beams ("god-rays"), a **60fps 3D Gold Dust Mote & Reactive Ripple Canvas** that responds to prompt keystrokes, 3D Coverflow card flips, and **Approve / Publish** stamps, and **subtle frosted glass cards** (`backdrop-blur-md`) so the warm 3D atmosphere glows softly through the workspace.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following user-confirmed choices govern this background upgrade:
+> The following user-confirmed choices govern this dashboard background upgrade:
 
-- **Confirmed Decision 1 (3D Background Centerpiece)**: **3D Orbital Brass Astrolabe Rings around the Cube** — Multi-axis tilted 3D brass gyroscope rings (`rotateX`, `rotateY`, `rotateZ` in `preserve-3d` space) with degree ticks, orbital nodes, and engraved SVG markings that react to cursor parallax, input field focus, and warp lock.
-- **Confirmed Decision 2 (Interactive Lighting & Reactive Effects)**:
-  1. **Volumetric Gold & Emerald Nebula Clouds**: Animated multi-layer volumetric nebula plumes (`#C8A15A` antique brass, `#E5C98B` champagne gold, and `#163F32` forest emerald) paired with soft diagonal light beams radiating from behind the 3D Cube stage.
-  2. **Keystroke Shockwave Ripples**: Every keystroke emits an expanding 3D perspective shockwave ring across the background canvas from the active input and around the 3D Cube, gently displacing nearby stardust particles as the wave passes.
-- **Confirmed Decision 3 (Integration with Existing Starfield & Warp)**: **Layered on top of existing 3D starfield and warp jump** — Preserves the 260-star 3D cosmos, keystroke energy comet trails, and post-login starfield warp jump while syncing the astrolabe rings to lock and accelerate during warp.
+- **Confirmed Decision 1 (3D Background Atmosphere)**: **Volumetric Atelier Light Beams with Floating 3D Gold Dust Motes** — Diagonal volumetric golden and emerald light shafts slant across the workspace while 3D depth-of-field brass dust motes drift through the illuminated beams.
+- **Confirmed Decision 2 (Reactive Workspace Events)**:
+  1. **Approve / Publish Stamp Ripple Waves**: Clicking **Approve** or **Publish** (or dispatching a brief) emits a multi-ring golden shockwave across the background canvas that accelerates and brightens nearby 3D gold dust motes.
+  2. **3D Coverflow Flip Energy Pulse**: Flipping or swiping between manuscripts in the 3D Coverflow carousel sends a horizontal kinetic wave and directional breeze through the floating 3D dust motes.
+  3. **Prompt Bar Keystroke Ripples**: Typing in the command prompt bar emits soft champagne-gold ripple rings from the top command stage.
+- **Confirmed Decision 3 (Surface Materiality)**: **Subtle Frosted Glass Cards (`backdrop-blur-md`)** — Dashboard containers (Command Stage, 3D Metric Monoliths, 3D Coverflow Stage, and Telemetry Charts) use translucent frosted glass surfaces with delicate brass-tinted borders so the volumetric light shafts and drifting 3D gold dust glow through without sacrificing tabular numeral contrast.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Transforms the authentication backdrop into a living, celestial mechanical observatory. Behind the form and around the 3D Gutenberg Cube, concentric 3D brass astrolabe rings rotate on tilted axes inside swirling gold-and-emerald volumetric nebula clouds, while typing sends luminous golden shockwaves rippling across the cosmos.
-- **Target Audience / Persona**: Writers, editors, and publishing teams signing into their studio.
-- **Key Value**: Creates an unforgettable, tactile first impression where every cursor movement, field focus, and keystroke visibly energizes the 3D environment.
+- **What It Does**: Replaces the flat dashboard background with a multi-layered 3D Atelier environment (`DashboardAtelierBackdrop3D`). Warm volumetric light shafts shine diagonally from the top-left studio canopy across a 60fps 3D canvas of floating gold dust motes, while user actions inside the dashboard send visible energy ripples through the space.
+- **Target Audience / Persona**: Editorial directors and creators working inside the studio who want tactile, atmospheric depth that responds to their publishing workflow.
+- **Key Value**: Unifies the 3D Gutenberg Cube, 3D Editorial Orrery, 3D Metric Monoliths, and 3D Coverflow Carousel inside a cohesive, luminous 3D room.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Ambient Cosmic Observatory**:
-     - Swirling **Volumetric Gold & Emerald Nebula Clouds** breathe slowly in the deep background (`#050B09` in dark mode, `#F5F2E8` in light mode) with subtle diagonal volumetric light rays behind the left 3D stage.
-     - Around the 3D Gutenberg Cube, a **Large-Scale 3D Brass Astrolabe** (spanning `520px × 520px` in the background plane plus inner gyroscope rings) orbits on three intersecting 3D planes (`rotateX(62deg)`, `rotateY(-38deg)`, `rotateZ`) with SVG degree ticks, cardinal markers, and glowing brass satellites.
-  2. **Field Focus & Typing Reactivity**:
-     - Focusing `Email`, `Password`, or `OTP` smoothly shifts the tilt angles of the 3D Astrolabe rings into distinct geometric alignments.
-     - Each keystroke triggers a **Background Shockwave Ripple** in the 60fps canvas—an expanding golden elliptical wave that radiates across the viewport and pushes nearby 3D stars outward with a brief luminous flare.
-  3. **Post-Login Warp Climax**:
-     - When login or signup succeeds, the 3D Astrolabe rings snap into concentric alignment around the centering Cube, spin up to high speed, and fire a multi-ring golden shockwave burst as the 3D starfield accelerates into warp streaks.
+  1. **Ambient Volumetric Atelier**:
+     - Three layered diagonal light shafts (`-28deg` to `-22deg`) in warm antique brass (`#C8A15A`), champagne gold (`#E5C98B`), and forest emerald (`#163F32`) breathe slowly across the viewport.
+     - Inside the light shafts, **110 3D Gold Dust Motes** float at varying Z-depths (`z` from `0.15` to `1.0`). Foreground motes render with soft bokeh halos while mid-plane motes shimmer as they pass through the diagonal light beams.
+  2. **Action-Driven Reactive Ripples**:
+     - **Keystroke Ripple (`typingPulse`)**: Typing in the prompt bar spawns a soft golden ripple wave (`#E5C98B`) radiating from the upper command stage.
+     - **3D Coverflow Flip Pulse (`coverflowIndex`)**: Navigating Previous/Next or swiping the 3D Coverflow carousel triggers a central emerald-brass energy ring (`#52B788` / `#C8A15A`) and imparts a smooth horizontal momentum impulse to all 3D dust motes.
+     - **Approve / Publish Stamp Shockwave (`stampPulse`)**: Stamping **Approve** or **Publish** fires a double concentric antique-brass shockwave across the entire dashboard that displaces and illuminates dust motes along the wavefront.
+  3. **Subtle Frosted Glass Surfaces**:
+     - All dashboard cards use translucent glass styling (`bg-[var(--color-surface)]/72 dark:bg-[#0D1A14]/68 backdrop-blur-xl border-[#C8A15A]/20`) so the moving volumetric beams and golden dust motes remain subtly visible behind every card while keeping WCAG AA contrast on all text and numbers.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Hybrid CSS `preserve-3d` SVG Astrolabe + 60fps Canvas Shockwaves**
-  - *Chosen Approach*: Render the tilted 3D Astrolabe rings with crisp SVG degree markings inside Framer Motion `preserve-3d` planes (synced to `stageRotateX`/`stageRotateY` and `focusedField`), while rendering the expanding keystroke shockwaves and star displacement directly inside the existing 60fps `<canvas>` loop.
-  - *Why*: SVG rings stay razor-sharp at any scale and tilt angle in 3D CSS space, while canvas shockwaves can directly interact with the 260 3D star coordinates at zero extra DOM cost.
+- **Decision 1: Fixed Full-Viewport 3D Canvas (`pointer-events-none fixed inset-0 z-0`) Behind Elevated Frosted Content (`relative z-10`)**
+  - *Chosen Approach*: Mount the volumetric light shafts and 60fps 3D dust/ripple canvas as a fixed background layer inside the dashboard view, driven directly by existing dashboard state (`typingPulse`, `stampPulse`, `coverflowIndex`, and `isDark`).
+  - *Why*: Guarantees zero interference with clicks, drags, or scroll performance while allowing ripples to react instantaneously to every dashboard interaction.
 
 ---
 
@@ -49,21 +51,24 @@ Elevate the login and signup portal background by layering a **3D Orbital Brass 
 
 - **Architecture & Component Diagram**:
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     MorphingAuthPortal Background                       │
-├─────────────────────────────────────────────────────────────────────────┤
-│  ├─ Layer 1A: Volumetric Gold & Emerald Nebula Clouds + God-Ray Beams   │
-│  ├─ Layer 1B: 60fps 3D Canvas                                           │
-│  │    ├─ 260 3D Stars (react to Shockwave Ripples + Warp Streaks)       │
-│  │    ├─ Keystroke Shockwave Ripples (expanding golden radial waves)    │
-│  │    └─ Keystroke Energy Comet Particles & Cube Absorption Rings       │
-│  └─ Layer 1C: 3D Orbital Brass Astrolabe (preserve-3d gyroscope rings)  │
-│       ├─ Equatorial Degree Ring (SVG ticks + cardinal brass nodes)      │
-│       ├─ Tilted Meridian Ring (rotateX 64deg, rotateY -28deg)           │
-│       └─ Ecliptic Gyroscope Ring (reacts to focusedField & isWarping)   │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        DashboardPage (relative)                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│  ├─ Layer 0: DashboardAtelierBackdrop3D (fixed inset-0 z-0)              │
+│  │    ├─ Volumetric Atelier Light Beams (3 animated diagonal shafts)     │
+│  │    └─ 60fps 3D Canvas                                                 │
+│  │         ├─ 110 3D Gold Dust Motes (depth-of-field bokeh + beam glow)  │
+│  │         ├─ Keystroke Ripples (triggered by typingPulse)               │
+│  │         ├─ Coverflow Flip Pulse & Breeze (triggered by coverflowIndex)│
+│  │         └─ Stamp Shockwave Burst (triggered by stampPulse)            │
+│  └─ Layer 1: Frosted Glass Workspace (relative z-10, backdrop-blur-xl)   │
+│       ├─ Clean 3D Command Stage + 3D Editorial Orrery                    │
+│       ├─ 4x 3D Parallax Metric Monoliths (frosted glass chassis)         │
+│       ├─ 3D Coverflow Manuscript Carousel (frosted glass stage)          │
+│       └─ Output & Cadence Telemetry Charts (frosted glass cards)         │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 - **Interactive Component & State Mapping**:
-  - `shockwavesRef`: Array of active `BackgroundShockwave` objects (`{ x, y, radius, maxRadius, alpha, color, speed }`) spawned inside `pulseCube()` on every keystroke and mode switch, and in a triple burst inside `triggerWarpToStudio()`.
-  - Star-wave interaction: In the 60fps canvas loop, stars near an active shockwave wavefront (`|dist - wave.radius| < 36`) receive a subtle radial push and brightness boost.
-  - 3D Astrolabe rings respond dynamically to `focusedField` (`name` | `email` | `password` | `otp`), `completionPct`, and `isWarping`.
+  - `typingPulse` increments when typing in the prompt bar -> spawns a `keystroke` ripple at `(width * 0.38, height * 0.24)`.
+  - `coverflowIndex` changes when flipping/swiping 3D Coverflow cards -> spawns a `coverflow` energy pulse at `(width * 0.52, height * 0.58)` and adds horizontal drift velocity to the 3D dust motes.
+  - `stampPulse` increments on **Approve**, **Publish**, or **Draft** dispatch -> spawns a multi-ring `stamp` shockwave burst that radially pushes and brightens 3D gold dust motes.
