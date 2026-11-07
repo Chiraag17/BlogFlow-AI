@@ -325,24 +325,42 @@ interface CubeShardSpec {
   tx: number;
   ty: number;
   tz: number;
-  rot: number;
-  size: number;
-  isDiamond: boolean;
-  color: string;
+  rx: number;
+  ry: number;
+  rz: number;
+  width: number;
+  height: number;
+  clipPath: string;
+  faceGradient: string;
+  edgeColor: string;
 }
+
+const SHARD_CLIP_PATHS = [
+  'polygon(14% 0%, 88% 6%, 100% 78%, 22% 100%, 0% 48%)',
+  'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+  'polygon(8% 12%, 94% 0%, 86% 92%, 12% 100%)',
+  'polygon(24% 0%, 100% 22%, 76% 100%, 0% 80%)',
+];
 
 const CUBE_SHATTER_SHARDS: CubeShardSpec[] = Array.from({ length: 32 }, (_, idx) => {
   const angle = (idx / 32) * Math.PI * 2 + (idx % 3) * 0.16;
   const dist = 175 + (idx % 5) * 72;
+  const isGold = idx % 3 !== 2;
   return {
     id: idx,
     tx: Math.round(Math.cos(angle) * dist),
     ty: Math.round(Math.sin(angle) * dist * 0.85),
-    tz: 95 + (idx % 5) * 52,
-    rot: (idx % 2 === 0 ? 1 : -1) * (160 + idx * 20),
-    size: 5 + (idx % 4) * 3.5,
-    isDiamond: idx % 2 === 0,
-    color: idx % 3 === 0 ? '#E5C98B' : idx % 3 === 1 ? '#C8A15A' : '#52B788',
+    tz: 110 + (idx % 5) * 58,
+    rx: (idx % 2 === 0 ? 1 : -1) * (180 + idx * 22),
+    ry: (idx % 3 === 0 ? -1 : 1) * (210 + idx * 19),
+    rz: (idx % 2 === 0 ? 1 : -1) * (150 + idx * 17),
+    width: 11 + (idx % 4) * 5,
+    height: 8 + (idx % 3) * 5,
+    clipPath: SHARD_CLIP_PATHS[idx % SHARD_CLIP_PATHS.length],
+    faceGradient: isGold
+      ? 'linear-gradient(135deg, #FFFDF7 0%, #E5C98B 38%, #C8A15A 72%, #7A5920 100%)'
+      : 'linear-gradient(135deg, #B8E4CE 0%, #2A6B53 45%, #123328 100%)',
+    edgeColor: isGold ? '#8A6829' : '#0B221A',
   };
 });
 
@@ -350,6 +368,180 @@ const SHATTER_GOD_RAYS = Array.from({ length: 8 }, (_, idx) => ({
   id: idx,
   angleDeg: idx * 45 + 15,
 }));
+
+/**
+ * Reusable Realistic Brushed-Brass Grain, Machined Chamfer Bezel & 4 Corner Hex Rivets
+ */
+function CubeFaceMachinedHardware({ variant = 'dark' }: { variant?: 'dark' | 'brass' }) {
+  const rivetColor = variant === 'brass' ? '#163F32' : '#E5C98B';
+  return (
+    <>
+      {/* Fine Anisotropic Brushed Metal Micro-Grain */}
+      <span
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(128deg, rgba(255,253,247,0.06) 0px, rgba(255,253,247,0.06) 1px, transparent 1px, transparent 4px)',
+        }}
+      />
+      {/* Specular Diagonal Studio Reflection Sweep */}
+      <span
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(255,253,247,0.24) 0%, transparent 38%, rgba(0,0,0,0.28) 100%)',
+        }}
+      />
+      {/* Machined Chamfered Inner Bezel Groove */}
+      <span
+        className="pointer-events-none absolute inset-2.5 rounded-[16px]"
+        style={{
+          border:
+            variant === 'brass'
+              ? '1px solid rgba(22, 63, 50, 0.35)'
+              : '1px solid rgba(229, 201, 139, 0.32)',
+          boxShadow:
+            'inset 0 1px 2px rgba(255, 253, 247, 0.35), inset 0 -2px 4px rgba(0, 0, 0, 0.55)',
+        }}
+      />
+      {/* 4 Machined Corner Hex Rivets with Specular Pin-Highlights */}
+      {[
+        'top-3.5 left-3.5',
+        'top-3.5 right-3.5',
+        'bottom-3.5 left-3.5',
+        'bottom-3.5 right-3.5',
+      ].map((pos) => (
+        <span
+          key={pos}
+          className={`pointer-events-none absolute ${pos} w-2.5 h-2.5 rounded-full flex items-center justify-center`}
+          style={{
+            backgroundColor: rivetColor,
+            boxShadow:
+              'inset 0 1px 1px rgba(255,255,255,0.75), 0 1px 2px rgba(0,0,0,0.65)',
+          }}
+        >
+          <span className="w-1 h-1 rounded-full bg-black/45" />
+        </span>
+      ))}
+    </>
+  );
+}
+
+/**
+ * 60fps 3D Floating Museum Gold Dust Motes inside the Hero Spotlight Cone
+ */
+function HeroMuseumDustCanvas({ isShatter }: { isShatter: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const shatterImpulseRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (isShatter) {
+      shatterImpulseRef.current = 1.0;
+    }
+  }, [isShatter]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const onResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', onResize);
+
+    const colors = ['#FFFDF7', '#E5C98B', '#C8A15A', '#D4AF67'];
+    const motes = Array.from({ length: 64 }, () => {
+      const z = 0.2 + Math.random() * 0.8;
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        z,
+        vx: (Math.random() - 0.45) * 0.24 * z,
+        vy: (-0.14 - Math.random() * 0.22) * z,
+        r: z > 0.78 ? 2.2 + Math.random() * 1.8 : 0.7 + z * 1.4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.016 + Math.random() * 0.025,
+      };
+    });
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+      shatterImpulseRef.current *= 0.92;
+      const impulse = shatterImpulseRef.current;
+      const cx = width * 0.5;
+      const cy = height * 0.46;
+
+      for (let i = 0; i < motes.length; i++) {
+        const m = motes[i];
+        m.phase += m.speed;
+
+        if (impulse > 0.02) {
+          const dx = m.x - cx;
+          const dy = m.y - cy;
+          const dist = Math.max(24, Math.hypot(dx, dy));
+          m.x += (dx / dist) * impulse * 9 * m.z;
+          m.y += (dy / dist) * impulse * 9 * m.z;
+        }
+
+        m.x += m.vx + Math.sin(m.phase * 0.7) * 0.15 * m.z;
+        m.y += m.vy;
+
+        if (m.y < -16) {
+          m.y = height + 14;
+          m.x = Math.random() * width;
+        }
+        if (m.x < -16) m.x = width + 14;
+        if (m.x > width + 16) m.x = -14;
+
+        // Higher luminosity inside the central museum spotlight cone
+        const distFromSpotAxis = Math.abs(m.x - width * 0.52) / (width * 0.42);
+        const spotFactor = Math.max(0.25, 1 - distFromSpotAxis * 0.75);
+        const twinkle = 0.55 + 0.45 * Math.sin(m.phase);
+        const alpha = Math.min(0.9, (0.18 + m.z * 0.45) * twinkle * spotFactor + impulse * 0.35);
+
+        if (m.z > 0.7 || impulse > 0.15) {
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.r * 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = m.color;
+          ctx.globalAlpha = alpha * 0.18;
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+        ctx.fillStyle = m.color;
+        ctx.globalAlpha = alpha;
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none absolute inset-0 w-full h-full z-[1]"
+      aria-hidden="true"
+    />
+  );
+}
 
 /**
  * 3-Act Director's Cut 3D Gutenberg Cube:
@@ -517,32 +709,64 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
         </>
       )}
 
-      {/* 32 Exploding Golden Brass & Emerald Shards (Bullet-Time Deceleration) */}
+      {/* 32 Exploding Thick 3D Faceted Metallic Fragments with Specular Flash */}
       {isShatter &&
         CUBE_SHATTER_SHARDS.map((shard) => (
           <motion.span
             key={shard.id}
-            initial={{ x: 0, y: 0, scale: 0.4, opacity: 1, rotate: 0 }}
+            initial={{
+              x: 0,
+              y: 0,
+              z: 0,
+              scale: 0.45,
+              opacity: 1,
+              rotateX: 0,
+              rotateY: 0,
+              rotateZ: 0,
+            }}
             animate={{
               x: shard.tx,
               y: shard.ty,
-              scale: [1.35, 1.05, 0],
-              opacity: [1, 0.92, 0],
-              rotate: shard.rot,
+              z: shard.tz,
+              scale: [1.45, 1.15, 0],
+              opacity: [1, 0.95, 0],
+              rotateX: shard.rx,
+              rotateY: shard.ry,
+              rotateZ: shard.rz,
             }}
-            transition={{ duration: 0.9, ease: [0.06, 0.94, 0.16, 1] }}
+            transition={{ duration: 0.92, ease: [0.06, 0.94, 0.16, 1] }}
             style={{
               position: 'absolute',
-              width: shard.size,
-              height: shard.size,
-              backgroundColor: shard.color,
-              borderRadius: shard.isDiamond ? '2px' : '9999px',
-              boxShadow: '0 0 14px rgba(229, 201, 139, 0.85)',
+              width: shard.width,
+              height: shard.height,
+              transformStyle: 'preserve-3d',
             }}
-          />
+          >
+            {/* Extruded 3D Side Bevel Thickness Layer */}
+            <span
+              style={{
+                position: 'absolute',
+                inset: 0,
+                clipPath: shard.clipPath,
+                backgroundColor: shard.edgeColor,
+                transform: 'translateZ(-4px) translateY(2px)',
+              }}
+            />
+            {/* Front Faceted Metallic Ingot Surface with Specular Reflection */}
+            <span
+              style={{
+                position: 'absolute',
+                inset: 0,
+                clipPath: shard.clipPath,
+                background: shard.faceGradient,
+                boxShadow:
+                  '0 0 18px rgba(255, 253, 247, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.85)',
+              }}
+            />
+          </motion.span>
         ))}
 
-      {/* 6-FACED 3D GUTENBERG TYPE-BLOCK MATRIX */}
+      {/* 6-FACED 3D GUTENBERG TYPE-BLOCK MATRIX (Photorealistic Brushed Brass & Embossed Relief) */}
       <motion.div
         initial={{
           rotateX: -18,
@@ -584,30 +808,31 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               ? `translate3d(-225px, -125px, 290px) rotateX(38deg) rotateY(-54deg) rotateZ(-24deg) scale(0.76)`
               : `rotateY(0deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(3px)' : 'none',
-            background: 'linear-gradient(145deg, #184537 0%, #0E2920 65%, #091B15 100%)',
-            border: '2px solid #C8A15A',
+            filter: isShatter ? 'blur(2px)' : 'none',
+            background:
+              'linear-gradient(145deg, #1E5241 0%, #12352A 48%, #0B221B 82%, #071611 100%)',
+            border: '2.5px solid #D4AF67',
             boxShadow:
-              '0 18px 40px rgba(0,0,0,0.45), inset 0 1px 3px rgba(229, 201, 139, 0.5)',
+              '0 22px 45px rgba(0,0,0,0.6), -3px 3px 0 #8A6829, inset 0 2px 4px rgba(255, 253, 247, 0.45)',
           }}
         >
-          <span className="absolute top-3 left-3 w-2 h-2 rounded-full bg-[#C8A15A]/80" />
-          <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#C8A15A]/80" />
+          <CubeFaceMachinedHardware variant="dark" />
           <span
             style={{
               fontFamily: "'Fraunces', 'Playfair Display', Georgia, serif",
-              fontSize: '92px',
+              fontSize: '94px',
               fontWeight: 700,
               lineHeight: 1,
               color: '#F7F4EC',
-              textShadow: '0 2px 0 #C8A15A, 0 6px 14px rgba(0,0,0,0.65)',
+              textShadow:
+                '0 1px 0 #FFFDF7, 0 3px 0 #C8A15A, 0 5px 0 #7A5920, 0 10px 20px rgba(0,0,0,0.75)',
             }}
           >
             B
           </span>
           <span
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-full bg-[#C8A15A]"
-            style={{ width: '52px', height: '5px' }}
+            className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded-t-full bg-gradient-to-r from-[#8A6829] via-[#E5C98B] to-[#8A6829]"
+            style={{ width: '56px', height: '5px' }}
           />
         </span>
 
@@ -619,21 +844,32 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               ? `translate3d(240px, -85px, 190px) rotateX(-38deg) rotateY(142deg) rotateZ(34deg) scale(0.72)`
               : `rotateY(90deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(4px)' : 'none',
-            background: 'linear-gradient(135deg, #E5C98B 0%, #C8A15A 52%, #8F6D2E 100%)',
-            border: '2px solid #F7F4EC',
-            boxShadow: '0 18px 40px rgba(0,0,0,0.4)',
+            filter: isShatter ? 'blur(3px)' : 'none',
+            background:
+              'linear-gradient(135deg, #F5E1A4 0%, #D4AF67 42%, #B38938 78%, #78571C 100%)',
+            border: '2.5px solid #FFFDF7',
+            boxShadow:
+              '0 22px 45px rgba(0,0,0,0.55), 3px 3px 0 #6E501A, inset 0 2px 5px rgba(255,255,255,0.7)',
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" style={{ width: '96px', height: '96px' }}>
+          <CubeFaceMachinedHardware variant="brass" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{
+              width: '96px',
+              height: '96px',
+              filter: 'drop-shadow(0 2px 0 rgba(255,253,247,0.55)) drop-shadow(0 4px 6px rgba(0,0,0,0.45))',
+            }}
+          >
             <path
               d="M12 3L18 14L15 21H9L6 14L12 3Z"
               stroke="#0E2920"
-              strokeWidth="1.8"
+              strokeWidth="1.9"
               strokeLinejoin="round"
             />
-            <line x1="12" y1="3" x2="12" y2="13" stroke="#0E2920" strokeWidth="1.8" />
-            <circle cx="12" cy="14" r="2" fill="#0E2920" />
+            <line x1="12" y1="3" x2="12" y2="13" stroke="#0E2920" strokeWidth="1.9" />
+            <circle cx="12" cy="14" r="2.2" fill="#0E2920" />
           </svg>
         </span>
 
@@ -645,18 +881,21 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               ? `translate3d(175px, 165px, -210px) rotateX(-52deg) rotateY(235deg) rotateZ(-40deg) scale(0.68)`
               : `rotateY(180deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(5px)' : 'none',
-            background: 'linear-gradient(145deg, #123328 0%, #0A1D16 100%)',
-            border: '2px solid #C8A15A',
+            filter: isShatter ? 'blur(4px)' : 'none',
+            background: 'linear-gradient(145deg, #163F32 0%, #0D261E 60%, #071510 100%)',
+            border: '2.5px solid #C8A15A',
+            boxShadow: '0 22px 45px rgba(0,0,0,0.6), 3px -3px 0 #7A5920',
           }}
         >
+          <CubeFaceMachinedHardware variant="dark" />
           <span
             style={{
               fontFamily: "'Fraunces', Georgia, serif",
-              fontSize: '90px',
+              fontSize: '92px',
               fontWeight: 700,
               lineHeight: 1,
-              color: '#C8A15A',
+              color: '#E5C98B',
+              textShadow: '0 2px 0 #7A5920, 0 8px 16px rgba(0,0,0,0.7)',
             }}
           >
             §
@@ -671,23 +910,33 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               ? `translate3d(-245px, 105px, 175px) rotateX(34deg) rotateY(-148deg) rotateZ(-32deg) scale(0.72)`
               : `rotateY(-90deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(4px)' : 'none',
-            background: 'linear-gradient(135deg, #163F32 0%, #0D261E 100%)',
-            border: '2px solid #C8A15A',
+            filter: isShatter ? 'blur(3px)' : 'none',
+            background: 'linear-gradient(135deg, #1A4A3B 0%, #0F2D23 65%, #081913 100%)',
+            border: '2.5px solid #D4AF67',
+            boxShadow: '0 22px 45px rgba(0,0,0,0.6), -3px 3px 0 #7A5920',
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" style={{ width: '92px', height: '92px' }}>
-            <circle cx="10.5" cy="10.5" r="6.5" stroke="#C8A15A" strokeWidth="2" />
+          <CubeFaceMachinedHardware variant="dark" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{
+              width: '92px',
+              height: '92px',
+              filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.6))',
+            }}
+          >
+            <circle cx="10.5" cy="10.5" r="6.5" stroke="#E5C98B" strokeWidth="2.1" />
             <line
               x1="15.5"
               y1="15.5"
               x2="20.5"
               y2="20.5"
               stroke="#F7F4EC"
-              strokeWidth="2.2"
+              strokeWidth="2.4"
               strokeLinecap="round"
             />
-            <circle cx="10.5" cy="10.5" r="2" fill="#F7F4EC" />
+            <circle cx="10.5" cy="10.5" r="2.2" fill="#F7F4EC" />
           </svg>
         </span>
 
@@ -699,24 +948,35 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               ? `translate3d(35px, -225px, 210px) rotateX(145deg) rotateY(38deg) rotateZ(45deg) scale(0.72)`
               : `rotateX(90deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(4px)' : 'none',
-            background: 'radial-gradient(circle at 50% 50%, #E5C98B 0%, #C8A15A 65%, #8A6829 100%)',
-            border: '2px solid #163F32',
+            filter: isShatter ? 'blur(3px)' : 'none',
+            background:
+              'radial-gradient(circle at 42% 38%, #FFF8E7 0%, #E5C98B 35%, #C8A15A 72%, #7A5920 100%)',
+            border: '2.5px solid #163F32',
+            boxShadow: '0 22px 45px rgba(0,0,0,0.55), 0 4px 0 #6E501A',
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" style={{ width: '98px', height: '98px' }}>
+          <CubeFaceMachinedHardware variant="brass" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{
+              width: '98px',
+              height: '98px',
+              filter: 'drop-shadow(0 2px 0 rgba(255,255,255,0.5))',
+            }}
+          >
             <circle
               cx="12"
               cy="12"
               r="8"
               stroke="#0E2920"
-              strokeWidth="1.8"
+              strokeWidth="1.9"
               strokeDasharray="3 2"
             />
             <path
               d="M8.5 12.5L11 15L15.8 9.5"
               stroke="#0E2920"
-              strokeWidth="2.2"
+              strokeWidth="2.3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -731,18 +991,21 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               ? `translate3d(-45px, 230px, 180px) rotateX(-145deg) rotateY(-32deg) rotateZ(-36deg) scale(0.7)`
               : `rotateX(-90deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(4px)' : 'none',
-            background: '#091510',
-            border: '2px solid rgba(200, 161, 90, 0.65)',
+            filter: isShatter ? 'blur(3px)' : 'none',
+            background: 'linear-gradient(145deg, #11241C 0%, #07120E 100%)',
+            border: '2.5px solid rgba(212, 175, 103, 0.8)',
+            boxShadow: '0 22px 45px rgba(0,0,0,0.65), 0 -3px 0 #7A5920',
           }}
         >
+          <CubeFaceMachinedHardware variant="dark" />
           <span
             style={{
               fontFamily: 'monospace',
               fontSize: '34px',
               fontWeight: 700,
-              color: '#C8A15A',
+              color: '#E5C98B',
               letterSpacing: '0.08em',
+              textShadow: '0 2px 0 #6E501A, 0 6px 12px rgba(0,0,0,0.8)',
             }}
           >
             1450
@@ -856,8 +1119,33 @@ function HeroSection({
     >
       <div className="lp-hero-bg" aria-hidden="true" />
 
-      {/* Live Cursor-Tracked Anamorphic Golden Spotlight & Horizontal Lens Reflection */}
+      {/* Warm Museum Spotlight Environment + Realistic Floor Reflection Pool + 60fps 3D Dust Motes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
+        {/* Top-Down Conical Museum Spotlight Beam */}
+        <div
+          className="absolute -top-28 left-1/2 -translate-x-1/2 w-[980px] h-[880px] opacity-75"
+          style={{
+            background:
+              'conic-gradient(from 152deg at 50% 0%, transparent 0deg, rgba(229, 201, 139, 0.14) 22deg, rgba(255, 250, 235, 0.24) 28deg, rgba(200, 161, 90, 0.14) 34deg, transparent 56deg)',
+            filter: 'blur(42px)',
+          }}
+        />
+
+        {/* Perspective-Foreshortened Realistic Studio Floor Reflection Pool */}
+        <div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[880px] h-[220px] rounded-full"
+          style={{
+            transform: 'perspective(900px) rotateX(74deg)',
+            background:
+              'radial-gradient(ellipse at center, rgba(229, 201, 139, 0.28) 0%, rgba(200, 161, 90, 0.14) 38%, rgba(22, 63, 50, 0.10) 64%, transparent 82%)',
+            boxShadow: 'inset 0 0 45px rgba(229, 201, 139, 0.22)',
+          }}
+        />
+
+        {/* 60fps 3D Floating Gold Dust Motes in the Museum Spotlight */}
+        <HeroMuseumDustCanvas isShatter={heroStage === 'shatter'} />
+
+        {/* Live Cursor-Tracked Anamorphic Golden Spotlight & Horizontal Lens Reflection */}
         <motion.div
           className="absolute w-[680px] h-[680px] rounded-full blur-[135px] -translate-x-1/2 -translate-y-1/2"
           style={{
@@ -945,13 +1233,13 @@ function HeroSection({
           }}
           className="lp-hero-inner"
         >
-          {/* Left: Leads directly with "Research. Think. Publish." (Elevated Z-Plane) */}
+          {/* Left: Leads directly with "Research. Think. Publish." (Elevated Z-Plane + Live Specular Glint) */}
           <div
             className="lp-hero-left"
             style={{ transform: 'translateZ(26px)', transformStyle: 'preserve-3d' }}
           >
             <motion.h1
-              className="lp-hero-headline"
+              className="lp-hero-headline relative group"
               id="hero-headline"
               initial={false}
               animate={
@@ -960,7 +1248,24 @@ function HeroSection({
                   : { opacity: 0, y: 34, scale: 0.92, filter: 'blur(12px)' }
               }
               transition={{ duration: 0.78, ease: HERO_MORPH_EASE }}
+              style={{
+                textShadow:
+                  '0 1px 0 rgba(229, 201, 139, 0.28), 0 10px 28px rgba(0, 0, 0, 0.16)',
+              }}
             >
+              {/* Cursor-Reactive Specular Light Glint Sweeping Across Headline */}
+              <motion.span
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-x-4 -inset-y-2 rounded-2xl opacity-75 mix-blend-overlay"
+                style={{
+                  left: anamorphicSpotX,
+                  width: '220px',
+                  transform: 'translateX(-50%) skewX(-18deg)',
+                  background:
+                    'linear-gradient(90deg, transparent 0%, rgba(255, 253, 247, 0.55) 50%, transparent 100%)',
+                  filter: 'blur(12px)',
+                }}
+              />
               <span className="lp-hero-headline-row">
                 <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
                 <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
@@ -987,7 +1292,7 @@ function HeroSection({
               human editorial sign-off, and WordPress publishing in one quiet studio.
             </motion.p>
 
-            {/* Primary & Secondary CTAs */}
+            {/* Primary & Secondary CTAs with Brushed Brass Specular Glint */}
             <motion.div
               className="lp-hero-ctas"
               initial={false}
@@ -996,13 +1301,37 @@ function HeroSection({
             >
               <Link
                 href="/generator"
-                className="lp-btn-primary"
+                className="lp-btn-primary relative overflow-hidden group"
                 id="hero-cta-primary"
+                style={{
+                  boxShadow:
+                    '0 10px 26px -6px rgba(22, 63, 50, 0.45), inset 0 1px 1px rgba(229, 201, 139, 0.55)',
+                }}
               >
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+                  style={{
+                    background:
+                      'linear-gradient(105deg, transparent 20%, rgba(229, 201, 139, 0.45) 50%, transparent 80%)',
+                  }}
+                />
                 Start creating
                 <span className="btn-arrow" aria-hidden="true"><ArrowRight size={16} /></span>
               </Link>
-              <a href="#product" className="lp-btn-secondary" id="hero-cta-secondary">
+              <a
+                href="#product"
+                className="lp-btn-secondary relative overflow-hidden group"
+                id="hero-cta-secondary"
+              >
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+                  style={{
+                    background:
+                      'linear-gradient(105deg, transparent 20%, rgba(200, 161, 90, 0.25) 50%, transparent 80%)',
+                  }}
+                />
                 <Search size={14} />
                 Inspect Live Galley Proof
               </a>

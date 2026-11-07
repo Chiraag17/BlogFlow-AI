@@ -1,55 +1,52 @@
-# 3-Act "Director's Cut" Cinematic Hero Experience
+# Photorealistic Materials & Museum Studio Lighting for the Hero Stage
 
-Transform the existing Landing Page Hero section (*3D Shattering Gutenberg Cube → "Research. Think. Publish." + 3D Floating Editorial Desk*) into a **3-Act "Director's Cut" Cinema Sequence** with retracting widescreen cinema letterbox bars, a bullet-time 6-face shatter with anamorphic golden lens flare and dual shockwave rings, a **3D Cursor-Tilted Camera Rig** across the entire Hero stage, and a subtle **Replay Cinema** control.
+Upgrade the Landing Page Hero section with physical, photorealistic materials and lighting: **realistic brushed brass metal and embossed 3D cube faces** that fracture into **thick, beveled 3D metallic fragments with specular reflections**, a **photorealistic 3D Editorial Desk** featuring a sculpted **Articulated Brass Banker's Desk Lamp** casting warm directional light and soft shadows, a **warm museum spotlight environment with floor reflections and floating 3D dust motes**, and **live specular light glints** sweeping across the headline and brass edges on hover.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following user-confirmed choices and recommended pacing defaults govern this cinematic Hero upgrade:
+> The following user-confirmed realism upgrades govern this implementation:
 
-- **Confirmed Decision 1 (Primary Cinematic Upgrade)**: **3-Act Director's Cut with Bullet-Time Shatter & Lens Flare**
-  - **Act I — Ignition (`0ms – 950ms`)**: Widescreen 2.39:1 cinema letterbox bars frame the dark/ivory stage as three orbital brass gyroscope rings lock around the spinning 6-faced 3D Gutenberg Cube and an anamorphic horizontal gold lens streak sweeps across the viewport.
-  - **Act II — Bullet-Time Shatter (`950ms – 1850ms`)**: At the moment of fracture, the 6 engraved cube faces and 32 golden shards burst outward in a "bullet-time" deceleration curve (`cubic-bezier(0.08, 0.92, 0.18, 1)`) while a dual concentric brass shockwave and horizontal anamorphic lens flare flash across the center of the frame.
-  - **Act III — Camera Dolly Reveal (`1850ms+`)**: The top and bottom widescreen cinema letterbox bars smoothly retract (`height: 0`) as the camera dollies forward (`scale: 1.08 -> 1`, `translateZ`) into *"Research. Think. Publish."* and the interactive **3D Floating Editorial Desk**.
-- **Confirmed Decision 2 (Cinematic Visual Effects)**:
-  1. **Retracting Widescreen Cinema Letterbox Bars**: Top and bottom matte obsidian cinema bars (`11vh` height) with subtle brass hairline inner borders frame Acts I & II, then glide open on Act III reveal.
-  2. **Anamorphic Golden Lens Flare & Shockwave Burst**: A screen-wide horizontal anamorphic streak (`#FFFDF7` core with `#E5C98B` and `#C8A15A` wings) + dual expanding shockwave rings + radial volumetric god-rays ignite when the 3D Cube shatters.
-  3. **3D Cursor-Tilted Camera Rig**: Once revealed, moving the cursor across the Hero section subtly pitches and yaws the entire 3D Hero stage (`rotateX`, `rotateY` in `preserve-3d` space) while shifting a live anamorphic brass spotlight reflection across the background.
-- **Confirmed Decision 3 (Recommended Pacing & Replay Control)**: Fast ~1.9s theatrical pacing that never blocks interaction, paired with both the existing click-logo-to-replay in the navbar and a subtle **Replay Cinema** button (`RotateCcw` icon) in the bottom-right corner of the Hero stage.
+- **Confirmed Decision 1 (Physical Materials)**:
+  1. **Realistic Brushed Brass Metal & Embossed 3D Cube Faces**: Each of the 6 Gutenberg Cube faces receives multi-layer anisotropic brushed metal sheen, machined chamfered inner bezels, recessed corner hex rivets, and deep letterpress embossing/debossing shadows.
+  2. **Photorealistic 3D Editorial Desk with Warm Lamp Light & Shadows**: Upgrade `/components/3d/FloatingEditorialDesk.tsx` with procedural walnut wood grain and pebble-leather blotter bump/roughness textures, plus a multi-part **Articulated Brass & Emerald Glass Banker's Desk Lamp** that casts a real Three.js `SpotLight` (`castShadow: true`) and a soft volumetric light cone across the manuscript and fountain pen.
+- **Confirmed Decision 2 (Studio Lighting Environment)**:
+  - **Warm Museum Spotlight with Realistic Floor Reflections & Dust Motes**: A top-down museum spotlight cone illuminates the Hero stage, accompanied by a realistic perspective-foreshortened floor reflection plane and 60fps floating 3D golden dust motes drifting through the beam.
+- **Confirmed Decision 3 (Physical Animation Realism)**:
+  1. **Thick 3D Shards with Specular Reflections on Shatter**: Replace flat 2D dots with multi-layered 3D extruded brass & emerald fragments (`preserve-3d` with front/side bevel thickness and animated metallic specular flash as they tumble).
+  2. **Live Specular Light Glints on Headline & Brass Edges**: Moving the cursor sweeps a realistic metallic specular highlight across *"Research. Think. Publish."* and illuminates the chamfered brass edges of the Hero CTA buttons and stage frames.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Elevates the Hero entrance from a simple overlay animation into a choreographed 3-act film sequence. Viewers experience a widescreen theatrical framing, an anamorphic lens flare and time-dilated 3D fracture of the 6-faced Gutenberg Cube, a camera dolly-in reveal as the letterbox bars open, and continuous 3D camera parallax controlled by their cursor.
-- **Target Audience / Persona**: Visitors, creators, and editorial teams arriving on the landing page.
-- **Key Value**: Delivers a memorable, studio-grade 3D theatrical reveal while keeping *"Research. Think. Publish."* and the **3D Floating Editorial Desk** immediately accessible and interactive.
+- **What It Does**: Brings tactile, museum-grade physical realism to every object in the Hero section. Metal surfaces exhibit anisotropic brushed reflections and machined bevels; the 3D Gutenberg Cube shatters into thick, tumbling metallic ingots and slabs; and the 3D WebGL Editorial Desk is lit by a physical brass banker's lamp casting warm tungsten shadows across grained walnut wood and archival paper.
+- **Target Audience / Persona**: Visitors, writers, and editorial leaders evaluating the craft and quality of the platform.
+- **Key Value**: Bridges the gap between digital web UI and physical industrial design—making the Hero stage feel like a real, touchable object filmed under studio lights.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Act I — Widescreen Ignition**:
-     - Top and bottom widescreen letterbox bars (`11vh`) frame the viewport with a `1px` antique-brass (`#C8A15A/35`) inner edge.
-     - The 6-faced 3D Gutenberg Cube accelerates inside multi-axis orbital brass rings as a pre-shatter golden core builds energy.
-  2. **Act II — Anamorphic Flash & Bullet-Time Shatter**:
-     - A razor-sharp horizontal **Anamorphic Golden Lens Flare** (`100vw` wide, tapered diamond profile) flashes across the center of the Cube.
-     - Two concentric shockwave rings (`#E5C98B` and `#52B788`) and 8 radial volumetric light rays burst outward.
-     - The 6 engraved faces (`B`, Nib, `§`, Loupe, Seal, `1450`) and 32 brass/emerald shards launch into deep 3D space (`translate3d`) and hang in a dramatic bullet-time deceleration before dissolving as the camera pushes through them.
-  3. **Act III — Letterbox Retraction & 3D Camera Rig**:
-     - The cinema letterbox bars retract smoothly to reveal the full viewport.
-     - The Hero stage dollies into focus with *"Research. Think. Publish."* (no kicker text above it) on the left and the interactive **3D Floating Editorial Desk** on the right.
-     - Moving the pointer tilts the entire Hero camera rig (`±4.5deg` X/Y spring-smoothed parallax) with a counter-drifting anamorphic light reflection.
-     - Clicking either the navbar 3D Cube logo or the subtle **Replay Cinema** button in the Hero corner re-triggers the full 3-Act Director's Cut anytime.
+  1. **Machined Brushed Brass 3D Cube & Thick 3D Fragment Shatter**:
+     - Each of the 6 Cube faces displays fine anisotropic brushed-metal grain (`repeating-linear-gradient`), a double-chamfered inner bezel (`inset` highlight + shadow), 4 machined corner hex screws, and a dynamic diagonal specular sheen.
+     - On shatter, each face reveals a thick 3D metallic edge rim while **32 Thick 3D Extruded Brass & Emerald Fragments** tumble in 3D space (`rotateX`, `rotateY`, `rotateZ`), flashing bright specular highlights (`#FFFDF7` → `#C8A15A`) as their facets catch the museum spotlight.
+  2. **Warm Museum Spotlight, Floor Reflection & 3D Dust Motes**:
+     - A warm museum spotlight beam descends from the top canopy onto the Hero stage, casting a soft elliptical floor reflection pool at the base of the viewport while 60fps 3D dust motes drift through the illuminated air.
+  3. **Photorealistic 3D Editorial Desk with Banker's Lamp (`FloatingEditorialDesk.tsx`)**:
+     - Procedural high-resolution canvas textures generate realistic **walnut wood grain** and **pebble-grain forest leather** roughness/bump maps for the desk plinth and blotter.
+     - A multi-part **Articulated Brass Banker's Desk Lamp** (weighted turned-brass base, twin tubular brass arms, emerald glass shade with inner warm emissive bulb, and a real shadow-casting `THREE.SpotLight` + translucent volumetric light cone) sits at the upper-left corner of the desk, bathing the manuscript, brass loupe, and fountain pen in warm 2900K light.
+  4. **Live Specular Light Glints on Headline & Brass Edges**:
+     - Moving the cursor across the Hero stage drives a real-time specular light glint across the serif letterforms of *"Research. Think. Publish."* and along the brushed-brass borders of the primary CTA and stage cards.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Spring-Smoothed `useMotionValue` 3D Camera Rig Combined with Scroll-Driven Recession**
-  - *Chosen Approach*: Combine Framer Motion `useSpring` cursor coordinates (`cameraRotateX`, `cameraRotateY`, `anamorphicGlowX`) with the existing scroll-driven 3D recession (`heroStageScale`, `heroStageRotateX`, `heroStageY`).
-  - *Why*: Gives the Hero section tactile 3D depth on mouse movement at the top of the page while preserving the smooth Apple-style 3D scroll transition into the `#product` section.
+- **Decision 1: Procedural PBR Bump/Roughness Maps + Real `THREE.SpotLight` in `FloatingEditorialDesk`**
+  - *Chosen Approach*: Generate procedural wood-grain and leather-grain textures on HTML5 `<canvas>` at initialization (`Zero External File / 404 Dependencies`) and attach them as `bumpMap`/`roughnessMap` on `MeshStandardMaterial` and `MeshPhysicalMaterial`, illuminated by a shadow-casting `SpotLight` inside the Banker's Lamp shade.
+  - *Why*: Delivers unmistakable close-up surface texture and warm tungsten lamp shadows at 60fps with zero network download latency or broken asset URLs.
 
 ---
 
@@ -57,22 +54,23 @@ Transform the existing Landing Page Hero section (*3D Shattering Gutenberg Cube 
 
 - **Architecture & Component Diagram**:
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                     HeroSection (3-Act Cinema Stage)                     │
-├──────────────────────────────────────────────────────────────────────────┤
-│  ├─ Cinema Letterbox Bars (Top & Bottom 11vh, retract on Act III)        │
-│  ├─ Anamorphic Spotlight & Volumetric Backdrop (reacts to cursor X/Y)    │
-│  ├─ Act I & II: HeroShatterCube3D ('spin' -> 'shatter' bullet-time)      │
-│  │    ├─ 3D Tilted Gyroscope Rings + Radial Volumetric God-Rays          │
-│  │    ├─ Horizontal Anamorphic Golden Lens Flare + Dual Shockwave Burst  │
-│  │    └─ 6 Engraved 3D Faces + 32 Shards (bullet-time 3D trajectories)   │
-│  ├─ Act III: 3D Camera Rig Stage (cursor rotateX/rotateY + scroll dolly) │
-│  │    ├─ Left: "Research. Think. Publish." + CTAs + Social Proof         │
-│  │    └─ Right: 3D FloatingEditorialDesk (4 interactive stages)          │
-│  └─ Replay Cinema Trigger (Navbar 3D Logo + Corner Replay Button)        │
-└──────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                   Photorealistic Hero Stage Architecture                  │
+├───────────────────────────────────────────────────────────────────────────┤
+│  ├─ Museum Spotlight Environment (HeroSection in /app/landing/page.tsx)   │
+│  │    ├─ Top-Down Conical Museum Spotlight + Floor Reflection Pool        │
+│  │    ├─ 60fps 3D Museum Dust Motes Canvas (drifting through light beam)  │
+│  │    └─ Live Cursor-Driven Specular Glint on Headline & Brass Borders    │
+│  ├─ Physical Brushed-Brass 3D Cube (HeroShatterCube3D)                    │
+│  │    ├─ 6 Embossed Faces (anisotropic grain, chamfer bezel, hex rivets)  │
+│  │    └─ 32 Thick 3D Extruded Fragments (preserve-3d + specular flash)    │
+│  └─ Photorealistic 3D WebGL Desk (FloatingEditorialDesk.tsx)              │
+│       ├─ Procedural Walnut Grain & Pebble Leather Bump/Roughness Maps     │
+│       ├─ Multi-Part Articulated Brass & Emerald Glass Banker's Lamp       │
+│       └─ Warm 2900K THREE.SpotLight (castShadow) + Volumetric Light Cone  │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 - **Interactive Component & State Mapping**:
-  - `heroStage`: `'spin'` (`0ms–900ms`) → `'shatter'` (`900ms–1850ms`, bullet-time fracture + anamorphic flare) → `'split'` (`1850ms+`, letterbox bars retract, 3D camera rig active).
-  - `camX` / `camY` (`useMotionValue` + `useSpring`): Tracks normalized cursor position across `#hero` and drives 3D camera rig rotation (`cameraRotateX`, `cameraRotateY`) and anamorphic background light shift.
-  - `onReplayHero`: Increments `replayKey` from either the Navbar logo or the Hero **Replay Cinema** button to replay Acts I–III on demand.
+  - `HeroDustMotesCanvas`: Renders 55 3D depth-of-field dust motes that brighten when passing through the museum spotlight cone and react to the Cube shatter shockwave.
+  - `HeroShatterCube3D`: Upgrades `CUBE_SHATTER_SHARDS` to 3D faceted polygonal ingots (`clipPath` + dual-layer thickness + keyframed specular flash) and adds machined metal textures, corner rivets, and embossed inner frames to all 6 cube faces.
+  - `FloatingEditorialDesk`: Adds `createWalnutGrainTexture()`, `createLeatherBumpTexture()`, and the 7-part `lampGroup` (`lampBase`, `lampStem`, `lampJoint`, `lampArm`, `lampShade`, `lampBulb`, `lampVolumetricCone`, and `lampSpotLight`).

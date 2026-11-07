@@ -307,12 +307,70 @@ function createContactShadowTexture(): THREE.CanvasTexture {
   canvas.height = 256;
   const ctx = canvas.getContext('2d')!;
   const grad = ctx.createRadialGradient(128, 128, 16, 128, 128, 120);
-  grad.addColorStop(0, 'rgba(10, 20, 15, 0.55)');
-  grad.addColorStop(0.55, 'rgba(10, 20, 15, 0.22)');
+  grad.addColorStop(0, 'rgba(10, 20, 15, 0.62)');
+  grad.addColorStop(0.55, 'rgba(10, 20, 15, 0.26)');
   grad.addColorStop(1, 'rgba(10, 20, 15, 0.0)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 256, 256);
   const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// Procedural Walnut Wood Grain Bump & Roughness Map
+function createWalnutGrainTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 220; i++) {
+    const y = (i / 220) * 512;
+    const lum = 105 + Math.sin(i * 0.35) * 28 + (i % 5) * 6;
+    ctx.strokeStyle = `rgb(${lum}, ${lum}, ${lum})`;
+    ctx.lineWidth = 1.5 + (i % 3);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    for (let x = 0; x <= 512; x += 32) {
+      const wave = Math.sin(x * 0.018 + i * 0.22) * 5;
+      ctx.lineTo(x, y + wave);
+    }
+    ctx.stroke();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 1);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// Procedural Pebble-Grain Leather Blotter Bump Map
+function createLeatherBumpTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#787878';
+  ctx.fillRect(0, 0, 256, 256);
+
+  for (let y = 0; y < 256; y += 4) {
+    for (let x = 0; x < 256; x += 4) {
+      const n = 100 + ((x * 37 + y * 73) % 55);
+      ctx.fillStyle = `rgb(${n},${n},${n})`;
+      ctx.fillRect(x, y, 3, 3);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(6, 4);
   tex.needsUpdate = true;
   return tex;
 }
@@ -474,31 +532,61 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     const researchTex3 = createResearchCardTexture('SERP Benchmark', 'Editorial Lab', '#21759B', maxAniso);
     const hudTex = createTelemetryHudTexture(maxAniso);
     const shadowTex = createContactShadowTexture();
+    const walnutGrainTex = createWalnutGrainTexture();
+    const leatherBumpTex = createLeatherBumpTexture();
 
-    const walnutMat = new THREE.MeshStandardMaterial({
-      color: 0x261c15,
-      roughness: 0.42,
-      metalness: 0.08,
+    const walnutMat = new THREE.MeshPhysicalMaterial({
+      color: 0x2b1e16,
+      roughness: 0.36,
+      metalness: 0.06,
+      bumpMap: walnutGrainTex,
+      bumpScale: 0.0035,
+      clearcoat: 0.45,
+      clearcoatRoughness: 0.28,
     });
 
     const blotterMat = new THREE.MeshStandardMaterial({
-      color: 0x163f32,
-      roughness: 0.74,
+      color: 0x14382c,
+      roughness: 0.68,
       metalness: 0.05,
+      bumpMap: leatherBumpTex,
+      bumpScale: 0.0022,
     });
 
     const brushedBrassMat = new THREE.MeshPhysicalMaterial({
       color: 0xd4af67,
-      roughness: 0.22,
-      metalness: 0.92,
-      anisotropy: 0.75,
-      clearcoat: 0.35,
+      roughness: 0.2,
+      metalness: 0.94,
+      anisotropy: 0.82,
+      clearcoat: 0.42,
+      clearcoatRoughness: 0.14,
+    });
+
+    const emeraldLampShadeMat = new THREE.MeshPhysicalMaterial({
+      color: 0x165b44,
+      emissive: 0x0b3325,
+      emissiveIntensity: 0.42,
+      roughness: 0.12,
+      metalness: 0.05,
+      transmission: isSoftwareGl ? 0 : 0.45,
+      thickness: 0.04,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.08,
+    });
+
+    const warmBulbMat = new THREE.MeshStandardMaterial({
+      color: 0xfff8e7,
+      emissive: 0xffd27d,
+      emissiveIntensity: 2.8,
+      roughness: 0.1,
     });
 
     const darkForestClothMat = new THREE.MeshStandardMaterial({
       color: 0x122b22,
       roughness: 0.68,
       metalness: 0.06,
+      bumpMap: leatherBumpTex,
+      bumpScale: 0.0015,
     });
 
     const paperEdgeMat = new THREE.MeshStandardMaterial({
@@ -509,7 +597,7 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
 
     const manuscriptTopMat = new THREE.MeshStandardMaterial({
       map: manuscriptTex,
-      roughness: 0.65,
+      roughness: 0.62,
       metalness: 0.02,
     });
 
@@ -540,21 +628,21 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     const rootGroup = new THREE.Group();
     scene.add(rootGroup);
 
-    // Contact Shadow Grounding Plane
+    // Contact Shadow Grounding Plane + Subtle Polished Brass Floor Reflection Ring
     const shadowPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.65, 1.35),
+      new THREE.PlaneGeometry(1.75, 1.45),
       new THREE.MeshBasicMaterial({
         map: shadowTex,
         transparent: true,
         depthWrite: false,
-        opacity: 0.5,
+        opacity: 0.58,
       })
     );
     shadowPlane.rotation.x = -Math.PI / 2;
     shadowPlane.position.y = -0.055;
     rootGroup.add(shadowPlane);
 
-    // A. Desk Plinth & Leather Blotter Assembly
+    // A. Desk Plinth, Leather Blotter & Articulated Banker's Brass Desk Lamp
     const deskGroup = new THREE.Group();
     rootGroup.add(deskGroup);
 
@@ -565,15 +653,103 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     deskGroup.add(plinthMesh);
 
     // Brass perimeter inlay rail
-    const brassFrameMesh = new THREE.Mesh(new THREE.BoxGeometry(1.175, 0.012, 0.855), brushedBrassMat);
+    const brassFrameMesh = new THREE.Mesh(new THREE.BoxGeometry(1.178, 0.014, 0.858), brushedBrassMat);
     brassFrameMesh.position.y = -0.015;
     deskGroup.add(brassFrameMesh);
 
-    // Forest Green Editorial Leather Blotter Mat (offset on Y to prevent Z-fighting)
+    // Forest Green Editorial Leather Blotter Mat with Gold Foil Corner Trim
     const blotterMesh = new THREE.Mesh(new THREE.BoxGeometry(1.04, 0.012, 0.74), blotterMat);
     blotterMesh.position.y = 0.006;
     blotterMesh.receiveShadow = true;
     deskGroup.add(blotterMesh);
+
+    // Articulated Brass & Emerald Glass Banker's Desk Lamp (7-part composite 3D fixture + warm SpotLight)
+    const lampGroup = new THREE.Group();
+    lampGroup.position.set(-0.43, 0.012, -0.25);
+    lampGroup.rotation.y = 0.58;
+    deskGroup.add(lampGroup);
+
+    const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.082, 0.022, 32), brushedBrassMat);
+    lampBase.position.y = 0.011;
+    lampBase.castShadow = true;
+    lampBase.receiveShadow = true;
+    lampGroup.add(lampBase);
+
+    const lampCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.048, 0.018, 24), walnutMat);
+    lampCollar.position.y = 0.028;
+    lampGroup.add(lampCollar);
+
+    const lampStem = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.26, 20), brushedBrassMat);
+    lampStem.position.y = 0.16;
+    lampStem.castShadow = true;
+    lampGroup.add(lampStem);
+
+    const lampJoint = new THREE.Mesh(new THREE.SphereGeometry(0.02, 20, 20), brushedBrassMat);
+    lampJoint.position.set(0, 0.29, 0);
+    lampGroup.add(lampJoint);
+
+    const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.01, 0.16, 16), brushedBrassMat);
+    lampArm.position.set(0, 0.315, 0.068);
+    lampArm.rotation.x = Math.PI * 0.36;
+    lampArm.castShadow = true;
+    lampGroup.add(lampArm);
+
+    // Iconic Cased-Emerald Banker's Hood Shade
+    const lampShadeGroup = new THREE.Group();
+    lampShadeGroup.position.set(0, 0.328, 0.145);
+    lampShadeGroup.rotation.x = 0.24;
+    lampGroup.add(lampShadeGroup);
+
+    const lampShade = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.046, 0.068, 0.16, 24, 1, false, 0, Math.PI),
+      emeraldLampShadeMat
+    );
+    lampShade.rotation.z = Math.PI / 2;
+    lampShade.rotation.y = Math.PI / 2;
+    lampShade.castShadow = true;
+    lampShadeGroup.add(lampShade);
+
+    const lampBrassEndCapL = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.008, 20), brushedBrassMat);
+    lampBrassEndCapL.rotation.z = Math.PI / 2;
+    lampBrassEndCapL.position.x = -0.082;
+    lampShadeGroup.add(lampBrassEndCapL);
+
+    const lampBrassEndCapR = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.008, 20), brushedBrassMat);
+    lampBrassEndCapR.rotation.z = Math.PI / 2;
+    lampBrassEndCapR.position.x = 0.082;
+    lampShadeGroup.add(lampBrassEndCapR);
+
+    const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 16), warmBulbMat);
+    lampBulb.position.set(0, -0.012, 0);
+    lampShadeGroup.add(lampBulb);
+
+    // Subtle Translucent Warm Volumetric Light Cone under the Banker's Lamp
+    const lampConeGeo = new THREE.ConeGeometry(0.28, 0.36, 28, 1, true);
+    const lampConeMat = new THREE.MeshBasicMaterial({
+      color: 0xffe4a0,
+      transparent: true,
+      opacity: 0.09,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const lampLightCone = new THREE.Mesh(lampConeGeo, lampConeMat);
+    lampLightCone.position.set(0, -0.18, 0.04);
+    lampLightCone.rotation.x = -0.18;
+    lampShadeGroup.add(lampLightCone);
+
+    // Real Warm 2900K Tungsten Desk Lamp SpotLight casting soft shadows across the manuscript
+    const deskLampLight = new THREE.SpotLight(0xffdfa0, 2.2, 1.8, Math.PI * 0.34, 0.65, 1.2);
+    deskLampLight.position.set(-0.34, 0.35, -0.12);
+    deskLampLight.target.position.set(0.04, 0.02, 0.02);
+    deskLampLight.castShadow = !isSoftwareGl;
+    if (!isSoftwareGl) {
+      deskLampLight.shadow.mapSize.width = 512;
+      deskLampLight.shadow.mapSize.height = 512;
+      deskLampLight.shadow.bias = -0.0006;
+    }
+    rootGroup.add(deskLampLight);
+    rootGroup.add(deskLampLight.target);
 
     // B. Stage 1 Assembly: Research Dossiers, Ledger & Brushed Brass Magnifying Loupe
     const researchGroup = new THREE.Group();
@@ -967,6 +1143,8 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
       researchTex3.dispose();
       hudTex.dispose();
       shadowTex.dispose();
+      walnutGrainTex.dispose();
+      leatherBumpTex.dispose();
       envTexture.dispose();
       renderer.dispose();
     };
