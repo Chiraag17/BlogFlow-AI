@@ -1,49 +1,55 @@
-# Volumetric Atelier Light Beams & 3D Gold Dust Dashboard Atmosphere
+# 3-Act "Director's Cut" Cinematic Hero Experience
 
-Transform the Dashboard backdrop into a living **Volumetric Atelier** featuring diagonal museum-grade golden light beams ("god-rays"), a **60fps 3D Gold Dust Mote & Reactive Ripple Canvas** that responds to prompt keystrokes, 3D Coverflow card flips, and **Approve / Publish** stamps, and **subtle frosted glass cards** (`backdrop-blur-md`) so the warm 3D atmosphere glows softly through the workspace.
+Transform the existing Landing Page Hero section (*3D Shattering Gutenberg Cube → "Research. Think. Publish." + 3D Floating Editorial Desk*) into a **3-Act "Director's Cut" Cinema Sequence** with retracting widescreen cinema letterbox bars, a bullet-time 6-face shatter with anamorphic golden lens flare and dual shockwave rings, a **3D Cursor-Tilted Camera Rig** across the entire Hero stage, and a subtle **Replay Cinema** control.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following user-confirmed choices govern this dashboard background upgrade:
+> The following user-confirmed choices and recommended pacing defaults govern this cinematic Hero upgrade:
 
-- **Confirmed Decision 1 (3D Background Atmosphere)**: **Volumetric Atelier Light Beams with Floating 3D Gold Dust Motes** — Diagonal volumetric golden and emerald light shafts slant across the workspace while 3D depth-of-field brass dust motes drift through the illuminated beams.
-- **Confirmed Decision 2 (Reactive Workspace Events)**:
-  1. **Approve / Publish Stamp Ripple Waves**: Clicking **Approve** or **Publish** (or dispatching a brief) emits a multi-ring golden shockwave across the background canvas that accelerates and brightens nearby 3D gold dust motes.
-  2. **3D Coverflow Flip Energy Pulse**: Flipping or swiping between manuscripts in the 3D Coverflow carousel sends a horizontal kinetic wave and directional breeze through the floating 3D dust motes.
-  3. **Prompt Bar Keystroke Ripples**: Typing in the command prompt bar emits soft champagne-gold ripple rings from the top command stage.
-- **Confirmed Decision 3 (Surface Materiality)**: **Subtle Frosted Glass Cards (`backdrop-blur-md`)** — Dashboard containers (Command Stage, 3D Metric Monoliths, 3D Coverflow Stage, and Telemetry Charts) use translucent frosted glass surfaces with delicate brass-tinted borders so the volumetric light shafts and drifting 3D gold dust glow through without sacrificing tabular numeral contrast.
+- **Confirmed Decision 1 (Primary Cinematic Upgrade)**: **3-Act Director's Cut with Bullet-Time Shatter & Lens Flare**
+  - **Act I — Ignition (`0ms – 950ms`)**: Widescreen 2.39:1 cinema letterbox bars frame the dark/ivory stage as three orbital brass gyroscope rings lock around the spinning 6-faced 3D Gutenberg Cube and an anamorphic horizontal gold lens streak sweeps across the viewport.
+  - **Act II — Bullet-Time Shatter (`950ms – 1850ms`)**: At the moment of fracture, the 6 engraved cube faces and 32 golden shards burst outward in a "bullet-time" deceleration curve (`cubic-bezier(0.08, 0.92, 0.18, 1)`) while a dual concentric brass shockwave and horizontal anamorphic lens flare flash across the center of the frame.
+  - **Act III — Camera Dolly Reveal (`1850ms+`)**: The top and bottom widescreen cinema letterbox bars smoothly retract (`height: 0`) as the camera dollies forward (`scale: 1.08 -> 1`, `translateZ`) into *"Research. Think. Publish."* and the interactive **3D Floating Editorial Desk**.
+- **Confirmed Decision 2 (Cinematic Visual Effects)**:
+  1. **Retracting Widescreen Cinema Letterbox Bars**: Top and bottom matte obsidian cinema bars (`11vh` height) with subtle brass hairline inner borders frame Acts I & II, then glide open on Act III reveal.
+  2. **Anamorphic Golden Lens Flare & Shockwave Burst**: A screen-wide horizontal anamorphic streak (`#FFFDF7` core with `#E5C98B` and `#C8A15A` wings) + dual expanding shockwave rings + radial volumetric god-rays ignite when the 3D Cube shatters.
+  3. **3D Cursor-Tilted Camera Rig**: Once revealed, moving the cursor across the Hero section subtly pitches and yaws the entire 3D Hero stage (`rotateX`, `rotateY` in `preserve-3d` space) while shifting a live anamorphic brass spotlight reflection across the background.
+- **Confirmed Decision 3 (Recommended Pacing & Replay Control)**: Fast ~1.9s theatrical pacing that never blocks interaction, paired with both the existing click-logo-to-replay in the navbar and a subtle **Replay Cinema** button (`RotateCcw` icon) in the bottom-right corner of the Hero stage.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Replaces the flat dashboard background with a multi-layered 3D Atelier environment (`DashboardAtelierBackdrop3D`). Warm volumetric light shafts shine diagonally from the top-left studio canopy across a 60fps 3D canvas of floating gold dust motes, while user actions inside the dashboard send visible energy ripples through the space.
-- **Target Audience / Persona**: Editorial directors and creators working inside the studio who want tactile, atmospheric depth that responds to their publishing workflow.
-- **Key Value**: Unifies the 3D Gutenberg Cube, 3D Editorial Orrery, 3D Metric Monoliths, and 3D Coverflow Carousel inside a cohesive, luminous 3D room.
+- **What It Does**: Elevates the Hero entrance from a simple overlay animation into a choreographed 3-act film sequence. Viewers experience a widescreen theatrical framing, an anamorphic lens flare and time-dilated 3D fracture of the 6-faced Gutenberg Cube, a camera dolly-in reveal as the letterbox bars open, and continuous 3D camera parallax controlled by their cursor.
+- **Target Audience / Persona**: Visitors, creators, and editorial teams arriving on the landing page.
+- **Key Value**: Delivers a memorable, studio-grade 3D theatrical reveal while keeping *"Research. Think. Publish."* and the **3D Floating Editorial Desk** immediately accessible and interactive.
 
 ---
 
 ## 2. User Experience & Visual Design
 
 - **Key User Flows**:
-  1. **Ambient Volumetric Atelier**:
-     - Three layered diagonal light shafts (`-28deg` to `-22deg`) in warm antique brass (`#C8A15A`), champagne gold (`#E5C98B`), and forest emerald (`#163F32`) breathe slowly across the viewport.
-     - Inside the light shafts, **110 3D Gold Dust Motes** float at varying Z-depths (`z` from `0.15` to `1.0`). Foreground motes render with soft bokeh halos while mid-plane motes shimmer as they pass through the diagonal light beams.
-  2. **Action-Driven Reactive Ripples**:
-     - **Keystroke Ripple (`typingPulse`)**: Typing in the prompt bar spawns a soft golden ripple wave (`#E5C98B`) radiating from the upper command stage.
-     - **3D Coverflow Flip Pulse (`coverflowIndex`)**: Navigating Previous/Next or swiping the 3D Coverflow carousel triggers a central emerald-brass energy ring (`#52B788` / `#C8A15A`) and imparts a smooth horizontal momentum impulse to all 3D dust motes.
-     - **Approve / Publish Stamp Shockwave (`stampPulse`)**: Stamping **Approve** or **Publish** fires a double concentric antique-brass shockwave across the entire dashboard that displaces and illuminates dust motes along the wavefront.
-  3. **Subtle Frosted Glass Surfaces**:
-     - All dashboard cards use translucent glass styling (`bg-[var(--color-surface)]/72 dark:bg-[#0D1A14]/68 backdrop-blur-xl border-[#C8A15A]/20`) so the moving volumetric beams and golden dust motes remain subtly visible behind every card while keeping WCAG AA contrast on all text and numbers.
+  1. **Act I — Widescreen Ignition**:
+     - Top and bottom widescreen letterbox bars (`11vh`) frame the viewport with a `1px` antique-brass (`#C8A15A/35`) inner edge.
+     - The 6-faced 3D Gutenberg Cube accelerates inside multi-axis orbital brass rings as a pre-shatter golden core builds energy.
+  2. **Act II — Anamorphic Flash & Bullet-Time Shatter**:
+     - A razor-sharp horizontal **Anamorphic Golden Lens Flare** (`100vw` wide, tapered diamond profile) flashes across the center of the Cube.
+     - Two concentric shockwave rings (`#E5C98B` and `#52B788`) and 8 radial volumetric light rays burst outward.
+     - The 6 engraved faces (`B`, Nib, `§`, Loupe, Seal, `1450`) and 32 brass/emerald shards launch into deep 3D space (`translate3d`) and hang in a dramatic bullet-time deceleration before dissolving as the camera pushes through them.
+  3. **Act III — Letterbox Retraction & 3D Camera Rig**:
+     - The cinema letterbox bars retract smoothly to reveal the full viewport.
+     - The Hero stage dollies into focus with *"Research. Think. Publish."* (no kicker text above it) on the left and the interactive **3D Floating Editorial Desk** on the right.
+     - Moving the pointer tilts the entire Hero camera rig (`±4.5deg` X/Y spring-smoothed parallax) with a counter-drifting anamorphic light reflection.
+     - Clicking either the navbar 3D Cube logo or the subtle **Replay Cinema** button in the Hero corner re-triggers the full 3-Act Director's Cut anytime.
 
 ---
 
 ## 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Fixed Full-Viewport 3D Canvas (`pointer-events-none fixed inset-0 z-0`) Behind Elevated Frosted Content (`relative z-10`)**
-  - *Chosen Approach*: Mount the volumetric light shafts and 60fps 3D dust/ripple canvas as a fixed background layer inside the dashboard view, driven directly by existing dashboard state (`typingPulse`, `stampPulse`, `coverflowIndex`, and `isDark`).
-  - *Why*: Guarantees zero interference with clicks, drags, or scroll performance while allowing ripples to react instantaneously to every dashboard interaction.
+- **Decision 1: Spring-Smoothed `useMotionValue` 3D Camera Rig Combined with Scroll-Driven Recession**
+  - *Chosen Approach*: Combine Framer Motion `useSpring` cursor coordinates (`cameraRotateX`, `cameraRotateY`, `anamorphicGlowX`) with the existing scroll-driven 3D recession (`heroStageScale`, `heroStageRotateX`, `heroStageY`).
+  - *Why*: Gives the Hero section tactile 3D depth on mouse movement at the top of the page while preserving the smooth Apple-style 3D scroll transition into the `#product` section.
 
 ---
 
@@ -52,23 +58,21 @@ Transform the Dashboard backdrop into a living **Volumetric Atelier** featuring 
 - **Architecture & Component Diagram**:
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                        DashboardPage (relative)                          │
+│                     HeroSection (3-Act Cinema Stage)                     │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  ├─ Layer 0: DashboardAtelierBackdrop3D (fixed inset-0 z-0)              │
-│  │    ├─ Volumetric Atelier Light Beams (3 animated diagonal shafts)     │
-│  │    └─ 60fps 3D Canvas                                                 │
-│  │         ├─ 110 3D Gold Dust Motes (depth-of-field bokeh + beam glow)  │
-│  │         ├─ Keystroke Ripples (triggered by typingPulse)               │
-│  │         ├─ Coverflow Flip Pulse & Breeze (triggered by coverflowIndex)│
-│  │         └─ Stamp Shockwave Burst (triggered by stampPulse)            │
-│  └─ Layer 1: Frosted Glass Workspace (relative z-10, backdrop-blur-xl)   │
-│       ├─ Clean 3D Command Stage + 3D Editorial Orrery                    │
-│       ├─ 4x 3D Parallax Metric Monoliths (frosted glass chassis)         │
-│       ├─ 3D Coverflow Manuscript Carousel (frosted glass stage)          │
-│       └─ Output & Cadence Telemetry Charts (frosted glass cards)         │
+│  ├─ Cinema Letterbox Bars (Top & Bottom 11vh, retract on Act III)        │
+│  ├─ Anamorphic Spotlight & Volumetric Backdrop (reacts to cursor X/Y)    │
+│  ├─ Act I & II: HeroShatterCube3D ('spin' -> 'shatter' bullet-time)      │
+│  │    ├─ 3D Tilted Gyroscope Rings + Radial Volumetric God-Rays          │
+│  │    ├─ Horizontal Anamorphic Golden Lens Flare + Dual Shockwave Burst  │
+│  │    └─ 6 Engraved 3D Faces + 32 Shards (bullet-time 3D trajectories)   │
+│  ├─ Act III: 3D Camera Rig Stage (cursor rotateX/rotateY + scroll dolly) │
+│  │    ├─ Left: "Research. Think. Publish." + CTAs + Social Proof         │
+│  │    └─ Right: 3D FloatingEditorialDesk (4 interactive stages)          │
+│  └─ Replay Cinema Trigger (Navbar 3D Logo + Corner Replay Button)        │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 - **Interactive Component & State Mapping**:
-  - `typingPulse` increments when typing in the prompt bar -> spawns a `keystroke` ripple at `(width * 0.38, height * 0.24)`.
-  - `coverflowIndex` changes when flipping/swiping 3D Coverflow cards -> spawns a `coverflow` energy pulse at `(width * 0.52, height * 0.58)` and adds horizontal drift velocity to the 3D dust motes.
-  - `stampPulse` increments on **Approve**, **Publish**, or **Draft** dispatch -> spawns a multi-ring `stamp` shockwave burst that radially pushes and brightens 3D gold dust motes.
+  - `heroStage`: `'spin'` (`0ms–900ms`) → `'shatter'` (`900ms–1850ms`, bullet-time fracture + anamorphic flare) → `'split'` (`1850ms+`, letterbox bars retract, 3D camera rig active).
+  - `camX` / `camY` (`useMotionValue` + `useSpring`): Tracks normalized cursor position across `#hero` and drives 3D camera rig rotation (`cameraRotateX`, `cameraRotateY`) and anamorphic background light shift.
+  - `onReplayHero`: Increments `replayKey` from either the Navbar logo or the Hero **Replay Cinema** button to replay Acts I–III on demand.

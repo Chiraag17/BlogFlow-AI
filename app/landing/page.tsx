@@ -7,6 +7,7 @@ import Link from 'next/link';
 import {
   AnimatePresence,
   motion,
+  useMotionValue,
   useMotionValueEvent,
   useScroll,
   useSpring,
@@ -330,28 +331,39 @@ interface CubeShardSpec {
   color: string;
 }
 
-const CUBE_SHATTER_SHARDS: CubeShardSpec[] = Array.from({ length: 24 }, (_, idx) => {
-  const angle = (idx / 24) * Math.PI * 2 + (idx % 3) * 0.18;
-  const dist = 160 + (idx % 4) * 75;
+const CUBE_SHATTER_SHARDS: CubeShardSpec[] = Array.from({ length: 32 }, (_, idx) => {
+  const angle = (idx / 32) * Math.PI * 2 + (idx % 3) * 0.16;
+  const dist = 175 + (idx % 5) * 72;
   return {
     id: idx,
     tx: Math.round(Math.cos(angle) * dist),
     ty: Math.round(Math.sin(angle) * dist * 0.85),
-    tz: 80 + (idx % 5) * 45,
-    rot: (idx % 2 === 0 ? 1 : -1) * (140 + idx * 18),
-    size: 5 + (idx % 4) * 3,
+    tz: 95 + (idx % 5) * 52,
+    rot: (idx % 2 === 0 ? 1 : -1) * (160 + idx * 20),
+    size: 5 + (idx % 4) * 3.5,
     isDiamond: idx % 2 === 0,
-    color: idx % 3 === 0 ? '#E5C98B' : idx % 3 === 1 ? '#C8A15A' : '#163F32',
+    color: idx % 3 === 0 ? '#E5C98B' : idx % 3 === 1 ? '#C8A15A' : '#52B788',
   };
 });
 
+const SHATTER_GOD_RAYS = Array.from({ length: 8 }, (_, idx) => ({
+  id: idx,
+  angleDeg: idx * 45 + 15,
+}));
+
 /**
- * 3D Gutenberg Cube that spins across its 6 engraved faces and shatters outward in 3D space
+ * 3-Act Director's Cut 3D Gutenberg Cube:
+ * Act I ('spin'): Multi-axis gyroscope lock + pre-ignition anamorphic glimmer
+ * Act II ('shatter'): Anamorphic golden lens flare + dual shockwave burst + bullet-time 6-face fracture
  */
 function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
-  const size = 164;
+  const size = 168;
   const half = size / 2;
   const isShatter = phase === 'shatter';
+
+  // Bullet-time deceleration curve: explosive initial velocity that hangs suspended in mid-air
+  const bulletTimeTransition =
+    'transform 920ms cubic-bezier(0.06, 0.94, 0.16, 1), opacity 860ms cubic-bezier(0.16, 1, 0.3, 1), filter 860ms ease-out';
 
   const faceCommonStyle: React.CSSProperties = {
     position: 'absolute',
@@ -365,18 +377,16 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
     userSelect: 'none',
     backfaceVisibility: 'visible',
     WebkitBackfaceVisibility: 'visible',
-    transition: isShatter
-      ? 'transform 760ms cubic-bezier(0.16, 1, 0.3, 1), opacity 680ms ease-out, filter 680ms ease-out'
-      : 'transform 300ms ease-out',
+    transition: isShatter ? bulletTimeTransition : 'transform 300ms ease-out',
   };
 
   return (
     <div
       className="relative flex items-center justify-center select-none pointer-events-none"
       style={{
-        width: 340,
-        height: 340,
-        perspective: 1400,
+        width: 420,
+        height: 420,
+        perspective: 1500,
       }}
     >
       {/* Warm Brass Radial Core Glow */}
@@ -384,27 +394,97 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
         initial={{ scale: 0.7, opacity: 0 }}
         animate={
           isShatter
-            ? { scale: [1.1, 2.5, 3.2], opacity: [0.95, 0.45, 0] }
-            : { scale: [0.85, 1.15, 1.05], opacity: [0.4, 0.85, 0.75] }
+            ? { scale: [1.15, 2.8, 3.6], opacity: [1, 0.55, 0] }
+            : { scale: [0.82, 1.18, 1.08], opacity: [0.45, 0.9, 0.8] }
         }
-        transition={{ duration: isShatter ? 0.72 : 0.9, ease: 'easeOut' }}
-        className="absolute w-64 h-64 rounded-full blur-3xl"
+        transition={{ duration: isShatter ? 0.92 : 0.9, ease: [0.06, 0.94, 0.16, 1] }}
+        className="absolute w-72 h-72 rounded-full blur-3xl"
         style={{
           background:
-            'radial-gradient(circle, rgba(229, 201, 139, 0.55) 0%, rgba(200, 161, 90, 0.28) 45%, rgba(22, 63, 50, 0.18) 72%, transparent 100%)',
+            'radial-gradient(circle, rgba(229, 201, 139, 0.65) 0%, rgba(200, 161, 90, 0.34) 45%, rgba(22, 63, 50, 0.22) 72%, transparent 100%)',
         }}
       />
+
+      {/* Radial Volumetric God-Rays on Bullet-Time Shatter */}
+      {isShatter &&
+        SHATTER_GOD_RAYS.map((ray) => (
+          <motion.div
+            key={ray.id}
+            initial={{ opacity: 0, scaleY: 0.2 }}
+            animate={{ opacity: [0.85, 0.35, 0], scaleY: [0.4, 1.45, 1.8] }}
+            transition={{ duration: 0.88, ease: [0.06, 0.94, 0.16, 1] }}
+            style={{
+              position: 'absolute',
+              width: '36px',
+              height: '460px',
+              transform: `rotate(${ray.angleDeg}deg)`,
+              background:
+                'linear-gradient(180deg, transparent 0%, rgba(229, 201, 139, 0.38) 50%, transparent 100%)',
+              filter: 'blur(10px)',
+            }}
+          />
+        ))}
+
+      {/* ANAMORPHIC GOLDEN LENS FLARE (Pre-ignition glimmer in Act I -> Full Widescreen Streak in Act II) */}
+      <motion.div
+        initial={{ scaleX: 0.15, opacity: 0 }}
+        animate={
+          isShatter
+            ? {
+                scaleX: [0.35, 1.35, 1.65],
+                scaleY: [1.8, 1, 0.25],
+                opacity: [1, 0.85, 0],
+              }
+            : {
+                scaleX: [0.15, 0.55, 0.42],
+                scaleY: [0.6, 0.9, 0.7],
+                opacity: [0.2, 0.65, 0.5],
+              }
+        }
+        transition={{
+          duration: isShatter ? 0.88 : 0.9,
+          ease: [0.06, 0.94, 0.16, 1],
+        }}
+        className="fixed left-0 right-0 h-[3px] flex items-center justify-center pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent 0%, rgba(200, 161, 90, 0.45) 22%, rgba(229, 201, 139, 0.95) 45%, #FFFDF7 50%, rgba(229, 201, 139, 0.95) 55%, rgba(200, 161, 90, 0.45) 78%, transparent 100%)',
+          boxShadow:
+            '0 0 32px 6px rgba(229, 201, 139, 0.65), 0 0 80px 16px rgba(200, 161, 90, 0.35)',
+        }}
+      >
+        {/* Central Anamorphic Iris Polygons */}
+        <div
+          className="w-48 h-6 rounded-full blur-md"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, #FFFDF7 0%, #E5C98B 45%, transparent 80%)',
+          }}
+        />
+      </motion.div>
 
       {/* Outer Calibrated Brass Orbital Ring */}
       <motion.div
         initial={{ scale: 0.6, opacity: 0, rotateZ: 0 }}
         animate={
           isShatter
-            ? { scale: 2.35, opacity: 0, rotateZ: 190 }
-            : { scale: 1, opacity: 0.75, rotateZ: 120 }
+            ? { scale: 2.55, opacity: 0, rotateZ: 210 }
+            : { scale: 1, opacity: 0.8, rotateZ: 120 }
         }
-        transition={{ duration: isShatter ? 0.68 : 0.95, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute w-72 h-72 rounded-full border border-dashed border-[#C8A15A]/45"
+        transition={{ duration: isShatter ? 0.88 : 0.92, ease: [0.06, 0.94, 0.16, 1] }}
+        className="absolute w-80 h-80 rounded-full border border-dashed border-[#C8A15A]/55"
+      />
+
+      {/* 3D Tilted Gyroscope Ring */}
+      <motion.div
+        initial={{ scale: 0.55, opacity: 0, rotateX: 62, rotateY: -28, rotateZ: 0 }}
+        animate={
+          isShatter
+            ? { scale: 2.25, opacity: 0, rotateX: 62, rotateY: -28, rotateZ: -195 }
+            : { scale: 1, opacity: 0.72, rotateX: 62, rotateY: -28, rotateZ: -115 }
+        }
+        transition={{ duration: isShatter ? 0.84 : 0.92, ease: [0.06, 0.94, 0.16, 1] }}
+        className="absolute w-72 h-72 rounded-full border border-[#E5C98B]/50 shadow-[0_0_24px_rgba(200,161,90,0.22)]"
       />
 
       {/* Inner Counter-Rotating Vernier Ring */}
@@ -412,24 +492,32 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
         initial={{ scale: 0.5, opacity: 0, rotateZ: 0 }}
         animate={
           isShatter
-            ? { scale: 1.95, opacity: 0, rotateZ: -160 }
-            : { scale: 1, opacity: 0.6, rotateZ: -95 }
+            ? { scale: 2.05, opacity: 0, rotateZ: -170 }
+            : { scale: 1, opacity: 0.65, rotateZ: -95 }
         }
-        transition={{ duration: isShatter ? 0.62 : 0.95, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute w-56 h-56 rounded-full border border-[#163F32]/35 dark:border-[#E5C98B]/30"
+        transition={{ duration: isShatter ? 0.8 : 0.92, ease: [0.06, 0.94, 0.16, 1] }}
+        className="absolute w-60 h-60 rounded-full border border-[#163F32]/40 dark:border-[#E5C98B]/35"
       />
 
-      {/* Shatter Shockwave Ring */}
+      {/* Dual Concentric Shockwave Burst on Shatter */}
       {isShatter && (
-        <motion.div
-          initial={{ scale: 0.35, opacity: 1 }}
-          animate={{ scale: 2.9, opacity: 0 }}
-          transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute w-52 h-52 rounded-full border-2 border-[#E5C98B] shadow-[0_0_50px_rgba(200,161,90,0.8)]"
-        />
+        <>
+          <motion.div
+            initial={{ scale: 0.3, opacity: 1 }}
+            animate={{ scale: 3.3, opacity: 0 }}
+            transition={{ duration: 0.86, ease: [0.06, 0.94, 0.16, 1] }}
+            className="absolute w-56 h-56 rounded-full border-2 border-[#E5C98B] shadow-[0_0_60px_rgba(229,201,139,0.9)]"
+          />
+          <motion.div
+            initial={{ scale: 0.2, opacity: 0.85 }}
+            animate={{ scale: 2.65, opacity: 0 }}
+            transition={{ duration: 0.92, delay: 0.06, ease: [0.06, 0.94, 0.16, 1] }}
+            className="absolute w-56 h-56 rounded-full border border-[#52B788] shadow-[0_0_40px_rgba(82,183,136,0.65)]"
+          />
+        </>
       )}
 
-      {/* 24 Exploding Golden Brass & Emerald Shards on Shatter */}
+      {/* 32 Exploding Golden Brass & Emerald Shards (Bullet-Time Deceleration) */}
       {isShatter &&
         CUBE_SHATTER_SHARDS.map((shard) => (
           <motion.span
@@ -438,18 +526,18 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
             animate={{
               x: shard.tx,
               y: shard.ty,
-              scale: [1.2, 0.85, 0],
-              opacity: [1, 0.85, 0],
+              scale: [1.35, 1.05, 0],
+              opacity: [1, 0.92, 0],
               rotate: shard.rot,
             }}
-            transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.9, ease: [0.06, 0.94, 0.16, 1] }}
             style={{
               position: 'absolute',
               width: shard.size,
               height: shard.size,
               backgroundColor: shard.color,
               borderRadius: shard.isDiamond ? '2px' : '9999px',
-              boxShadow: '0 0 12px rgba(229, 201, 139, 0.75)',
+              boxShadow: '0 0 14px rgba(229, 201, 139, 0.85)',
             }}
           />
         ))}
@@ -465,21 +553,21 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
         animate={
           isShatter
             ? {
-                rotateX: 28,
-                rotateY: 410,
-                rotateZ: 18,
-                scale: 1.08,
+                rotateX: 24,
+                rotateY: 395,
+                rotateZ: 14,
+                scale: 1.12,
               }
             : {
                 rotateX: [-18, 22, -14],
                 rotateY: [-32, 165, 338],
                 rotateZ: [-8, 12, 0],
-                scale: [0.72, 1.04, 1],
+                scale: [0.72, 1.05, 1],
               }
         }
         transition={{
-          duration: isShatter ? 0.68 : 0.95,
-          ease: isShatter ? [0.16, 1, 0.3, 1] : [0.22, 1, 0.36, 1],
+          duration: isShatter ? 0.9 : 0.92,
+          ease: isShatter ? [0.06, 0.94, 0.16, 1] : [0.22, 1, 0.36, 1],
         }}
         style={{
           width: `${size}px`,
@@ -493,10 +581,10 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
           style={{
             ...faceCommonStyle,
             transform: isShatter
-              ? `translate3d(-195px, -110px, 260px) rotateX(42deg) rotateY(-58deg) rotateZ(-28deg) scale(0.74)`
+              ? `translate3d(-225px, -125px, 290px) rotateX(38deg) rotateY(-54deg) rotateZ(-24deg) scale(0.76)`
               : `rotateY(0deg) translateZ(${half}px)`,
             opacity: isShatter ? 0 : 1,
-            filter: isShatter ? 'blur(4px)' : 'none',
+            filter: isShatter ? 'blur(3px)' : 'none',
             background: 'linear-gradient(145deg, #184537 0%, #0E2920 65%, #091B15 100%)',
             border: '2px solid #C8A15A',
             boxShadow:
@@ -669,13 +757,26 @@ function HeroSection({
   activeDeskStage,
   onSelectDeskStage,
   replayKey,
+  onReplayHero,
 }: {
   activeDeskStage: DeskStage;
   onSelectDeskStage: (stage: DeskStage) => void;
   replayKey: number;
+  onReplayHero: () => void;
 }) {
   const [heroStage, setHeroStage] = useState<'spin' | 'shatter' | 'split'>('spin');
   const heroSectionRef = useRef<HTMLElement | null>(null);
+
+  // 3D Cursor-Tilted Cinema Camera Rig Motion Values
+  const camX = useMotionValue(0.5);
+  const camY = useMotionValue(0.5);
+  const smoothCamX = useSpring(camX, { stiffness: 65, damping: 24, mass: 0.4 });
+  const smoothCamY = useSpring(camY, { stiffness: 65, damping: 24, mass: 0.4 });
+
+  const cameraRigRotateX = useTransform(smoothCamY, [0, 1], [4.2, -4.2]);
+  const cameraRigRotateY = useTransform(smoothCamX, [0, 1], [-5.2, 5.2]);
+  const anamorphicSpotX = useTransform(smoothCamX, [0, 1], ['22%', '78%']);
+  const anamorphicSpotY = useTransform(smoothCamY, [0, 1], ['24%', '76%']);
 
   const { scrollYProgress: heroScrollProgress } = useScroll({
     target: heroSectionRef,
@@ -706,13 +807,15 @@ function HeroSection({
 
     setHeroStage('spin');
 
+    // Act II: Bullet-Time Shatter & Anamorphic Lens Flare Ignition
     const shatterTimer = setTimeout(() => {
       setHeroStage('shatter');
-    }, 920);
+    }, 900);
 
+    // Act III: Widescreen Letterbox Retraction & Camera Dolly Reveal
     const splitTimer = setTimeout(() => {
       setHeroStage('split');
-    }, 1620);
+    }, 1820);
 
     return () => {
       clearTimeout(shatterTimer);
@@ -720,9 +823,25 @@ function HeroSection({
     };
   }, [replayKey]);
 
-  // Begin revealing the Hero content as the 3D cube shatters outward
+  const handleHeroPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    const el = heroSectionRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    camX.set(nx);
+    camY.set(ny);
+  };
+
+  const handleHeroPointerLeave = () => {
+    camX.set(0.5);
+    camY.set(0.5);
+  };
+
+  // Begin revealing the Hero content as the 3D cube shatters outward in bullet-time
   const isRevealed = heroStage === 'shatter' || heroStage === 'split';
   const showCubeOverlay = heroStage === 'spin' || heroStage === 'shatter';
+  const showLetterboxBars = heroStage !== 'split';
   const activeChapter =
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
 
@@ -730,12 +849,58 @@ function HeroSection({
     <section
       ref={heroSectionRef}
       id="hero"
-      className="lp-hero lp-perspective-stage"
+      onPointerMove={handleHeroPointerMove}
+      onPointerLeave={handleHeroPointerLeave}
+      className="lp-hero lp-perspective-stage relative overflow-hidden"
       aria-labelledby="hero-headline"
     >
       <div className="lp-hero-bg" aria-hidden="true" />
 
-      {/* ACT I: 3D Gutenberg Cube Spin & 6-Face Shatter Reveal Stage */}
+      {/* Live Cursor-Tracked Anamorphic Golden Spotlight & Horizontal Lens Reflection */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
+        <motion.div
+          className="absolute w-[680px] h-[680px] rounded-full blur-[135px] -translate-x-1/2 -translate-y-1/2"
+          style={{
+            left: anamorphicSpotX,
+            top: anamorphicSpotY,
+            background:
+              'radial-gradient(circle, rgba(200, 161, 90, 0.20) 0%, rgba(22, 63, 50, 0.12) 48%, transparent 72%)',
+          }}
+        />
+        <motion.div
+          className="absolute w-[900px] h-[2px] -translate-x-1/2 -translate-y-1/2 opacity-40"
+          style={{
+            left: anamorphicSpotX,
+            top: anamorphicSpotY,
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(200, 161, 90, 0.35) 30%, rgba(229, 201, 139, 0.75) 50%, rgba(200, 161, 90, 0.35) 70%, transparent 100%)',
+            boxShadow: '0 0 18px rgba(200, 161, 90, 0.35)',
+          }}
+        />
+      </div>
+
+      {/* WIDESCREEN 2.39:1 CINEMA LETTERBOX BARS (Retract smoothly on Act III) */}
+      <motion.div
+        initial={{ height: '10.5vh' }}
+        animate={{ height: showLetterboxBars ? '10.5vh' : '0vh' }}
+        transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-none fixed top-0 left-0 right-0 z-40 bg-[#050B09] overflow-hidden flex items-end"
+        aria-hidden="true"
+      >
+        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#C8A15A]/55 to-transparent" />
+      </motion.div>
+
+      <motion.div
+        initial={{ height: '10.5vh' }}
+        animate={{ height: showLetterboxBars ? '10.5vh' : '0vh' }}
+        transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 bg-[#050B09] overflow-hidden flex items-start"
+        aria-hidden="true"
+      >
+        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#C8A15A]/55 to-transparent" />
+      </motion.div>
+
+      {/* ACT I & II: 3D Gutenberg Cube Spin, Anamorphic Flare & Bullet-Time 6-Face Shatter */}
       <AnimatePresence>
         {showCubeOverlay && (
           <motion.div
@@ -743,7 +908,7 @@ function HeroSection({
             className="lp-hero-center-stage"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: HERO_REVEAL_EASE }}
+            transition={{ duration: 0.42, ease: HERO_REVEAL_EASE }}
             aria-hidden="true"
           >
             <HeroShatterCube3D phase={heroStage === 'shatter' ? 'shatter' : 'spin'} />
@@ -751,20 +916,40 @@ function HeroSection({
         )}
       </AnimatePresence>
 
-      {/* ACT II: Split-Column Studio Layout (Emerges from the shattering 3D cube core) */}
+      {/* ACT III: 3D Camera Rig & Dolly-In Reveal Stage */}
       <motion.div
-        className="lp-container lp-hero-dive-stage"
+        className="lp-container lp-hero-dive-stage relative z-10"
         style={{
           scale: heroStageScale,
           rotateX: heroStageRotateX,
           y: heroStageY,
           opacity: heroStageOpacity,
-          transformPerspective: 1400,
+          transformPerspective: 1500,
         }}
       >
-        <div className="lp-hero-inner">
-          {/* Left: Leads directly with "Research. Think. Publish." (No kicker text) */}
-          <div className="lp-hero-left">
+        {/* 3D Cursor-Tilted Camera Rig Wrapper */}
+        <motion.div
+          initial={false}
+          animate={
+            heroStage === 'spin'
+              ? { scale: 0.9, z: -120 }
+              : heroStage === 'shatter'
+              ? { scale: 1.03, z: 18 }
+              : { scale: 1, z: 0 }
+          }
+          transition={{ duration: 0.88, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            rotateX: cameraRigRotateX,
+            rotateY: cameraRigRotateY,
+            transformStyle: 'preserve-3d',
+          }}
+          className="lp-hero-inner"
+        >
+          {/* Left: Leads directly with "Research. Think. Publish." (Elevated Z-Plane) */}
+          <div
+            className="lp-hero-left"
+            style={{ transform: 'translateZ(26px)', transformStyle: 'preserve-3d' }}
+          >
             <motion.h1
               className="lp-hero-headline"
               id="hero-headline"
@@ -772,9 +957,9 @@ function HeroSection({
               animate={
                 isRevealed
                   ? { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
-                  : { opacity: 0, y: 28, scale: 0.94, filter: 'blur(10px)' }
+                  : { opacity: 0, y: 34, scale: 0.92, filter: 'blur(12px)' }
               }
-              transition={{ duration: 0.72, ease: HERO_MORPH_EASE }}
+              transition={{ duration: 0.78, ease: HERO_MORPH_EASE }}
             >
               <span className="lp-hero-headline-row">
                 <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
@@ -847,16 +1032,17 @@ function HeroSection({
             </motion.div>
           </div>
 
-          {/* Right: 3D FloatingEditorialDesk */}
+          {/* Right: 3D FloatingEditorialDesk (Elevated Counter-Parallax Z-Plane) */}
           <motion.div
             className="lp-hero-right-3d"
+            style={{ transform: 'translateZ(42px)', transformStyle: 'preserve-3d' }}
             initial={false}
             animate={
               isRevealed
                 ? { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
-                : { opacity: 0, x: 56, scale: 0.92, filter: 'blur(12px)' }
+                : { opacity: 0, x: 64, scale: 0.88, filter: 'blur(14px)' }
             }
-            transition={{ duration: 0.85, delay: isRevealed ? 0.06 : 0, ease: HERO_MORPH_EASE }}
+            transition={{ duration: 0.88, delay: isRevealed ? 0.06 : 0, ease: HERO_MORPH_EASE }}
           >
             <FloatingEditorialDesk
               currentStage={activeDeskStage}
@@ -866,8 +1052,23 @@ function HeroSection({
               activeTopicMetric={activeChapter.hudMetric}
             />
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
+
+      {/* Subtle Corner Replay Cinema Trigger */}
+      <motion.button
+        type="button"
+        onClick={onReplayHero}
+        initial={false}
+        animate={heroStage === 'split' ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+        transition={{ duration: 0.45 }}
+        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#C8A15A]/30 bg-[var(--lp-surface)]/80 backdrop-blur-md text-xs font-medium text-[var(--lp-text-secondary)] hover:text-[var(--lp-text)] hover:border-[#C8A15A] transition-colors cursor-pointer z-20"
+        style={{ position: 'absolute', bottom: '58px', right: '32px' }}
+        title="Replay 3D Cinema Intro"
+      >
+        <RotateCcw size={12} className="text-[#C8A15A]" />
+        <span>Replay Cinema</span>
+      </motion.button>
 
       {/* Quiet Editorial Principles Strip */}
       <motion.div
@@ -2120,6 +2321,7 @@ export default function LandingPage() {
           activeDeskStage={activeDeskStage}
           onSelectDeskStage={setActiveDeskStage}
           replayKey={replayKey}
+          onReplayHero={handleReplayHero}
         />
         <ProductXRaySection />
         <WorkflowSection onSyncDeskStage={setActiveDeskStage} />
