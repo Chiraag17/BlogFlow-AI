@@ -325,6 +325,10 @@ interface CubeShardSpec {
   tx: number;
   ty: number;
   tz: number;
+  forgeX: number;
+  forgeY: number;
+  forgeZ: number;
+  targetForge: 'headline' | 'desk';
   rx: number;
   ry: number;
   rz: number;
@@ -344,13 +348,34 @@ const SHARD_CLIP_PATHS = [
 
 const CUBE_SHATTER_SHARDS: CubeShardSpec[] = Array.from({ length: 32 }, (_, idx) => {
   const angle = (idx / 32) * Math.PI * 2 + (idx % 3) * 0.16;
-  const dist = 175 + (idx % 5) * 72;
+  const dist = 145 + (idx % 5) * 58;
   const isGold = idx % 3 !== 2;
+  const isHeadlineTarget = idx % 2 === 0;
+  const streamIdx = Math.floor(idx / 2);
+
+  // Stage A: Bullet-time outward suspension apex
+  const tx = Math.round(Math.cos(angle) * dist);
+  const ty = Math.round(Math.sin(angle) * dist * 0.82);
+  const tz = 115 + (idx % 5) * 54;
+
+  // Stage B: Magnetic convergence into Left Headline ("Research. Think. Publish.") or Right 3D Desk Lamp
+  const forgeX = isHeadlineTarget
+    ? -335 + (streamIdx % 4) * 44
+    : 225 + (streamIdx % 4) * 42;
+  const forgeY = isHeadlineTarget
+    ? -92 + Math.floor(streamIdx / 4) * 34
+    : -64 + Math.floor(streamIdx / 4) * 32;
+  const forgeZ = isHeadlineTarget ? 48 + (streamIdx % 3) * 22 : 64 + (streamIdx % 3) * 24;
+
   return {
     id: idx,
-    tx: Math.round(Math.cos(angle) * dist),
-    ty: Math.round(Math.sin(angle) * dist * 0.85),
-    tz: 110 + (idx % 5) * 58,
+    tx,
+    ty,
+    tz,
+    forgeX,
+    forgeY,
+    forgeZ,
+    targetForge: isHeadlineTarget ? 'headline' : 'desk',
     rx: (idx % 2 === 0 ? 1 : -1) * (180 + idx * 22),
     ry: (idx % 3 === 0 ? -1 : 1) * (210 + idx * 19),
     rz: (idx % 2 === 0 ? 1 : -1) * (150 + idx * 17),
@@ -364,13 +389,15 @@ const CUBE_SHATTER_SHARDS: CubeShardSpec[] = Array.from({ length: 32 }, (_, idx)
   };
 });
 
-const SHATTER_GOD_RAYS = Array.from({ length: 8 }, (_, idx) => ({
+const SHATTER_GOD_RAYS = Array.from({ length: 12 }, (_, idx) => ({
   id: idx,
-  angleDeg: idx * 45 + 15,
+  angleDeg: idx * 30 + 12,
+  widthPx: idx % 2 === 0 ? 44 : 28,
 }));
 
 /**
- * Reusable Realistic Brushed-Brass Grain, Machined Chamfer Bezel & 4 Corner Hex Rivets
+ * Reusable Realistic Brushed-Brass Grain, Machined Chamfer Bezel, 4 Corner Hex Rivets
+ * + Molten 24K Gold Kintsugi Fracture Seams Leaking Pressurized Light Before Shatter
  */
 function CubeFaceMachinedHardware({ variant = 'dark' }: { variant?: 'dark' | 'brass' }) {
   const rivetColor = variant === 'brass' ? '#163F32' : '#E5C98B';
@@ -390,6 +417,44 @@ function CubeFaceMachinedHardware({ variant = 'dark' }: { variant?: 'dark' | 'br
         style={{
           background:
             'linear-gradient(135deg, rgba(255,253,247,0.24) 0%, transparent 38%, rgba(0,0,0,0.28) 100%)',
+        }}
+      />
+      {/* Molten 24K Gold Kintsugi Fracture Seams Etching Across the Plate */}
+      <motion.svg
+        viewBox="0 0 168 168"
+        fill="none"
+        className="pointer-events-none absolute inset-0 w-full h-full"
+        initial={{ opacity: 0.15 }}
+        animate={{ opacity: [0.18, 0.95, 1] }}
+        transition={{ duration: 0.88, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          filter:
+            'drop-shadow(0 0 6px rgba(255, 253, 247, 0.95)) drop-shadow(0 0 14px rgba(229, 201, 139, 0.85))',
+        }}
+      >
+        <path
+          d="M0 36 L44 58 L78 46 L112 88 L168 72 M54 0 L68 48 L48 108 L82 168 M112 88 L138 142 L168 154"
+          stroke="#FFFDF7"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M0 122 L52 106 L94 118 L128 84 L168 28"
+          stroke="#F5E1A4"
+          strokeWidth="1.25"
+          strokeLinecap="round"
+        />
+      </motion.svg>
+      {/* Perimeter Molten Seam Leak Glow */}
+      <motion.span
+        className="pointer-events-none absolute inset-0 rounded-[22px]"
+        initial={{ opacity: 0.2 }}
+        animate={{ opacity: [0.25, 0.95, 1] }}
+        transition={{ duration: 0.88, ease: 'easeIn' }}
+        style={{
+          boxShadow:
+            'inset 0 0 18px rgba(255, 250, 220, 0.78), 0 0 24px rgba(229, 201, 139, 0.75)',
         }}
       />
       {/* Machined Chamfered Inner Bezel Groove */}
@@ -597,25 +662,39 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
         }}
       />
 
-      {/* Radial Volumetric God-Rays on Bullet-Time Shatter */}
-      {isShatter &&
-        SHATTER_GOD_RAYS.map((ray) => (
-          <motion.div
-            key={ray.id}
-            initial={{ opacity: 0, scaleY: 0.2 }}
-            animate={{ opacity: [0.85, 0.35, 0], scaleY: [0.4, 1.45, 1.8] }}
-            transition={{ duration: 0.88, ease: [0.06, 0.94, 0.16, 1] }}
-            style={{
-              position: 'absolute',
-              width: '36px',
-              height: '460px',
-              transform: `rotate(${ray.angleDeg}deg)`,
-              background:
-                'linear-gradient(180deg, transparent 0%, rgba(229, 201, 139, 0.38) 50%, transparent 100%)',
-              filter: 'blur(10px)',
-            }}
-          />
-        ))}
+      {/* Pressurized Volumetric God-Rays Bursting Through the Cube Seams (Act I Build-Up -> Act II Flare) */}
+      {SHATTER_GOD_RAYS.map((ray) => (
+        <motion.div
+          key={ray.id}
+          initial={{ opacity: 0.08, scaleY: 0.32, rotate: ray.angleDeg }}
+          animate={
+            isShatter
+              ? {
+                  opacity: [0.95, 0.55, 0],
+                  scaleY: [0.85, 1.75, 2.15],
+                  rotate: ray.angleDeg + 28,
+                }
+              : {
+                  opacity: [0.12, 0.68, 0.92],
+                  scaleY: [0.35, 0.92, 1.18],
+                  rotate: ray.angleDeg + 16,
+                }
+          }
+          transition={{
+            duration: isShatter ? 0.96 : 0.9,
+            ease: isShatter ? [0.06, 0.94, 0.16, 1] : 'easeIn',
+          }}
+          style={{
+            position: 'absolute',
+            width: `${ray.widthPx}px`,
+            height: '520px',
+            background:
+              'linear-gradient(180deg, transparent 0%, rgba(229, 201, 139, 0.25) 28%, rgba(255, 253, 247, 0.72) 50%, rgba(229, 201, 139, 0.25) 72%, transparent 100%)',
+            filter: 'blur(9px)',
+            mixBlendMode: 'screen',
+          }}
+        />
+      ))}
 
       {/* ANAMORPHIC GOLDEN LENS FLARE (Pre-ignition glimmer in Act I -> Full Widescreen Streak in Act II) */}
       <motion.div
@@ -709,7 +788,7 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
         </>
       )}
 
-      {/* 32 Exploding Thick 3D Faceted Metallic Fragments with Specular Flash */}
+      {/* 32 Magnetic 3D Shards: Burst to Bullet-Time Apex -> Curve Left & Right to Forge Headline & 3D Desk */}
       {isShatter &&
         CUBE_SHATTER_SHARDS.map((shard) => (
           <motion.span
@@ -725,16 +804,20 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
               rotateZ: 0,
             }}
             animate={{
-              x: shard.tx,
-              y: shard.ty,
-              z: shard.tz,
-              scale: [1.45, 1.15, 0],
-              opacity: [1, 0.95, 0],
-              rotateX: shard.rx,
-              rotateY: shard.ry,
-              rotateZ: shard.rz,
+              x: [0, shard.tx, shard.forgeX],
+              y: [0, shard.ty, shard.forgeY],
+              z: [0, shard.tz, shard.forgeZ],
+              scale: [0.55, 1.5, 0.22],
+              opacity: [1, 1, 0],
+              rotateX: [0, shard.rx * 0.55, shard.rx],
+              rotateY: [0, shard.ry * 0.55, shard.ry],
+              rotateZ: [0, shard.rz * 0.55, shard.rz],
             }}
-            transition={{ duration: 0.92, ease: [0.06, 0.94, 0.16, 1] }}
+            transition={{
+              duration: 1.04,
+              times: [0, 0.42, 1],
+              ease: ['circOut', 'easeInOut'],
+            }}
             style={{
               position: 'absolute',
               width: shard.width,
@@ -800,6 +883,25 @@ function HeroShatterCube3D({ phase }: { phase: 'spin' | 'shatter' }) {
           transformStyle: 'preserve-3d',
         }}
       >
+        {/* Internal Molten 24K Gold Linotype Core Furnace (Glows inside the cube through the seams) */}
+        <motion.div
+          initial={{ scale: 0.45, opacity: 0.35 }}
+          animate={
+            isShatter
+              ? { scale: [1.1, 2.2, 0.2], opacity: [1, 0.9, 0] }
+              : { scale: [0.55, 0.96, 1.08], opacity: [0.4, 0.95, 1] }
+          }
+          transition={{ duration: 0.9, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute',
+            inset: '18px',
+            borderRadius: '9999px',
+            background:
+              'radial-gradient(circle, #FFFDF7 0%, #FFE4A0 38%, #D4AF67 68%, transparent 100%)',
+            boxShadow: '0 0 65px 24px rgba(255, 244, 200, 0.92)',
+            transform: 'translateZ(0px)',
+          }}
+        />
         {/* 1. FRONT FACE: Raised 'B' Gutenberg Serif Monogram */}
         <span
           style={{
@@ -1028,6 +1130,7 @@ function HeroSection({
   onReplayHero: () => void;
 }) {
   const [heroStage, setHeroStage] = useState<'spin' | 'shatter' | 'split'>('spin');
+  const [bulletTimeFrozen, setBulletTimeFrozen] = useState<boolean>(false);
   const heroSectionRef = useRef<HTMLElement | null>(null);
 
   // 3D Cursor-Tilted Cinema Camera Rig Motion Values
@@ -1068,23 +1171,34 @@ function HeroSection({
       return;
     }
 
+    setBulletTimeFrozen(false);
     setHeroStage('spin');
 
-    // Act II: Bullet-Time Shatter & Anamorphic Lens Flare Ignition
+    // Act II: Molten Kintsugi Peak -> Bullet-Time Shatter & Magnetic Shard Forge
     const shatterTimer = setTimeout(() => {
       setHeroStage('shatter');
-    }, 900);
+    }, 920);
 
-    // Act III: Widescreen Letterbox Retraction & Camera Dolly Reveal
+    // Act III: Shards Strike Headline & Desk -> Pull-Chain Banker's Lamp Clicks On
     const splitTimer = setTimeout(() => {
       setHeroStage('split');
-    }, 1820);
+    }, 1920);
 
     return () => {
       clearTimeout(shatterTimer);
       clearTimeout(splitTimer);
     };
   }, [replayKey]);
+
+  const handleToggleBulletTime = () => {
+    if (bulletTimeFrozen) {
+      setBulletTimeFrozen(false);
+      setHeroStage('split');
+    } else {
+      setBulletTimeFrozen(true);
+      setHeroStage('shatter');
+    }
+  };
 
   const handleHeroPointerMove = (e: React.PointerEvent<HTMLElement>) => {
     const el = heroSectionRef.current;
@@ -1103,8 +1217,9 @@ function HeroSection({
 
   // Begin revealing the Hero content as the 3D cube shatters outward in bullet-time
   const isRevealed = heroStage === 'shatter' || heroStage === 'split';
-  const showCubeOverlay = heroStage === 'spin' || heroStage === 'shatter';
-  const showLetterboxBars = heroStage !== 'split';
+  const isLampLit = heroStage === 'split' && !bulletTimeFrozen;
+  const showCubeOverlay = heroStage === 'spin' || heroStage === 'shatter' || bulletTimeFrozen;
+  const showLetterboxBars = heroStage !== 'split' || bulletTimeFrozen;
   const activeChapter =
     HERO_CHAPTER_INDEX.find((c) => c.id === activeDeskStage) || HERO_CHAPTER_INDEX[0];
 
@@ -1119,20 +1234,41 @@ function HeroSection({
     >
       <div className="lp-hero-bg" aria-hidden="true" />
 
+      {/* CHIAROSCURO DARK-ROOM VEIL (Envelops the stage until the 3D Banker's Lamp Pull-Chain Clicks On) */}
+      <motion.div
+        initial={{ opacity: 0.84 }}
+        animate={{
+          opacity: heroStage === 'spin' ? 0.84 : heroStage === 'shatter' ? 0.46 : 0,
+        }}
+        transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
+        className="pointer-events-none absolute inset-0 z-[5]"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 46%, rgba(12, 28, 22, 0.32) 0%, rgba(4, 10, 8, 0.88) 65%, rgba(2, 6, 5, 0.96) 100%)',
+        }}
+        aria-hidden="true"
+      />
+
       {/* Warm Museum Spotlight Environment + Realistic Floor Reflection Pool + 60fps 3D Dust Motes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
-        {/* Top-Down Conical Museum Spotlight Beam */}
-        <div
-          className="absolute -top-28 left-1/2 -translate-x-1/2 w-[980px] h-[880px] opacity-75"
+        {/* Top-Down Conical Museum Spotlight Beam (Ignites when Banker's Lamp clicks on in Act III) */}
+        <motion.div
+          initial={{ opacity: 0.12 }}
+          animate={{ opacity: isLampLit ? [0.2, 0.98, 0.78] : 0.14 }}
+          transition={{ duration: 0.72, ease: 'easeOut' }}
+          className="absolute -top-28 left-1/2 -translate-x-1/2 w-[980px] h-[880px]"
           style={{
             background:
-              'conic-gradient(from 152deg at 50% 0%, transparent 0deg, rgba(229, 201, 139, 0.14) 22deg, rgba(255, 250, 235, 0.24) 28deg, rgba(200, 161, 90, 0.14) 34deg, transparent 56deg)',
+              'conic-gradient(from 152deg at 50% 0%, transparent 0deg, rgba(229, 201, 139, 0.14) 22deg, rgba(255, 250, 235, 0.26) 28deg, rgba(200, 161, 90, 0.14) 34deg, transparent 56deg)',
             filter: 'blur(42px)',
           }}
         />
 
         {/* Perspective-Foreshortened Realistic Studio Floor Reflection Pool */}
-        <div
+        <motion.div
+          initial={{ opacity: 0.15 }}
+          animate={{ opacity: isLampLit ? 1 : 0.22 }}
+          transition={{ duration: 0.75, ease: 'easeOut' }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[880px] h-[220px] rounded-full"
           style={{
             transform: 'perspective(900px) rotateX(74deg)',
@@ -1188,23 +1324,23 @@ function HeroSection({
         <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#C8A15A]/55 to-transparent" />
       </motion.div>
 
-      {/* ACT I & II: 3D Gutenberg Cube Spin, Anamorphic Flare & Bullet-Time 6-Face Shatter */}
+      {/* ACT I & II: 3D Gutenberg Cube Molten Kintsugi Seams, Volumetric God-Rays & Magnetic 3D Shard Forge */}
       <AnimatePresence>
         {showCubeOverlay && (
           <motion.div
-            key={`cube-shatter-stage-${replayKey}`}
+            key={`cube-shatter-stage-${replayKey}-${bulletTimeFrozen ? 'frozen' : 'live'}`}
             className="lp-hero-center-stage"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.42, ease: HERO_REVEAL_EASE }}
             aria-hidden="true"
           >
-            <HeroShatterCube3D phase={heroStage === 'shatter' ? 'shatter' : 'spin'} />
+            <HeroShatterCube3D phase={heroStage === 'shatter' || bulletTimeFrozen ? 'shatter' : 'spin'} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ACT III: 3D Camera Rig & Dolly-In Reveal Stage */}
+      {/* ACT III: 3D Camera Rig & Anamorphic Depth-of-Field Rack Focus Stage */}
       <motion.div
         className="lp-container lp-hero-dive-stage relative z-10"
         style={{
@@ -1233,24 +1369,47 @@ function HeroSection({
           }}
           className="lp-hero-inner"
         >
-          {/* Left: Leads directly with "Research. Think. Publish." (Elevated Z-Plane + Live Specular Glint) */}
+          {/* Left: Leads directly with "Research. Think. Publish." (Forged by Left Magnetic Shard Stream + Anamorphic Rack Focus) */}
           <div
-            className="lp-hero-left"
+            className="lp-hero-left relative"
             style={{ transform: 'translateZ(26px)', transformStyle: 'preserve-3d' }}
           >
+            {/* Molten Gold Anvil Forge Flash when Left Magnetic Shards Strike the Headline */}
+            <AnimatePresence>
+              {heroStage === 'shatter' && (
+                <motion.div
+                  key={`headline-forge-flash-${replayKey}`}
+                  initial={{ opacity: 0, scale: 0.65 }}
+                  animate={{ opacity: [0, 0.92, 0], scale: [0.7, 1.25, 1.5] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.82, delay: 0.28, ease: 'easeOut' }}
+                  className="pointer-events-none absolute -top-10 -left-10 w-80 h-44 rounded-full blur-3xl z-0"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse at center, rgba(255, 253, 247, 0.85) 0%, rgba(229, 201, 139, 0.55) 45%, transparent 78%)',
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+            </AnimatePresence>
+
             <motion.h1
               className="lp-hero-headline relative group"
               id="hero-headline"
               initial={false}
               animate={
-                isRevealed
-                  ? { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
-                  : { opacity: 0, y: 34, scale: 0.92, filter: 'blur(12px)' }
+                heroStage === 'spin'
+                  ? { opacity: 0.08, y: 34, scale: 0.92, filter: 'blur(18px)' }
+                  : heroStage === 'shatter'
+                  ? { opacity: 0.88, y: 4, scale: 1.02, filter: 'blur(3.5px)' }
+                  : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
               }
               transition={{ duration: 0.78, ease: HERO_MORPH_EASE }}
               style={{
                 textShadow:
-                  '0 1px 0 rgba(229, 201, 139, 0.28), 0 10px 28px rgba(0, 0, 0, 0.16)',
+                  heroStage === 'shatter'
+                    ? '0 0 28px rgba(255, 244, 200, 0.85), 0 2px 0 #E5C98B'
+                    : '0 1px 0 rgba(229, 201, 139, 0.28), 0 10px 28px rgba(0, 0, 0, 0.16)',
               }}
             >
               {/* Cursor-Reactive Specular Light Glint Sweeping Across Headline */}
@@ -1282,8 +1441,8 @@ function HeroSection({
               initial={false}
               animate={
                 isRevealed
-                  ? { opacity: 1, y: 0 }
-                  : { opacity: 0, y: 18 }
+                  ? { opacity: 1, y: 0, filter: heroStage === 'shatter' ? 'blur(2px)' : 'blur(0px)' }
+                  : { opacity: 0, y: 18, filter: 'blur(10px)' }
               }
               transition={{ duration: 0.62, delay: isRevealed ? 0.14 : 0, ease: HERO_REVEAL_EASE }}
             >
@@ -1361,17 +1520,19 @@ function HeroSection({
             </motion.div>
           </div>
 
-          {/* Right: 3D FloatingEditorialDesk (Elevated Counter-Parallax Z-Plane) */}
+          {/* Right: 3D FloatingEditorialDesk (Anamorphic Rack Focus + Chiaroscuro Pull-Chain Lamp Ignition) */}
           <motion.div
-            className="lp-hero-right-3d"
+            className="lp-hero-right-3d relative"
             style={{ transform: 'translateZ(42px)', transformStyle: 'preserve-3d' }}
             initial={false}
             animate={
-              isRevealed
-                ? { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
-                : { opacity: 0, x: 64, scale: 0.88, filter: 'blur(14px)' }
+              heroStage === 'spin'
+                ? { opacity: 0.14, x: 48, scale: 0.9, filter: 'blur(18px)' }
+                : heroStage === 'shatter'
+                ? { opacity: 0.85, x: 10, scale: 0.98, filter: 'blur(4.5px)' }
+                : { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }
             }
-            transition={{ duration: 0.88, delay: isRevealed ? 0.06 : 0, ease: HERO_MORPH_EASE }}
+            transition={{ duration: 0.88, ease: HERO_MORPH_EASE }}
           >
             <FloatingEditorialDesk
               currentStage={activeDeskStage}
@@ -1379,25 +1540,43 @@ function HeroSection({
               interactive={true}
               activeTopicTitle={`${activeChapter.num}. ${activeChapter.label}`}
               activeTopicMetric={activeChapter.hudMetric}
+              lampIgnited={isLampLit}
             />
           </motion.div>
         </motion.div>
       </motion.div>
 
-      {/* Subtle Corner Replay Cinema Trigger */}
-      <motion.button
-        type="button"
-        onClick={onReplayHero}
+      {/* Corner Director's Control Cluster: Freeze Bullet-Time Shards & Replay Cinema */}
+      <motion.div
         initial={false}
-        animate={heroStage === 'split' ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+        animate={heroStage === 'split' || bulletTimeFrozen ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
         transition={{ duration: 0.45 }}
-        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#C8A15A]/30 bg-[var(--lp-surface)]/80 backdrop-blur-md text-xs font-medium text-[var(--lp-text-secondary)] hover:text-[var(--lp-text)] hover:border-[#C8A15A] transition-colors cursor-pointer z-20"
+        className="hidden sm:inline-flex items-center gap-2 z-30"
         style={{ position: 'absolute', bottom: '58px', right: '32px' }}
-        title="Replay 3D Cinema Intro"
       >
-        <RotateCcw size={12} className="text-[#C8A15A]" />
-        <span>Replay Cinema</span>
-      </motion.button>
+        <button
+          type="button"
+          onClick={handleToggleBulletTime}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+            bulletTimeFrozen
+              ? 'border-[#E5C98B] bg-[#163F32] text-[#FFFDF7] shadow-[0_0_20px_rgba(229,201,139,0.4)]'
+              : 'border-[#C8A15A]/30 bg-[var(--lp-surface)]/80 backdrop-blur-md text-[var(--lp-text-secondary)] hover:text-[var(--lp-text)] hover:border-[#C8A15A]'
+          }`}
+          title="Freeze or resume mid-air 3D magnetic shard forge"
+        >
+          <Sparkles size={12} className="text-[#C8A15A]" />
+          <span>{bulletTimeFrozen ? 'Resume Cinema' : 'Freeze Bullet-Time'}</span>
+        </button>
+        <button
+          type="button"
+          onClick={onReplayHero}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#C8A15A]/30 bg-[var(--lp-surface)]/80 backdrop-blur-md text-xs font-medium text-[var(--lp-text-secondary)] hover:text-[var(--lp-text)] hover:border-[#C8A15A] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+          title="Replay 3D Kintsugi Forge & Lamp Ignition"
+        >
+          <RotateCcw size={12} className="text-[#C8A15A]" />
+          <span>Replay Cinema</span>
+        </button>
+      </motion.div>
 
       {/* Quiet Editorial Principles Strip */}
       <motion.div

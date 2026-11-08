@@ -15,6 +15,7 @@ export interface FloatingEditorialDeskProps {
   reducedMotion?: boolean;
   activeTopicTitle?: string;
   activeTopicMetric?: string;
+  lampIgnited?: boolean;
 }
 
 // Reusable module-scope math objects (zero GC in render loop)
@@ -382,6 +383,7 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
   reducedMotion = false,
   activeTopicTitle,
   activeTopicMetric,
+  lampIgnited = true,
 }) => {
   const canvasMountRef = useRef<HTMLDivElement | null>(null);
 
@@ -400,8 +402,24 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
   const stageRef = useRef<DeskStage>(activeStage);
   const explodedRef = useRef<number>(exploded);
   const presetRef = useRef<CameraPreset | null>(cameraPreset);
+  const lampIgnitedRef = useRef<boolean>(lampIgnited);
+  const lampSurgeClockRef = useRef<number>(lampIgnited ? 10 : 0);
+  const chainTugVelocityRef = useRef<number>(0);
+  const chainOffsetRef = useRef<number>(0);
   const userDraggingRef = useRef<boolean>(false);
   const requestRenderRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const wasLit = lampIgnitedRef.current;
+    lampIgnitedRef.current = lampIgnited;
+    if (!wasLit && lampIgnited) {
+      // Trigger physical downward tug on the brass pull-chain and tungsten filament surge
+      chainOffsetRef.current = -0.038;
+      chainTugVelocityRef.current = 0.14;
+      lampSurgeClockRef.current = 0.001;
+    }
+    requestRenderRef.current?.();
+  }, [lampIgnited]);
 
   useEffect(() => {
     stageRef.current = activeStage;
@@ -723,12 +741,40 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     lampBulb.position.set(0, -0.012, 0);
     lampShadeGroup.add(lampBulb);
 
+    // Physical Brass Pull-Chain & Acorn Finial hanging under right side of Banker's Hood
+    const pullChainGroup = new THREE.Group();
+    pullChainGroup.position.set(0.056, -0.052, -0.01);
+    lampShadeGroup.add(pullChainGroup);
+
+    const chainCord = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0022, 0.0022, 0.088, 10),
+      brushedBrassMat
+    );
+    chainCord.position.y = -0.044;
+    chainCord.castShadow = true;
+    pullChainGroup.add(chainCord);
+
+    const chainCollar = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0045, 0.0075, 0.012, 12),
+      brushedBrassMat
+    );
+    chainCollar.position.y = -0.09;
+    pullChainGroup.add(chainCollar);
+
+    const chainAcorn = new THREE.Mesh(
+      new THREE.SphereGeometry(0.0085, 14, 14),
+      brushedBrassMat
+    );
+    chainAcorn.position.y = -0.098;
+    chainAcorn.castShadow = true;
+    pullChainGroup.add(chainAcorn);
+
     // Subtle Translucent Warm Volumetric Light Cone under the Banker's Lamp
     const lampConeGeo = new THREE.ConeGeometry(0.28, 0.36, 28, 1, true);
     const lampConeMat = new THREE.MeshBasicMaterial({
       color: 0xffe4a0,
       transparent: true,
-      opacity: 0.09,
+      opacity: lampIgnitedRef.current ? 0.1 : 0.0,
       side: THREE.DoubleSide,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -738,8 +784,15 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     lampLightCone.rotation.x = -0.18;
     lampShadeGroup.add(lampLightCone);
 
-    // Real Warm 2900K Tungsten Desk Lamp SpotLight casting soft shadows across the manuscript
-    const deskLampLight = new THREE.SpotLight(0xffdfa0, 2.2, 1.8, Math.PI * 0.34, 0.65, 1.2);
+    // Real Warm 2700K Tungsten Desk Lamp SpotLight casting soft shadows across the manuscript
+    const deskLampLight = new THREE.SpotLight(
+      0xffdfa0,
+      lampIgnitedRef.current ? 2.6 : 0.0,
+      1.9,
+      Math.PI * 0.35,
+      0.65,
+      1.2
+    );
     deskLampLight.position.set(-0.34, 0.35, -0.12);
     deskLampLight.target.position.set(0.04, 0.02, 0.02);
     deskLampLight.castShadow = !isSoftwareGl;
@@ -1050,6 +1103,71 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
 
       controls.update();
 
+      // Chiaroscuro Pull-Chain Spring Physics & 2700K Tungsten Filament Warm-Up Surge
+      const isLit = lampIgnitedRef.current;
+      if (Math.abs(chainOffsetRef.current) > 0.0002 || Math.abs(chainTugVelocityRef.current) > 0.0002) {
+        const springForce = -180 * chainOffsetRef.current;
+        const dampingForce = -14 * chainTugVelocityRef.current;
+        chainTugVelocityRef.current += (springForce + dampingForce) * dt;
+        chainOffsetRef.current += chainTugVelocityRef.current * dt;
+      } else {
+        chainOffsetRef.current = 0;
+        chainTugVelocityRef.current = 0;
+      }
+      pullChainGroup.position.y = -0.052 + chainOffsetRef.current;
+
+      let targetSpotIntensity = 0.0;
+      let targetConeOpacity = 0.0;
+      let targetShadeEmissive = 0.03;
+      let targetBulbEmissive = 0.08;
+      let targetKeyIntensity = 0.38;
+
+      if (isLit) {
+        if (lampSurgeClockRef.current > 0 && lampSurgeClockRef.current < 1.2) {
+          lampSurgeClockRef.current += dt;
+          const t = lampSurgeClockRef.current;
+          // Realistic tungsten filament strike: initial bright hot surge -> slight dip -> steady warm glow
+          const surgeFactor =
+            t < 0.16
+              ? (t / 0.16) * 1.42
+              : t < 0.34
+                ? 1.42 - ((t - 0.16) / 0.18) * 0.54
+                : 0.88 + Math.min(1, (t - 0.34) / 0.45) * 0.12;
+          targetSpotIntensity = 2.65 * surgeFactor;
+          targetConeOpacity = 0.105 * surgeFactor;
+          targetShadeEmissive = 0.48 * surgeFactor;
+          targetBulbEmissive = 3.2 * surgeFactor;
+          targetKeyIntensity = 0.38 + 1.07 * Math.min(1, t / 0.5);
+        } else {
+          targetSpotIntensity = 2.65;
+          targetConeOpacity = 0.105;
+          targetShadeEmissive = 0.48;
+          targetBulbEmissive = 3.0;
+          targetKeyIntensity = 1.45;
+        }
+      }
+
+      deskLampLight.intensity = THREE.MathUtils.damp(deskLampLight.intensity, targetSpotIntensity, 14, dt);
+      lampConeMat.opacity = THREE.MathUtils.damp(lampConeMat.opacity, targetConeOpacity, 14, dt);
+      emeraldLampShadeMat.emissiveIntensity = THREE.MathUtils.damp(
+        emeraldLampShadeMat.emissiveIntensity,
+        targetShadeEmissive,
+        14,
+        dt
+      );
+      warmBulbMat.emissiveIntensity = THREE.MathUtils.damp(
+        warmBulbMat.emissiveIntensity,
+        targetBulbEmissive,
+        14,
+        dt
+      );
+      keyLight.intensity = THREE.MathUtils.damp(keyLight.intensity, targetKeyIntensity, 8, dt);
+
+      const lampTransitioning =
+        Math.abs(chainOffsetRef.current) > 0.0004 ||
+        Math.abs(deskLampLight.intensity - targetSpotIntensity) > 0.01 ||
+        (isLit && lampSurgeClockRef.current > 0 && lampSurgeClockRef.current < 1.2);
+
       const propsMoving =
         Math.abs(researchGroup.position.y - researchTargetY) > 0.0005 ||
         Math.abs(draftGroup.position.y - draftTargetY) > 0.0005 ||
@@ -1057,7 +1175,7 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
         Math.abs(publishGroup.position.y - publishTargetY) > 0.0005 ||
         Math.abs(reviewGroup.scale.x - reviewTargetScale) > 0.002;
 
-      return camMoving || propsMoving;
+      return camMoving || propsMoving || lampTransitioning;
     }
 
     function requestRender() {
