@@ -1217,7 +1217,6 @@ function HeroSection({
 
   // Begin revealing the Hero content as the 3D cube shatters outward in bullet-time
   const isRevealed = heroStage === 'shatter' || heroStage === 'split';
-  const isLampLit = heroStage === 'split' && !bulletTimeFrozen;
   const showCubeOverlay = heroStage === 'spin' || heroStage === 'shatter' || bulletTimeFrozen;
   const showLetterboxBars = heroStage !== 'split' || bulletTimeFrozen;
   const activeChapter =
@@ -1234,41 +1233,20 @@ function HeroSection({
     >
       <div className="lp-hero-bg" aria-hidden="true" />
 
-      {/* CHIAROSCURO DARK-ROOM VEIL (Envelops the stage until the 3D Banker's Lamp Pull-Chain Clicks On) */}
-      <motion.div
-        initial={{ opacity: 0.84 }}
-        animate={{
-          opacity: heroStage === 'spin' ? 0.84 : heroStage === 'shatter' ? 0.46 : 0,
-        }}
-        transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
-        className="pointer-events-none absolute inset-0 z-[5]"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 46%, rgba(12, 28, 22, 0.32) 0%, rgba(4, 10, 8, 0.88) 65%, rgba(2, 6, 5, 0.96) 100%)',
-        }}
-        aria-hidden="true"
-      />
-
       {/* Warm Museum Spotlight Environment + Realistic Floor Reflection Pool + 60fps 3D Dust Motes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
-        {/* Top-Down Conical Museum Spotlight Beam (Ignites when Banker's Lamp clicks on in Act III) */}
-        <motion.div
-          initial={{ opacity: 0.12 }}
-          animate={{ opacity: isLampLit ? [0.2, 0.98, 0.78] : 0.14 }}
-          transition={{ duration: 0.72, ease: 'easeOut' }}
-          className="absolute -top-28 left-1/2 -translate-x-1/2 w-[980px] h-[880px]"
+        {/* Top-Down Conical Museum Spotlight Beam */}
+        <div
+          className="absolute -top-28 left-1/2 -translate-x-1/2 w-[980px] h-[880px] opacity-75"
           style={{
             background:
-              'conic-gradient(from 152deg at 50% 0%, transparent 0deg, rgba(229, 201, 139, 0.14) 22deg, rgba(255, 250, 235, 0.26) 28deg, rgba(200, 161, 90, 0.14) 34deg, transparent 56deg)',
+              'conic-gradient(from 152deg at 50% 0%, transparent 0deg, rgba(229, 201, 139, 0.14) 22deg, rgba(255, 250, 235, 0.24) 28deg, rgba(200, 161, 90, 0.14) 34deg, transparent 56deg)',
             filter: 'blur(42px)',
           }}
         />
 
         {/* Perspective-Foreshortened Realistic Studio Floor Reflection Pool */}
-        <motion.div
-          initial={{ opacity: 0.15 }}
-          animate={{ opacity: isLampLit ? 1 : 0.22 }}
-          transition={{ duration: 0.75, ease: 'easeOut' }}
+        <div
           className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[880px] h-[220px] rounded-full"
           style={{
             transform: 'perspective(900px) rotateX(74deg)',
@@ -1520,7 +1498,7 @@ function HeroSection({
             </motion.div>
           </div>
 
-          {/* Right: 3D FloatingEditorialDesk (Anamorphic Rack Focus + Chiaroscuro Pull-Chain Lamp Ignition) */}
+          {/* Right: 3D FloatingEditorialDesk (Anamorphic Rack Focus + Steady Warm Banker's Lamp) */}
           <motion.div
             className="lp-hero-right-3d relative"
             style={{ transform: 'translateZ(42px)', transformStyle: 'preserve-3d' }}
@@ -1540,7 +1518,6 @@ function HeroSection({
               interactive={true}
               activeTopicTitle={`${activeChapter.num}. ${activeChapter.label}`}
               activeTopicMetric={activeChapter.hudMetric}
-              lampIgnited={isLampLit}
             />
           </motion.div>
         </motion.div>
