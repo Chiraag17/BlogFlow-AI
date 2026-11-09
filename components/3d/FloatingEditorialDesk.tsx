@@ -848,10 +848,10 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     heroSheet.receiveShadow = true;
     draftGroup.add(heroSheet);
 
-    // Multi-Part Editorial Fountain Pen (Barrel, Grip, Gold Nib, Clip)
+    // Multi-Part Editorial Fountain Pen (Barrel, Grip, Gold Nib, Clip + Glowing Golden Nib Tip)
     const penGroup = new THREE.Group();
-    penGroup.position.set(0.22, 0.045, 0.04);
-    penGroup.rotation.set(0.08, -0.42, -0.18);
+    penGroup.position.set(0.14, 0.068, 0.02);
+    penGroup.rotation.set(0.12, -0.38, -0.24);
     draftGroup.add(penGroup);
 
     const penBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.012, 0.24, 20), darkForestClothMat);
@@ -870,9 +870,70 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
     penNib.castShadow = true;
     penGroup.add(penNib);
 
+    // Incandescent 24K Golden Ink Tip Droplet & Nib Micro-Spotlight
+    const goldenInkTipMat = new THREE.MeshBasicMaterial({
+      color: 0xfff3b0,
+      transparent: true,
+      opacity: 0.96,
+    });
+    const nibTipGlow = new THREE.Mesh(new THREE.SphereGeometry(0.0052, 12, 12), goldenInkTipMat);
+    nibTipGlow.position.set(0, -0.002, -0.162);
+    penGroup.add(nibTipGlow);
+
+    const penNibLight = new THREE.PointLight(0xffdf80, 1.25, 0.36, 1.4);
+    penNibLight.position.set(0, -0.006, -0.162);
+    penGroup.add(penNibLight);
+
     const penClip = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.006, 0.08), brushedBrassMat);
     penClip.position.set(0, 0.013, 0.06);
     penGroup.add(penClip);
+
+    // Glowing Golden Ink Trail on the Manuscript Surface under the Fountain Pen Nib
+    const inkTrailGroup = new THREE.Group();
+    inkTrailGroup.position.set(0, 0.0278, 0);
+    draftGroup.add(inkTrailGroup);
+
+    const inkStrokeLineZ = [-0.075, -0.042, -0.009, 0.024, 0.057, 0.09];
+    const inkStrokeMeshes: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; maxW: number; zPos: number }[] = [];
+
+    inkStrokeLineZ.forEach((zPos, idx) => {
+      const maxW = idx === 5 ? 0.14 : 0.21 - (idx % 2) * 0.025;
+      const mat = new THREE.MeshBasicMaterial({
+        color: idx % 2 === 0 ? 0xffdf78 : 0xe5c168,
+        transparent: true,
+        opacity: 0.78,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const geo = new THREE.PlaneGeometry(maxW, 0.0065);
+      // Anchor geometry at left edge so scaling X grows the ink line from left to right
+      geo.translate(maxW / 2, 0, 0);
+      const strokeMesh = new THREE.Mesh(geo, mat);
+      strokeMesh.rotation.x = -Math.PI / 2;
+      strokeMesh.position.set(-0.105, 0, zPos);
+      strokeMesh.renderOrder = 2;
+      inkTrailGroup.add(strokeMesh);
+      inkStrokeMeshes.push({ mesh: strokeMesh, mat, maxW, zPos });
+    });
+
+    // Live Shimmering Wet Golden Ink Pool Directly Beneath the Nib Contact Point
+    const wetInkPoolMat = new THREE.MeshBasicMaterial({
+      color: 0xfff6c8,
+      transparent: true,
+      opacity: 0.88,
+      polygonOffset: true,
+      polygonOffsetFactor: -3,
+      polygonOffsetUnits: -3,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const wetInkPool = new THREE.Mesh(new THREE.CircleGeometry(0.016, 20), wetInkPoolMat);
+    wetInkPool.rotation.x = -Math.PI / 2;
+    wetInkPool.renderOrder = 3;
+    inkTrailGroup.add(wetInkPool);
 
     // D. Stage 3 Assembly: Quality & SEO Verification Glass Slab + Brass Approval Seal
     const reviewGroup = new THREE.Group();
@@ -974,48 +1035,107 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
 
     function stepScene(): boolean {
       const dt = Math.min(clock.getDelta(), 0.1) || 0.016;
+      const elapsed = clock.getElapsedTime();
       const st = stageRef.current;
       const exp = explodedRef.current;
       const preset = presetRef.current;
       const lambda = reducedMotion ? 25 : 6.5;
 
-      // Target vertical & horizontal separations per stage + exploded slider
-      const researchTargetY = (st === 'research' ? 0.065 : 0.02) + exp * 0.12;
+      // Continuous subtle motion + amplified hover/click stage choreography
+      const isResearchActive = st === 'research';
+      const isDraftActive = st === 'draft';
+      const isReviewOrPublish = st === 'review' || st === 'publish';
+
+      // 1. Loupe Figure-8 Optical Scan over Citation Dossiers
+      const loupeSpeed = reducedMotion ? 0 : isResearchActive ? 2.1 : 0.95;
+      const loupeAmp = reducedMotion ? 0 : isResearchActive ? 0.046 : 0.018;
+      const loupeScanX = 0.04 + Math.sin(elapsed * loupeSpeed) * loupeAmp;
+      const loupeScanZ = 0.05 + Math.sin(elapsed * loupeSpeed * 2) * (loupeAmp * 0.65);
+      const loupeBaseY = (isResearchActive ? 0.108 : 0.076) + Math.cos(elapsed * loupeSpeed * 1.5) * (loupeAmp * 0.25);
+
+      // 2. Fountain Pen Live Calligraphy Sweep & Glowing Golden Ink Trail on Manuscript
+      const writeCycleDuration = isDraftActive ? 4.2 : 7.5;
+      const cyclePos = reducedMotion ? 0.65 : (elapsed / writeCycleDuration) % 1;
+      const totalLines = inkStrokeMeshes.length;
+      const exactLine = cyclePos * totalLines;
+      const activeLineIdx = Math.min(totalLines - 1, Math.floor(exactLine));
+      const lineProgress = exactLine - activeLineIdx;
+      const activeStroke = inkStrokeMeshes[activeLineIdx];
+
+      // Nib world-local coordinates on the manuscript sheet
+      const nibX = -0.105 + lineProgress * activeStroke.maxW;
+      const nibZ = activeStroke.zPos + Math.sin(elapsed * (isDraftActive ? 18 : 9)) * 0.0028;
+      const cursiveHop = reducedMotion ? 0 : Math.abs(Math.sin(elapsed * (isDraftActive ? 14 : 7))) * (isDraftActive ? 0.0075 : 0.003);
+
+      // Position penGroup so its gold nib tip (at local z = -0.162, rotated) tracks (nibX, nibZ)
+      const penTargetX = nibX + 0.058;
+      const penTargetZ = nibZ + 0.138;
+      const penTargetY = (isDraftActive ? 0.042 : 0.036) + cursiveHop + exp * 0.08;
+      const penTargetRotZ = (isDraftActive ? -0.26 : -0.16) + Math.sin(elapsed * 5.5) * 0.04;
+      const penTargetRotY = -0.38 + (lineProgress - 0.5) * 0.12;
+
+      // Update glowing golden ink strokes and wet ink pool under the nib
+      wetInkPool.position.set(nibX, 0.0005, nibZ);
+      const poolPulse = 0.85 + 0.35 * Math.sin(elapsed * 12);
+      wetInkPool.scale.setScalar(isDraftActive ? poolPulse * 1.25 : poolPulse * 0.85);
+      wetInkPoolMat.opacity = isDraftActive ? 0.92 : 0.62;
+      penNibLight.intensity = isDraftActive ? 1.55 + Math.sin(elapsed * 14) * 0.3 : 0.85;
+
+      inkStrokeMeshes.forEach((item, idx) => {
+        if (idx < activeLineIdx) {
+          item.mesh.scale.x = 1;
+          item.mat.opacity = isDraftActive ? 0.78 : 0.48;
+        } else if (idx === activeLineIdx) {
+          item.mesh.scale.x = Math.max(0.02, lineProgress);
+          item.mat.opacity = isDraftActive ? 0.96 : 0.68;
+        } else {
+          // Faded previous pass so golden ink is always visible
+          item.mesh.scale.x = 1;
+          item.mat.opacity = isDraftActive ? 0.22 : 0.14;
+        }
+      });
+
+      // 3. Target vertical & horizontal separations per stage + exploded slider
+      const researchTargetY = (isResearchActive ? 0.065 : 0.02) + exp * 0.12;
       const researchTargetX = -0.28 - exp * 0.1;
 
-      const draftTargetY = (st === 'draft' ? 0.055 : 0.02) + exp * 0.18;
-      const penTargetY = st === 'draft' ? 0.085 + exp * 0.08 : 0.038;
-      const penTargetRotZ = st === 'draft' ? -0.35 : -0.12;
+      const draftTargetY = (isDraftActive ? 0.055 : 0.02) + exp * 0.18;
 
       const reviewTargetY =
         (st === 'review' ? 0.16 : st === 'publish' ? 0.11 : 0.04) + exp * 0.28;
-      const reviewTargetScale = st === 'review' || st === 'publish' || exp > 0.15 ? 1.0 : 0.001;
+      const reviewTargetScale = isReviewOrPublish || exp > 0.15 ? 1.0 : 0.001;
+      const sealStampOffset =
+        !reducedMotion && isReviewOrPublish ? Math.sin(elapsed * 3.2) * 0.014 : 0;
 
-      const publishTargetY = (st === 'publish' ? 0.095 : 0.028) + exp * 0.22;
+      const publishTargetY =
+        (st === 'publish' ? 0.095 : 0.028) +
+        exp * 0.22 +
+        (!reducedMotion ? Math.sin(elapsed * 2.2) * 0.006 : 0);
       const publishTargetX = 0.33 + exp * 0.1;
-      const publishTargetRotZ = st === 'publish' ? 0.08 : 0.0;
+      const publishTargetRotZ = st === 'publish' ? 0.08 + Math.sin(elapsed * 2.2) * 0.02 : 0.0;
 
       // Apply exponential damping
       researchGroup.position.y = THREE.MathUtils.damp(researchGroup.position.y, researchTargetY, lambda, dt);
       researchGroup.position.x = THREE.MathUtils.damp(researchGroup.position.x, researchTargetX, lambda, dt);
-      loupeGroup.position.y = THREE.MathUtils.damp(
-        loupeGroup.position.y,
-        st === 'research' ? 0.115 : 0.075,
-        lambda,
-        dt
-      );
+      loupeGroup.position.x = THREE.MathUtils.damp(loupeGroup.position.x, loupeScanX, lambda, dt);
+      loupeGroup.position.z = THREE.MathUtils.damp(loupeGroup.position.z, loupeScanZ, lambda, dt);
+      loupeGroup.position.y = THREE.MathUtils.damp(loupeGroup.position.y, loupeBaseY, lambda, dt);
       loupeGroup.rotation.y = THREE.MathUtils.damp(
         loupeGroup.rotation.y,
-        st === 'research' ? -0.15 : -0.45,
+        (isResearchActive ? -0.15 : -0.42) + Math.sin(elapsed * loupeSpeed) * 0.12,
         lambda,
         dt
       );
 
       draftGroup.position.y = THREE.MathUtils.damp(draftGroup.position.y, draftTargetY, lambda, dt);
-      penGroup.position.y = THREE.MathUtils.damp(penGroup.position.y, penTargetY, lambda, dt);
+      penGroup.position.x = THREE.MathUtils.damp(penGroup.position.x, penTargetX, lambda * 1.4, dt);
+      penGroup.position.z = THREE.MathUtils.damp(penGroup.position.z, penTargetZ, lambda * 1.4, dt);
+      penGroup.position.y = THREE.MathUtils.damp(penGroup.position.y, penTargetY, lambda * 1.6, dt);
       penGroup.rotation.z = THREE.MathUtils.damp(penGroup.rotation.z, penTargetRotZ, lambda, dt);
+      penGroup.rotation.y = THREE.MathUtils.damp(penGroup.rotation.y, penTargetRotY, lambda, dt);
 
       reviewGroup.position.y = THREE.MathUtils.damp(reviewGroup.position.y, reviewTargetY, lambda, dt);
+      sealGroup.position.y = THREE.MathUtils.damp(sealGroup.position.y, -0.05 + sealStampOffset, lambda, dt);
       const nextScale = THREE.MathUtils.damp(reviewGroup.scale.x, reviewTargetScale, lambda, dt);
       reviewGroup.scale.setScalar(Math.max(0.001, nextScale));
       reviewGroup.visible = nextScale > 0.02;
@@ -1051,6 +1171,7 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
       controls.update();
 
       const propsMoving =
+        !reducedMotion ||
         Math.abs(researchGroup.position.y - researchTargetY) > 0.0005 ||
         Math.abs(draftGroup.position.y - draftTargetY) > 0.0005 ||
         Math.abs(reviewGroup.position.y - reviewTargetY) > 0.0005 ||

@@ -1,52 +1,80 @@
-# Remove Chiaroscuro Dark-Room Intro & Pull-Chain Lamp Ignition
+# Interactive Headline-to-3D-Desk Choreography & Living Golden Ink Fountain Pen
 
-This update removes the **Chiaroscuro Dark-Room Intro Veil** and the **Pull-Chain Banker's Lamp Ignition** sequence from the Hero section and 3D Editorial Desk, restoring steady, warm museum and banker's lamp illumination from the very first frame while keeping the **Molten Gold *Kintsugi* seams**, **Volumetric God-Rays**, **Magnetic 3D Shard Forge**, and **Anamorphic Depth-of-Field Rack Focus**.
+This upgrade connects the Hero's monumental typography (*"Research. Think. Publish."*) directly to the 3D Editorial Desk and brings the 3D desk instruments to life with continuous subtle motion, hover/click reactions, and a **glowing golden ink trail** beneath the 3D fountain pen nib.
 
 ## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> **Requested Removal**:
-> - **Remove Chiaroscuro Dark-Room Veil**: The Hero stage will no longer start darkened under an obsidian-emerald chiaroscuro overlay; the warm museum spotlight and floor reflection pool remain consistently illuminated throughout the sequence.
-> - **Remove Pull-Chain Tug & Delayed Bulb Surge**: Inside `FloatingEditorialDesk`, the brass pull-chain geometry/tug animation and delayed filament warm-up are removed so the 3D Emerald Banker's Lamp and studio key light shine steadily at full warm tungsten brightness from frame zero.
-> - **Retained Cinematic Upgrades**: The Molten 24K Gold *Kintsugi* fracture seams, Volumetric God-Ray cones, 32 Magnetic 3D Shards flying to forge the headline and 3D desk, Anamorphic Rack Focus, and the Freeze Bullet-Time / Replay Cinema controls remain intact.
+> **Confirmed Phase 1 Choices**:
+> - **Interactive Headline Words Driving the 3D Desk**: Hovering or clicking **"Research."**, **"Think."**, or **"Publish."** in the Hero headline immediately drives the 3D Editorial Desk camera and instruments to the corresponding stage (`research`, `draft`, or `publish`), with visual brass underline feedback and an inline stage readout.
+> - **Continuous Subtle Motion + Hover & Click Reactions**: The 3D Editorial Desk instruments (magnifying loupe, fountain pen, approval seal, and bound folio) perform continuous, organic studio motion once revealed, and amplify their physical choreography when hovered or selected via the headline words.
+> - **Glowing Golden Ink Trail Under the 3D Fountain Pen Nib**: As the 3D fountain pen writes across the manuscript, its gold nib emits a warm micro-spotlight and leaves a shimmering 24K golden calligraphy ink trail across the paper surface.
 
 ---
 
 ## 1. Overview & Core Concept
 
-- **What It Does**: Eliminates the initial dark-room chiaroscuro dimming and pull-chain lamp switch choreography so the Hero page opens immediately in a bright, inviting, museum-lit editorial studio.
-- **Key Value**: Preserves full visual clarity and theme consistency (especially in light and dark modes) from the moment the page loads while showcasing the molten *Kintsugi* cube and magnetic shard forge.
+- **What It Does**: Transforms the Hero headline from static display text into an interactive spatial controller for the 3D Editorial Desk, while making the 3D desk itself feel like a living, breathing writer's atelier.
+- **Target Audience / Persona**: Visitors who land on the Hero and instinctively move their cursor over *"Research. Think. Publish."* or inspect the 3D desk.
+- **Key Value**: Creates an immediate, memorable "aha" moment—demonstrating how BlogFlow AI unifies research, long-form thinking, and publishing through direct tactile interaction.
 
 ---
 
 ## 2. User Experience & Visual Design
 
-- **Updated 3-Act Hero Timeline**:
-  1. **Act I — Molten *Kintsugi* Cube & Volumetric God-Rays (0.0s – 0.92s)**:
-     - The Hero stage is brightly lit by the top-down museum spotlight and floor reflection pool from the start.
-     - The 6-faced 3D Gutenberg Cube spins as glowing 24K *Kintsugi* fracture veins and 12 volumetric God-ray cones build up pressure across its seams.
-  2. **Act II — Bullet-Time Detonation & Magnetic Shard Forge (0.92s – 1.92s)**:
-     - The cube shatters into 32 extruded 3D metallic shards that pause in bullet-time and then split into two magnetic streams—16 curving left to forge *"Research. Think. Publish."* with a golden anvil flash, and 16 spiraling right into the 3D Editorial Desk.
-  3. **Act III — Anamorphic Rack-Focus Reveal (1.92s+)**:
-     - The camera completes its smooth optical rack focus (`blur(18px) → blur(0px)`) onto the headline and the already-illuminated 3D Editorial Desk as the cinema letterbox bars retract.
+- **Interactive Headline Choreography (*"Research. Think. Publish."*)**:
+  1. **"Research." (`stage = 'research'`)**:
+     - Hovering or clicking **"Research."** highlights the word with a warm brushed-brass underline glow and swings the 3D desk camera toward the fanned MIT/Nature citation dossiers.
+     - The 3D brass magnifying loupe sweeps in a figure-8 optical scan over the primary sources.
+  2. **"Think." (`stage = 'draft'`)**:
+     - Hovering or clicking **"Think."** shifts focus to the central archival manuscript stack.
+     - The 3D fountain pen drops into writing posture and glides across the page in a live calligraphy motion, illuminating a **glowing golden ink trail** directly beneath the gold nib.
+  3. **"Publish." (`stage = 'publish'`)**:
+     - Hovering or clicking **"Publish."** transitions the 3D desk to the bound publication folio and brass approval seal, triggering a smooth stamp-and-levitate motion.
+- **Visual Identity & Theme**:
+  - *Aesthetic Direction*: Tactile Editorial Atelier—clean unboxed typography with subtle `·` separators and warm 24K gold-and-emerald studio accents.
+  - *Interactive Affordance*: Each of the three headline words displays a subtle brass baseline indicator when active or hovered, accompanied by a quiet 1-line unboxed status readout right below the headline (`Active on 3D Desk: 02. Think · Gemini Long-Form Writer drafting with live golden ink`).
 
 ---
 
-## 3. Technical Architecture & Changes
+## 3. Key Product Decisions & Trade-Offs
+
+- **Decision 1: Continuous Clock-Driven Kinematics with Active Stage Amplification**
+  - *Chosen Approach*: Use the Three.js `clock.getElapsedTime()` inside `FloatingEditorialDesk` to drive smooth sine/figure-8 oscillations on the loupe, fountain pen, and seal, scaling the motion amplitude by `2.2×` on whichever instrument matches the active headline word (`research`, `draft`, or `publish`).
+  - *Why*: Ensures the 3D desk never looks frozen or static, while giving a clear, unmistakable physical response when the user hovers **"Research."**, **"Think."**, or **"Publish."**
+- **Decision 2: Procedural 3D Golden Ink Ribbon + Nib PointLight**
+  - *Chosen Approach*: Attach a short-range warm `THREE.PointLight` (`0xffdf80`) to the tip of `penNib` and render a multi-stroke golden calligraphy trail (`inkTrailGroup`) on the top surface of `heroSheet` whose emissive glow pulses and tracks the pen nib's horizontal sweep.
+  - *Why*: Delivers realistic specular ink shimmer and warm light pooling on the paper grain at 60fps with zero external texture dependencies.
+
+---
+
+## 4. Technical Architecture & Data Strategy *(Technical Reference)*
+
+### Architecture & Component Diagram
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                   HeroSection (/app/landing/page.tsx)                      │
+│  Props: activeDeskStage, onSelectDeskStage                                 │
 ├──────────────────────────────────────┬─────────────────────────────────────┤
-│  • Remove Chiaroscuro Dark-Room Veil │  • Keep Molten Kintsugi Seams &     │
-│  • Keep Museum Spotlight & Floor     │    12 Volumetric God-Ray Cones      │
-│    Reflection Pool at steady opacity │  • Keep 32 Magnetic 3D Shards       │
-│  • Keep Anamorphic Rack Focus &      │    forging Headline & 3D Desk       │
-│    Bullet-Time / Replay Controls     │                                     │
-├──────────────────────────────────────┴─────────────────────────────────────┤
-│             FloatingEditorialDesk (/components/3d/FloatingEditorialDesk)   │
-│  • Remove pullChainGroup (cord, collar, acorn) & spring tug kinematics     │
-│  • Remove lampIgnited prop & delayed filament surge state                  │
-│  • Keep Banker's Lamp SpotLight, volumetric cone & studio key light steady │
-└────────────────────────────────────────────────────────────────────────────┘
+│                                      │                                     │
+│  ┌────────────────────────────────┐  │  ┌───────────────────────────────┐  │
+│  │  Interactive Headline Trigger  │  │  │    FloatingEditorialDesk      │  │
+│  │  • "Research." -> 'research'   ├──┼─►│  • Continuous 60fps studio    │  │
+│  │  • "Think."    -> 'draft'      │  │  │    kinematics loop            │  │
+│  │  • "Publish."  -> 'publish'    │  │  │  • Loupe figure-8 scan        │  │
+│  │  • Brass active underline &    │  │  │  • Pen calligraphy sweep      │  │
+│  │    unboxed stage telemetry     │  │  │  • Glowing Golden Ink Trail + │  │
+│  └────────────────────────────────┘  │  │    Nib PointLight on paper    │  │
+│                                      │  └───────────────────────────────┘  │
+└──────────────────────────────────────┴─────────────────────────────────────┘
 ```
+
+### Interactive Component & State Mapping
+
+1. **`HeroSection` (`/app/landing/page.tsx`)**:
+   - Wraps **"Research."**, **"Think."**, and **"Publish."** inside interactive `<button>` / `<span role="button">` triggers with `onMouseEnter`, `onFocus`, and `onClick` handlers that call `onSelectDeskStage('research' | 'draft' | 'publish')` and pulse a `deskInteractionPulse` counter.
+   - Renders an animated brushed-brass underline indicator beneath the currently active headline word and a quiet unboxed inline readout showing the synchronized 3D Desk instrument and live metric.
+2. **`FloatingEditorialDesk` (`/components/3d/FloatingEditorialDesk.tsx`)**:
+   - Adds `penNibLight` (`THREE.PointLight(0xffdf80, 0.9, 0.32)`) at the fountain pen nib tip and `inkTrailGroup` (6 glowing golden calligraphy strokes + live nib ink droplet mesh with `polygonOffset` on `heroSheet`) that shimmer and reveal progressively as `penGroup` sweeps across the manuscript.
+   - Updates the render loop so continuous subtle motion runs smoothly whenever the scene is visible, with amplified calligraphy writing on `'draft'`, figure-8 optical scanning on `'research'`, and seal stamping / folio levitation on `'review'` & `'publish'`.

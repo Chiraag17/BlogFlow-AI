@@ -1403,16 +1403,115 @@ function HeroSection({
                   filter: 'blur(12px)',
                 }}
               />
-              <span className="lp-hero-headline-row">
-                <KineticText text="Research." as="span" className="inline-flex cursor-default font-serif" />{' '}
-                <KineticText text="Think." as="span" className="inline-flex cursor-default font-serif" />
+              <span className="lp-hero-headline-row flex flex-wrap items-baseline gap-x-3">
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onMouseEnter={() => onSelectDeskStage('research')}
+                  onFocus={() => onSelectDeskStage('research')}
+                  onClick={() => onSelectDeskStage('research')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectDeskStage('research');
+                    }
+                  }}
+                  title="Inspect Stage 01: Web Research & Optical Loupe on 3D Desk"
+                  className={`relative inline-flex cursor-pointer font-serif transition-colors duration-200 focus:outline-none ${
+                    activeDeskStage === 'research'
+                      ? 'text-[var(--lp-primary)]'
+                      : 'hover:text-[var(--lp-primary)]'
+                  }`}
+                >
+                  <KineticText text="Research." as="span" className="inline-flex cursor-pointer font-serif" />
+                  {activeDeskStage === 'research' && (
+                    <motion.span
+                      layoutId="hero-headline-stage-underline"
+                      className="pointer-events-none absolute -bottom-1 left-0 right-2 h-[3px] rounded-full bg-gradient-to-r from-[#C8A15A] via-[#FFF3B0] to-[#C8A15A] shadow-[0_0_14px_rgba(229,201,139,0.85)]"
+                      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                    />
+                  )}
+                </span>{' '}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onMouseEnter={() => onSelectDeskStage('draft')}
+                  onFocus={() => onSelectDeskStage('draft')}
+                  onClick={() => onSelectDeskStage('draft')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectDeskStage('draft');
+                    }
+                  }}
+                  title="Inspect Stage 02: Fountain Pen & Glowing Golden Ink Trail on 3D Desk"
+                  className={`relative inline-flex cursor-pointer font-serif transition-colors duration-200 focus:outline-none ${
+                    activeDeskStage === 'draft'
+                      ? 'text-[var(--lp-primary)]'
+                      : 'hover:text-[var(--lp-primary)]'
+                  }`}
+                >
+                  <KineticText text="Think." as="span" className="inline-flex cursor-pointer font-serif" />
+                  {activeDeskStage === 'draft' && (
+                    <motion.span
+                      layoutId="hero-headline-stage-underline"
+                      className="pointer-events-none absolute -bottom-1 left-0 right-2 h-[3px] rounded-full bg-gradient-to-r from-[#C8A15A] via-[#FFF3B0] to-[#C8A15A] shadow-[0_0_14px_rgba(229,201,139,0.85)]"
+                      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                    />
+                  )}
+                </span>
               </span>
-              <KineticText
-                text="Publish."
-                as="em"
-                className="italic text-[var(--lp-primary)] inline-flex cursor-default font-serif"
-              />
+              <span
+                role="button"
+                tabIndex={0}
+                onMouseEnter={() => onSelectDeskStage('publish')}
+                onFocus={() => onSelectDeskStage('publish')}
+                onClick={() => onSelectDeskStage('publish')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectDeskStage('publish');
+                  }
+                }}
+                title="Inspect Stage 04: Brass Approval Seal & Bound Folio on 3D Desk"
+                className="relative inline-flex cursor-pointer font-serif focus:outline-none mt-1"
+              >
+                <KineticText
+                  text="Publish."
+                  as="em"
+                  className="italic text-[var(--lp-primary)] inline-flex cursor-pointer font-serif"
+                />
+                {(activeDeskStage === 'publish' || activeDeskStage === 'review') && (
+                  <motion.span
+                    layoutId="hero-headline-stage-underline"
+                    className="pointer-events-none absolute -bottom-1 left-0 right-2 h-[3px] rounded-full bg-gradient-to-r from-[#C8A15A] via-[#FFF3B0] to-[#C8A15A] shadow-[0_0_14px_rgba(229,201,139,0.85)]"
+                    transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                  />
+                )}
+              </span>
             </motion.h1>
+
+            {/* Quiet Unboxed Headline-to-3D-Desk Synchronized Stage Readout */}
+            <motion.div
+              initial={false}
+              animate={
+                isRevealed
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 10 }
+              }
+              transition={{ duration: 0.55, delay: isRevealed ? 0.08 : 0, ease: HERO_REVEAL_EASE }}
+              className="mt-3 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--lp-text-secondary)] font-mono tabular-nums"
+            >
+              <span className="font-semibold text-[#C8A15A]">
+                3D Desk Focus: {activeChapter.num}. {activeChapter.label}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{activeChapter.hudMetric}</span>
+              <span aria-hidden="true">·</span>
+              <span className="italic font-sans text-[11px] opacity-80">
+                Hover or click headline words to drive 3D instruments
+              </span>
+            </motion.div>
 
             <motion.p
               className="lp-hero-desc"
