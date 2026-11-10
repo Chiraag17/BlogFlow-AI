@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for elevating the Hero section to flagship editorial caliber: (1) Open borderless 3D Editorial Desk stage that blends into the Hero backdrop with a whisper-quiet floating HUD pill, (2) Typography upgrade from Instrument Serif/Inter to Fraunces + Plus Jakarta Sans + JetBrains Mono, and (3) Replacing the boilerplate SVG icons in the Hero social proof avatars with bespoke editorial monogram/portrait medallions.",
-  "updatedAt":  "2026-11-10T12:15:57.186761845Z",
+  "summary":  "Plan to remove the \"3D Desk Focus: 02. Draft · 1,840 Words · 6 H2 Sections · 5 FAQs · Hover or click headline words to drive 3D instruments\" readout line below the Hero headline while preserving the interactive headline-to-3D-desk choreography.",
+  "updatedAt":  "2026-11-10T12:24:50.761744724Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

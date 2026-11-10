@@ -1499,28 +1499,6 @@ function HeroSection({
               </span>
             </motion.h1>
 
-            {/* Quiet Unboxed Headline-to-3D-Desk Synchronized Stage Readout */}
-            <motion.div
-              initial={false}
-              animate={
-                isRevealed
-                  ? { opacity: 1, y: 0 }
-                  : { opacity: 0, y: 10 }
-              }
-              transition={{ duration: 0.55, delay: isRevealed ? 0.08 : 0, ease: HERO_REVEAL_EASE }}
-              className="mt-3 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--lp-text-secondary)] font-mono tabular-nums"
-            >
-              <span className="font-semibold text-[#C8A15A]">
-                3D Desk Focus: {activeChapter.num}. {activeChapter.label}
-              </span>
-              <span aria-hidden="true">·</span>
-              <span>{activeChapter.hudMetric}</span>
-              <span aria-hidden="true">·</span>
-              <span className="italic font-sans text-[11px] opacity-80">
-                Hover or click headline words to drive 3D instruments
-              </span>
-            </motion.div>
-
             <motion.p
               className="lp-hero-desc"
               initial={false}
