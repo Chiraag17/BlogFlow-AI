@@ -43,24 +43,32 @@ const FloatingEditorialDesk = dynamic(
 
 const CREATOR_AVATARS = [
   {
-    imageUrl: '/fallback_floating_desk.jpg',
+    initials: 'SC',
+    name: 'Sarah Chen · Head of Editorial, Meridian Press',
+    bgGradient: 'linear-gradient(135deg, #163F32 0%, #0D261E 100%)',
+    accentColor: '#F3E3B8',
     profileUrl: '#',
-    name: 'Sarah Chen · Content Lead',
   },
   {
-    imageUrl: '/window.svg',
+    initials: 'AR',
+    name: 'Alex Rivera · Managing Tech Editor, Vector Journal',
+    bgGradient: 'linear-gradient(135deg, #581C1C 0%, #2D0F10 100%)',
+    accentColor: '#E5C98B',
     profileUrl: '#',
-    name: 'Alex Rivera · Tech Editor',
   },
   {
-    imageUrl: '/globe.svg',
+    initials: 'ER',
+    name: 'Elena Rostova · Principal SEO Strategist, Archive Labs',
+    bgGradient: 'linear-gradient(135deg, #1E3246 0%, #101B27 100%)',
+    accentColor: '#E5C98B',
     profileUrl: '#',
-    name: 'Elena Rostova · SEO Strategist',
   },
   {
-    imageUrl: '/file.svg',
+    initials: 'MV',
+    name: 'Marcus Vance · Executive Publisher, Monograph Studio',
+    bgGradient: 'linear-gradient(135deg, #3D2B1F 0%, #1E140E 100%)',
+    accentColor: '#F3E3B8',
     profileUrl: '#',
-    name: 'Marcus Vance · Publisher',
   },
 ];
 
@@ -1615,6 +1623,7 @@ function HeroSection({
               currentStage={activeDeskStage}
               onStageChange={onSelectDeskStage}
               interactive={true}
+              heroFrameless={true}
               activeTopicTitle={`${activeChapter.num}. ${activeChapter.label}`}
               activeTopicMetric={activeChapter.hudMetric}
             />

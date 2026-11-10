@@ -1,80 +1,43 @@
-# Interactive Headline-to-3D-Desk Choreography & Living Golden Ink Fountain Pen
+# Hero Visual & Architectural Polish Plan: Open Borderless 3D Stage, Flagship Typography & Editorial Medallion Avatars
 
-This upgrade connects the Hero's monumental typography (*"Research. Think. Publish."*) directly to the 3D Editorial Desk and brings the 3D desk instruments to life with continuous subtle motion, hover/click reactions, and a **glowing golden ink trail** beneath the 3D fountain pen nib.
-
-## User Review & Critical Decisions
-
-> [!IMPORTANT]
-> **Confirmed Phase 1 Choices**:
-> - **Interactive Headline Words Driving the 3D Desk**: Hovering or clicking **"Research."**, **"Think."**, or **"Publish."** in the Hero headline immediately drives the 3D Editorial Desk camera and instruments to the corresponding stage (`research`, `draft`, or `publish`), with visual brass underline feedback and an inline stage readout.
-> - **Continuous Subtle Motion + Hover & Click Reactions**: The 3D Editorial Desk instruments (magnifying loupe, fountain pen, approval seal, and bound folio) perform continuous, organic studio motion once revealed, and amplify their physical choreography when hovered or selected via the headline words.
-> - **Glowing Golden Ink Trail Under the 3D Fountain Pen Nib**: As the 3D fountain pen writes across the manuscript, its gold nib emits a warm micro-spotlight and leaves a shimmering 24K golden calligraphy ink trail across the paper surface.
+## 1. Architectural Vision
+Transform the Hero section from a boxed two-column layout into an unobstructed, gallery-grade flagship showcase by resolving the three visual friction points selected in our audit:
+1. **Open Borderless 3D Desk Stage & Minimal HUD (`FloatingEditorialDesk.tsx` & `landing.css`)**: Dissolve the heavy rectangular card box (`.lp-desk-studio` border, boxed background, and wide multi-row bottom dock) so the 3D Walnut & Forest Leather Editorial Desk, Articulated Brass Banker's Lamp, and Glowing Golden Ink Trail float seamlessly inside the Hero atmosphere. Replace the intrusive top/bottom chrome with a whisper-quiet, ultra-compact floating studio control pill (Camera Angle: *Iso / Top / Macro* + *Explode* toggle) tucked neatly at the bottom-right of the 3D pedestal.
+2. **Flagship Editorial Typography Upgrade (`landing.css`)**: Upgrade the Hero font stack from `Instrument Serif` + `Inter` to **`Fraunces`** (optical-size variable old-style display serif with sculpted calligraphic terminals), **`Plus Jakarta Sans`** (crisp humanist UI & body sans), and **`JetBrains Mono`** (tabular technical telemetry), refining the optical weight, tracking, and italic contrast of *"Research. Think. Publish."*.
+3. **Bespoke Editorial Medallion Avatars (`AvatarCircles.tsx` & `page.tsx`)**: Replace the broken Next.js boilerplate file icons (`/window.svg`, `/globe.svg`, `/file.svg`) in `CREATOR_AVATARS` with high-craft **Editorial Portrait & Monogram Medallions** (engraved brass-rimmed SVG/canvas editorial badges with publication insignia, role tooltips, and rich forest/amber/burgundy palettes).
 
 ---
 
-## 1. Overview & Core Concept
+## 2. File-by-File Implementation Details
 
-- **What It Does**: Transforms the Hero headline from static display text into an interactive spatial controller for the 3D Editorial Desk, while making the 3D desk itself feel like a living, breathing writer's atelier.
-- **Target Audience / Persona**: Visitors who land on the Hero and instinctively move their cursor over *"Research. Think. Publish."* or inspect the 3D desk.
-- **Key Value**: Creates an immediate, memorable "aha" moment—demonstrating how BlogFlow AI unifies research, long-form thinking, and publishing through direct tactile interaction.
+### A. `/app/landing/landing.css`
+1. **Typography Token & Google Fonts Upgrade**:
+   - Update the Google Fonts import at the top of `landing.css` to load `Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600`, `Plus+Jakarta+Sans:wght@400;500;600;700`, and `JetBrains+Mono:wght@500;600;700`.
+   - Set `--font-serif: 'Fraunces', Georgia, serif;`, `--font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;`, and `--font-mono: 'JetBrains Mono', monospace;`.
+   - Refine `.lp-hero-h1` with `font-variation-settings: 'opsz' 144, 'SOFT' 30;`, `font-weight: 500;`, and tighter `-0.03em` tracking so *"Research. Think. Publish."* commands museum-grade authority.
+2. **Open Borderless 3D Stage (`.lp-hero-right-3d .lp-desk-studio`)**:
+   - In the Hero context (`.lp-hero-right-3d`), remove the rectangular card border, solid radial box fill, and clipped drop-shadow from `.lp-desk-studio` and `.lp-desk-studio-wrap`.
+   - Apply a soft radial atmospheric floor shadow and subtle warm tungsten aura behind the 3D canvas so the floating walnut desk blends organically into both Daytime Parchment (`#F7F4EC`) and Midnight Forest (`#101714`) Hero backdrops.
 
----
+### B. `/components/3d/FloatingEditorialDesk.tsx`
+1. **Frameless Hero Mode & Minimal Studio Pill (`heroFrameless?: boolean` prop)**:
+   - Add a `heroFrameless?: boolean` prop (enabled by default in the Hero section).
+   - When `heroFrameless` is active:
+     - Omit the bulky top-left/top-right dark HUD bars (since the Hero headline's interactive stage readout on the left already displays the active stage and live instrument telemetry).
+     - Replace the wide multi-row bottom dock with a sleek, minimal floating studio bar at the bottom of the 3D stage containing compact camera view switches (`Iso` · `Top` · `Macro`) and a single-click `Explode View` toggle, keeping 92%+ of the 3D canvas completely unobstructed.
 
-## 2. User Experience & Visual Design
-
-- **Interactive Headline Choreography (*"Research. Think. Publish."*)**:
-  1. **"Research." (`stage = 'research'`)**:
-     - Hovering or clicking **"Research."** highlights the word with a warm brushed-brass underline glow and swings the 3D desk camera toward the fanned MIT/Nature citation dossiers.
-     - The 3D brass magnifying loupe sweeps in a figure-8 optical scan over the primary sources.
-  2. **"Think." (`stage = 'draft'`)**:
-     - Hovering or clicking **"Think."** shifts focus to the central archival manuscript stack.
-     - The 3D fountain pen drops into writing posture and glides across the page in a live calligraphy motion, illuminating a **glowing golden ink trail** directly beneath the gold nib.
-  3. **"Publish." (`stage = 'publish'`)**:
-     - Hovering or clicking **"Publish."** transitions the 3D desk to the bound publication folio and brass approval seal, triggering a smooth stamp-and-levitate motion.
-- **Visual Identity & Theme**:
-  - *Aesthetic Direction*: Tactile Editorial Atelier—clean unboxed typography with subtle `·` separators and warm 24K gold-and-emerald studio accents.
-  - *Interactive Affordance*: Each of the three headline words displays a subtle brass baseline indicator when active or hovered, accompanied by a quiet 1-line unboxed status readout right below the headline (`Active on 3D Desk: 02. Think · Gemini Long-Form Writer drafting with live golden ink`).
-
----
-
-## 3. Key Product Decisions & Trade-Offs
-
-- **Decision 1: Continuous Clock-Driven Kinematics with Active Stage Amplification**
-  - *Chosen Approach*: Use the Three.js `clock.getElapsedTime()` inside `FloatingEditorialDesk` to drive smooth sine/figure-8 oscillations on the loupe, fountain pen, and seal, scaling the motion amplitude by `2.2×` on whichever instrument matches the active headline word (`research`, `draft`, or `publish`).
-  - *Why*: Ensures the 3D desk never looks frozen or static, while giving a clear, unmistakable physical response when the user hovers **"Research."**, **"Think."**, or **"Publish."**
-- **Decision 2: Procedural 3D Golden Ink Ribbon + Nib PointLight**
-  - *Chosen Approach*: Attach a short-range warm `THREE.PointLight` (`0xffdf80`) to the tip of `penNib` and render a multi-stroke golden calligraphy trail (`inkTrailGroup`) on the top surface of `heroSheet` whose emissive glow pulses and tracks the pen nib's horizontal sweep.
-  - *Why*: Delivers realistic specular ink shimmer and warm light pooling on the paper grain at 60fps with zero external texture dependencies.
+### C. `/components/ui/avatar-circles.tsx` & `/app/landing/page.tsx`
+1. **Bespoke Editorial Medallion Avatars**:
+   - Extend `AvatarItem` in `AvatarCircles` to support rich bespoke SVG/monogram editorial medallions (`initials`, `accentColor`, `bgGradient`, `role`, `publication`) or high-craft inline SVG portrait data URLs so it never falls back to generic `/window.svg`, `/globe.svg`, or `/file.svg` icons.
+   - Update `CREATOR_AVATARS` in `/app/landing/page.tsx` with 4 distinct editorial creator medallions:
+     - **SC** — *Sarah Chen · Head of Editorial, Meridian Press* (Deep Forest & Burnished Gold)
+     - **AR** — *Alex Rivera · Managing Tech Editor, Vector Journal* (Oxblood Crimson & Warm Brass)
+     - **ER** — *Elena Rostova · Principal SEO Strategist, Archive Labs* (Slate Indigo & Champagne Gold)
+     - **MV** — *Marcus Vance · Executive Publisher, Monograph Studio* (Espresso Walnut & 24K Gold)
 
 ---
 
-## 4. Technical Architecture & Data Strategy *(Technical Reference)*
-
-### Architecture & Component Diagram
-
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                   HeroSection (/app/landing/page.tsx)                      │
-│  Props: activeDeskStage, onSelectDeskStage                                 │
-├──────────────────────────────────────┬─────────────────────────────────────┤
-│                                      │                                     │
-│  ┌────────────────────────────────┐  │  ┌───────────────────────────────┐  │
-│  │  Interactive Headline Trigger  │  │  │    FloatingEditorialDesk      │  │
-│  │  • "Research." -> 'research'   ├──┼─►│  • Continuous 60fps studio    │  │
-│  │  • "Think."    -> 'draft'      │  │  │    kinematics loop            │  │
-│  │  • "Publish."  -> 'publish'    │  │  │  • Loupe figure-8 scan        │  │
-│  │  • Brass active underline &    │  │  │  • Pen calligraphy sweep      │  │
-│  │    unboxed stage telemetry     │  │  │  • Glowing Golden Ink Trail + │  │
-│  └────────────────────────────────┘  │  │    Nib PointLight on paper    │  │
-│                                      │  └───────────────────────────────┘  │
-└──────────────────────────────────────┴─────────────────────────────────────┘
-```
-
-### Interactive Component & State Mapping
-
-1. **`HeroSection` (`/app/landing/page.tsx`)**:
-   - Wraps **"Research."**, **"Think."**, and **"Publish."** inside interactive `<button>` / `<span role="button">` triggers with `onMouseEnter`, `onFocus`, and `onClick` handlers that call `onSelectDeskStage('research' | 'draft' | 'publish')` and pulse a `deskInteractionPulse` counter.
-   - Renders an animated brushed-brass underline indicator beneath the currently active headline word and a quiet unboxed inline readout showing the synchronized 3D Desk instrument and live metric.
-2. **`FloatingEditorialDesk` (`/components/3d/FloatingEditorialDesk.tsx`)**:
-   - Adds `penNibLight` (`THREE.PointLight(0xffdf80, 0.9, 0.32)`) at the fountain pen nib tip and `inkTrailGroup` (6 glowing golden calligraphy strokes + live nib ink droplet mesh with `polygonOffset` on `heroSheet`) that shimmer and reveal progressively as `penGroup` sweeps across the manuscript.
-   - Updates the render loop so continuous subtle motion runs smoothly whenever the scene is visible, with amplified calligraphy writing on `'draft'`, figure-8 optical scanning on `'research'`, and seal stamping / folio levitation on `'review'` & `'publish'`.
+## 3. Verification & Quality Gates
+- **Headline & 3D Synchronization**: Verify *"Research. Think. Publish."* remains the exact opening headline, now rendered in `Fraunces` with interactive hover/click stage choreography and the glowing golden ink trail under the 3D fountain pen nib.
+- **Frameless 3D Stage Clarity**: Confirm the 3D Editorial Desk floats seamlessly in the Hero without a rectangular card border or heavy HUD covering the desk.
+- **Build & Lint Verification**: Run `compile_applet` and `lint_applet` together to guarantee zero TypeScript or ESLint errors.

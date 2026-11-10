@@ -3,7 +3,7 @@
    Daytime Editorial Studio ↔ Midnight Editorial Studio
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* --- Landing Design Tokens --- */
 :root {
@@ -27,10 +27,11 @@
   --glass-bg-mid:         rgba(247, 244, 236, 0.90);
   --glass-border:         rgba(255, 255, 255, 0.65);
   --glass-shadow:         0 8px 32px rgba(22, 63, 50, 0.10), 0 1px 0 rgba(255,255,255,0.6) inset;
-  --glass-shadow-lg:      0 20px 60px rgba(22, 63, 50, 0.13), 0 1px 0 rgba(255,255,255,0.7) inset;
+  --glass-shadow-lg:      0 20px 60px rgba(22, 63, 50, 0.13), 0 1px 0 rgba(235, 242, 237, 0.7) inset;
 
-  --font-serif:           'Instrument Serif', Georgia, serif;
-  --font-sans:            'Manrope', 'Inter', system-ui, sans-serif;
+  --font-serif:           'Fraunces', Georgia, serif;
+  --font-sans:            'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono:            'JetBrains Mono', monospace;
   --lp-section-gap:       140px;
   --lp-max-width:         1420px;
 }
@@ -953,9 +954,11 @@
 
 .lp-hero-headline {
   font-family: var(--font-serif);
-  font-size: clamp(3rem, 5.5vw, 5rem);
-  line-height: 1.08;
-  letter-spacing: -0.025em;
+  font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  font-weight: 500;
+  font-size: clamp(3.15rem, 5.4vw, 4.9rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
   color: var(--lp-text);
   margin: 0;
   transition: color 0.3s ease;
@@ -963,6 +966,7 @@
 
 .lp-hero-headline em {
   font-style: italic;
+  font-weight: 400;
   color: var(--lp-primary);
 }
 
@@ -3179,6 +3183,96 @@
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
+/* Open Borderless Gallery Pedestal for Hero 3D Desk */
+.lp-desk-studio.is-frameless {
+  height: 560px;
+  border: none;
+  border-radius: 0;
+  background: radial-gradient(
+    ellipse 68% 58% at 52% 48%,
+    rgba(229, 201, 139, 0.16) 0%,
+    rgba(22, 63, 50, 0.05) 48%,
+    transparent 74%
+  );
+  box-shadow: none;
+  overflow: visible;
+}
+
+.dark .lp-desk-studio.is-frameless {
+  border: none;
+  background: radial-gradient(
+    ellipse 68% 58% at 52% 48%,
+    rgba(212, 175, 103, 0.14) 0%,
+    rgba(28, 56, 44, 0.28) 46%,
+    transparent 74%
+  );
+  box-shadow: none;
+}
+
+/* Whisper-Quiet Floating Studio Pill for Frameless Hero Desk */
+.lp-desk-minimal-pill {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(16, 23, 20, 0.82);
+  border: 1px solid rgba(212, 175, 103, 0.34);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+  white-space: nowrap;
+}
+
+.lp-desk-minimal-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #D4AF67;
+  padding-left: 4px;
+}
+
+.lp-desk-minimal-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.lp-desk-minimal-btn {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #C8D4CD;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.lp-desk-minimal-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lp-desk-minimal-btn.active {
+  background: #244737;
+  border-color: rgba(212, 175, 103, 0.65);
+  color: #F7F4EC;
+}
+
+.lp-desk-minimal-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(235, 242, 237, 0.18);
+}
+
 .lp-desk-canvas-mount {
   position: absolute;
   inset: 0;
@@ -4370,13 +4464,17 @@
 
 .lp-hero-right-3d .lp-desk-studio-wrap,
 .lp-hero-right-3d .lp-desk-loading {
-  height: 550px;
-  box-shadow: 0 28px 64px rgba(16, 23, 20, 0.14);
+  height: 560px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .dark .lp-hero-right-3d .lp-desk-studio-wrap,
 .dark .lp-hero-right-3d .lp-desk-loading {
-  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.55);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .lp-desk-hud-topic {

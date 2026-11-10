@@ -15,6 +15,7 @@ export interface FloatingEditorialDeskProps {
   reducedMotion?: boolean;
   activeTopicTitle?: string;
   activeTopicMetric?: string;
+  heroFrameless?: boolean;
 }
 
 // Reusable module-scope math objects (zero GC in render loop)
@@ -382,6 +383,7 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
   reducedMotion = false,
   activeTopicTitle,
   activeTopicMetric,
+  heroFrameless = false,
 }) => {
   const canvasMountRef = useRef<HTMLDivElement | null>(null);
 
@@ -1274,16 +1276,21 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
   const currentMeta = STAGE_META[activeStage];
 
   return (
-    <div className="lp-desk-studio" aria-label="Interactive 3D Editorial Studio Desk">
-      {/* Minimal Top-Left Spec Header (Unobstructed Center Viewport) */}
-      <div className="lp-desk-hud-top">
-        <div className="lp-desk-spec-kicker">
-          <span>STAGE {currentMeta.index}: {currentMeta.label.toUpperCase()}</span>
-          <span aria-hidden="true">·</span>
-          <span>{activeTopicTitle || currentMeta.agent}</span>
+    <div
+      className={`lp-desk-studio${heroFrameless ? ' is-frameless' : ''}`}
+      aria-label="Interactive 3D Editorial Studio Desk"
+    >
+      {/* Minimal Top-Left Spec Header (Hidden in frameless Hero mode where headline readout leads) */}
+      {!heroFrameless && (
+        <div className="lp-desk-hud-top">
+          <div className="lp-desk-spec-kicker">
+            <span>STAGE {currentMeta.index}: {currentMeta.label.toUpperCase()}</span>
+            <span aria-hidden="true">·</span>
+            <span>{activeTopicTitle || currentMeta.agent}</span>
+          </div>
+          <div className="lp-desk-spec-metric">{activeTopicMetric || currentMeta.metric}</div>
         </div>
-        <div className="lp-desk-spec-metric">{activeTopicMetric || currentMeta.metric}</div>
-      </div>
+      )}
 
       {/* Isolated WebGL Canvas Container */}
       <div
@@ -1293,78 +1300,112 @@ export const FloatingEditorialDesk: React.FC<FloatingEditorialDeskProps> = ({
         aria-label={`3D Editorial Desk showing stage ${currentMeta.label}: ${currentMeta.summary}`}
       />
 
-      {/* Unified Collapsible Bottom Control Dock (Zero Backdrop-Filter over WebGL) */}
-      <div className={`lp-desk-dock-wrapper${dockCollapsed ? ' is-collapsed' : ''}`}>
-        <button
-          type="button"
-          onClick={() => setDockCollapsed((prev) => !prev)}
-          className="lp-desk-dock-toggle"
-          title="Toggle 3D Controls (Shortcut: H)"
-        >
-          {dockCollapsed ? '▴ Show Studio Controls (H)' : '▾ Hide Controls (H)'}
-        </button>
-
-        <div className="lp-desk-dock">
-          {/* Stage Selector Buttons */}
-          <div className="lp-desk-dock-group" role="tablist" aria-label="Editorial workflow stages">
-            {(Object.keys(STAGE_META) as DeskStage[]).map((stageKey) => {
-              const info = STAGE_META[stageKey];
-              const isSelected = activeStage === stageKey;
-              return (
-                <button
-                  key={stageKey}
-                  type="button"
-                  role="tab"
-                  aria-selected={isSelected}
-                  onClick={() => handleSelectStage(stageKey)}
-                  className={`lp-desk-stage-btn${isSelected ? ' active' : ''}`}
-                >
-                  <span className="lp-desk-stage-idx">{info.index}.</span>
-                  <span>{info.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="lp-desk-dock-divider" aria-hidden="true" />
-
-          {/* Exploded View Slider */}
-          <div className="lp-desk-dock-slider">
-            <label htmlFor="desk-explode-range" className="lp-desk-slider-label">
-              Explode Layers
-            </label>
-            <input
-              id="desk-explode-range"
-              type="range"
-              min={0}
-              max={1}
-              step={0.02}
-              value={exploded}
-              onChange={(e) => setExploded(parseFloat(e.target.value))}
-              className="lp-desk-range"
-            />
-          </div>
-
-          <div className="lp-desk-dock-divider" aria-hidden="true" />
-
-          {/* Camera Preset Selector */}
-          <div className="lp-desk-dock-cameras" aria-label="Camera angle presets">
+      {heroFrameless ? (
+        /* Whisper-Quiet Floating Studio Pill for Open Borderless Hero Pedestal */
+        <div className="lp-desk-minimal-pill" role="toolbar" aria-label="3D Studio Camera and Layer Controls">
+          <span className="lp-desk-minimal-label">3D View</span>
+          <div className="lp-desk-minimal-group" aria-label="Camera angle presets">
             {(Object.keys(CAMERA_PRESETS) as CameraPreset[]).map((presetKey) => {
-              const p = CAMERA_PRESETS[presetKey];
+              const shortLabel =
+                presetKey === 'isometric' ? 'Iso' : presetKey === 'manuscript' ? 'Top' : 'Macro';
+              const isActive =
+                cameraPreset === presetKey || (!cameraPreset && presetKey === 'isometric');
               return (
                 <button
                   key={presetKey}
                   type="button"
                   onClick={() => setCameraPreset(presetKey)}
-                  className={`lp-desk-cam-btn${cameraPreset === presetKey ? ' active' : ''}`}
+                  className={`lp-desk-minimal-btn${isActive ? ' active' : ''}`}
                 >
-                  {p.label}
+                  {shortLabel}
                 </button>
               );
             })}
           </div>
+          <span className="lp-desk-minimal-sep" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => setExploded((prev) => (prev > 0.1 ? 0 : 0.85))}
+            className={`lp-desk-minimal-btn${exploded > 0.1 ? ' active' : ''}`}
+            title="Toggle exploded 3D architectural layer view"
+          >
+            {exploded > 0.1 ? 'Assemble' : 'Explode'}
+          </button>
         </div>
-      </div>
+      ) : (
+        /* Unified Collapsible Bottom Control Dock (Zero Backdrop-Filter over WebGL) */
+        <div className={`lp-desk-dock-wrapper${dockCollapsed ? ' is-collapsed' : ''}`}>
+          <button
+            type="button"
+            onClick={() => setDockCollapsed((prev) => !prev)}
+            className="lp-desk-dock-toggle"
+            title="Toggle 3D Controls (Shortcut: H)"
+          >
+            {dockCollapsed ? '▴ Show Studio Controls (H)' : '▾ Hide Controls (H)'}
+          </button>
+
+          <div className="lp-desk-dock">
+            {/* Stage Selector Buttons */}
+            <div className="lp-desk-dock-group" role="tablist" aria-label="Editorial workflow stages">
+              {(Object.keys(STAGE_META) as DeskStage[]).map((stageKey) => {
+                const info = STAGE_META[stageKey];
+                const isSelected = activeStage === stageKey;
+                return (
+                  <button
+                    key={stageKey}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => handleSelectStage(stageKey)}
+                    className={`lp-desk-stage-btn${isSelected ? ' active' : ''}`}
+                  >
+                    <span className="lp-desk-stage-idx">{info.index}.</span>
+                    <span>{info.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="lp-desk-dock-divider" aria-hidden="true" />
+
+            {/* Exploded View Slider */}
+            <div className="lp-desk-dock-slider">
+              <label htmlFor="desk-explode-range" className="lp-desk-slider-label">
+                Explode Layers
+              </label>
+              <input
+                id="desk-explode-range"
+                type="range"
+                min={0}
+                max={1}
+                step={0.02}
+                value={exploded}
+                onChange={(e) => setExploded(parseFloat(e.target.value))}
+                className="lp-desk-range"
+              />
+            </div>
+
+            <div className="lp-desk-dock-divider" aria-hidden="true" />
+
+            {/* Camera Preset Selector */}
+            <div className="lp-desk-dock-cameras" aria-label="Camera angle presets">
+              {(Object.keys(CAMERA_PRESETS) as CameraPreset[]).map((presetKey) => {
+                const p = CAMERA_PRESETS[presetKey];
+                return (
+                  <button
+                    key={presetKey}
+                    type="button"
+                    onClick={() => setCameraPreset(presetKey)}
+                    className={`lp-desk-cam-btn${cameraPreset === presetKey ? ' active' : ''}`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
