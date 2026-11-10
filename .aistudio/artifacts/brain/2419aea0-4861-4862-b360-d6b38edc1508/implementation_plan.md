@@ -1,14 +1,14 @@
-# Remove Hero Stage Readout Line Below Headline
+# Remove "Freeze Bullet-Time" & "Replay Cinema" Buttons from Hero
 
 ## 1. Change Overview
-Per the attached screenshot, remove the telemetry readout row directly beneath the Hero headline (`"3D Desk Focus: 02. Draft · 1,840 Words · 6 H2 Sections · 5 FAQs · Hover or click headline words to drive 3D instruments"`) so the Hero headline (**"Research. Think. Publish."**) flows cleanly and directly into the editorial lead paragraph.
+Per the attached screenshot, remove the bottom-right Corner Director's Control Cluster (`"Freeze Bullet-Time"` and `"Replay Cinema"` buttons) from the Hero section so the bottom-right of the Hero stage remains completely clean and uncluttered.
 
 ## 2. File-by-File Modifications
 
 ### `/app/landing/page.tsx`
-- **Remove Stage Readout Block (Lines 1502–1522)**:
-  - Delete the `<motion.div>` rendering `3D Desk Focus: {activeChapter.num}. {activeChapter.label} · {activeChapter.hudMetric} · Hover or click headline words to drive 3D instruments`.
-  - Keep the interactive hover/focus/click choreography and animated brushed-brass underline on the **"Research."**, **"Think."**, and **"Publish."** headline words intact so they continue to drive the 3D Editorial Desk seamlessly without extra text clutter.
+- **Remove Corner Director's Control Cluster (Lines 1612–1642)**:
+  - Delete the `<motion.div>` containing the `Freeze Bullet-Time` (`handleToggleBulletTime`) and `Replay Cinema` (`onReplayHero`) buttons at the bottom-right of `HeroSection`.
+  - Clean up unused `bulletTimeFrozen` state and `handleToggleBulletTime` handler in `HeroSection` so the 3-Act Kintsugi Cube → Magnetic Shard Forge → Hero Reveal plays smoothly and automatically on entry without floating debug/replay buttons.
 
 ## 3. Verification
 - Run `compile_applet` and `lint_applet` to ensure zero build or lint issues.

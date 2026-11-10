@@ -1609,38 +1609,6 @@ function HeroSection({
         </motion.div>
       </motion.div>
 
-      {/* Corner Director's Control Cluster: Freeze Bullet-Time Shards & Replay Cinema */}
-      <motion.div
-        initial={false}
-        animate={heroStage === 'split' || bulletTimeFrozen ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-        transition={{ duration: 0.45 }}
-        className="hidden sm:inline-flex items-center gap-2 z-30"
-        style={{ position: 'absolute', bottom: '58px', right: '32px' }}
-      >
-        <button
-          type="button"
-          onClick={handleToggleBulletTime}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-            bulletTimeFrozen
-              ? 'border-[#E5C98B] bg-[#163F32] text-[#FFFDF7] shadow-[0_0_20px_rgba(229,201,139,0.4)]'
-              : 'border-[#C8A15A]/30 bg-[var(--lp-surface)]/80 backdrop-blur-md text-[var(--lp-text-secondary)] hover:text-[var(--lp-text)] hover:border-[#C8A15A]'
-          }`}
-          title="Freeze or resume mid-air 3D magnetic shard forge"
-        >
-          <Sparkles size={12} className="text-[#C8A15A]" />
-          <span>{bulletTimeFrozen ? 'Resume Cinema' : 'Freeze Bullet-Time'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={onReplayHero}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#C8A15A]/30 bg-[var(--lp-surface)]/80 backdrop-blur-md text-xs font-medium text-[var(--lp-text-secondary)] hover:text-[var(--lp-text)] hover:border-[#C8A15A] transition-colors cursor-pointer whitespace-nowrap shrink-0"
-          title="Replay 3D Kintsugi Forge & Lamp Ignition"
-        >
-          <RotateCcw size={12} className="text-[#C8A15A]" />
-          <span>Replay Cinema</span>
-        </button>
-      </motion.div>
-
       {/* Quiet Editorial Principles Strip */}
       <motion.div
         className="lp-trust"
