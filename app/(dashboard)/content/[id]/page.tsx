@@ -15,6 +15,7 @@ import {
   getStatusLabel, cn,
 } from '@/lib/utils';
 import { Blog, QualityReport, DetailedQualityReport, RevisionAction, WritingTone } from '@/types';
+import type { SeoAnalysisResult } from '@/services/content/seo-analysis.service';
 
 export default function BlogEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -55,6 +56,10 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentReport, setCurrentReport] = useState<QualityReport | undefined>(undefined);
   const [detailedReport, setDetailedReport] = useState<DetailedQualityReport | null>(null);
+  const [seoDiagnostics, setSeoDiagnostics] = useState<SeoAnalysisResult | null>(null);
+  const [isRunningSeoAudit, setIsRunningSeoAudit] = useState(false);
+  const [serpPreviewMode, setSerpPreviewMode] = useState<'google' | 'social'>('google');
+  const [copiedSchema, setCopiedSchema] = useState(false);
 
   // AI Content Revision Studio state
   const [showRevisionModal, setShowRevisionModal] = useState(false);
@@ -262,6 +267,34 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  const runDeepSeoAnalysis = async () => {
+    setIsRunningSeoAudit(true);
+    try {
+      const response = await fetch('/api/ai/analyze-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          slug: formData.slug,
+          content: formData.content,
+          metaTitle: formData.metaTitle || formData.title,
+          metaDescription: formData.metaDescription,
+          focusKeyword: formData.focusKeyword,
+          category: formData.category,
+          faqs: formData.faqs,
+        }),
+      });
+      const res = await response.json();
+      if (res.success && res.data) {
+        setSeoDiagnostics(res.data);
+      }
+    } catch (err) {
+      console.warn('Deep SEO analysis error:', err);
+    } finally {
+      setIsRunningSeoAudit(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top action bar */}
@@ -342,9 +375,14 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
             </button>
             <button
               className={cn('tab', activeTab === 'seo' && 'active')}
-              onClick={() => setActiveTab('seo')}
+              onClick={() => {
+                setActiveTab('seo');
+                if (!seoDiagnostics && (formData.title || formData.content)) {
+                  runDeepSeoAnalysis();
+                }
+              }}
             >
-              <Search size={14} /> SEO & Metadata
+              <Search size={14} /> SEO &amp; Metadata
             </button>
             <button
               className={cn('tab', activeTab === 'faqs' && 'active')}
@@ -403,52 +441,362 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
 
           {/* TAB: SEO & Metadata */}
           {activeTab === 'seo' && (
-            <div className="card space-y-4">
-              <div className="form-group">
-                <label className="form-label">SEO Meta Title</label>
-                <input
-                  className="form-input text-xs"
-                  value={formData.metaTitle || ''}
-                  onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                  placeholder="Search engine title..."
-                />
-                <span className="text-[11px] text-[var(--color-text-muted)] mt-1 block">
-                  {(formData.metaTitle || '').length} / 60 characters
-                </span>
-              </div>
+            <div className="space-y-5">
+              {/* Metadata Input Card with Optimal Character Progress Bars */}
+              <div className="card space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Search size={15} className="text-indigo-600" />
+                      On-Page SEO Metadata &amp; Focus Signals
+                    </h3>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Optimize your SERP title, snippet description, canonical slug, and primary keyword.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={runDeepSeoAnalysis}
+                    disabled={isRunningSeoAudit}
+                    className="btn btn-secondary text-xs font-semibold text-indigo-600"
+                  >
+                    <RefreshCw size={13} className={cn(isRunningSeoAudit && 'animate-spin')} />
+                    {isRunningSeoAudit ? 'Auditing SEO...' : 'Run Deep SEO Audit'}
+                  </button>
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Meta Description</label>
-                <textarea
-                  className="form-textarea text-xs"
-                  rows={3}
-                  value={formData.metaDescription || ''}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                  placeholder="Summary for search engine snippets..."
-                />
-                <span className="text-[11px] text-[var(--color-text-muted)] mt-1 block">
-                  {(formData.metaDescription || '').length} / 160 characters
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="form-group">
-                  <label className="form-label">Focus Keyword</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="form-label mb-0">SEO Meta Title</label>
+                    <span
+                      className={cn(
+                        'text-[11px] font-medium',
+                        (formData.metaTitle || formData.title || '').length >= 35 &&
+                          (formData.metaTitle || formData.title || '').length <= 60
+                          ? 'text-emerald-600'
+                          : 'text-amber-600'
+                      )}
+                    >
+                      {(formData.metaTitle || formData.title || '').length} / 60 chars (Optimal: 45–60)
+                    </span>
+                  </div>
                   <input
                     className="form-input text-xs"
-                    value={formData.focusKeyword || ''}
-                    onChange={(e) => setFormData({ ...formData, focusKeyword: e.target.value })}
+                    value={formData.metaTitle || ''}
+                    onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                    placeholder={formData.title || 'Search engine title...'}
                   />
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5">
+                    <div
+                      className={cn(
+                        'h-full transition-all duration-200 rounded-full',
+                        (formData.metaTitle || formData.title || '').length >= 35 &&
+                          (formData.metaTitle || formData.title || '').length <= 60
+                          ? 'bg-emerald-500'
+                          : 'bg-amber-500'
+                      )}
+                      style={{
+                        width: `${Math.min(100, (((formData.metaTitle || formData.title || '').length) / 65) * 100)}%`,
+                      }}
+                    />
+                  </div>
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">URL Slug</label>
-                  <input
-                    className="form-input text-xs"
-                    value={formData.slug || ''}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="form-label mb-0">Meta Description</label>
+                    <span
+                      className={cn(
+                        'text-[11px] font-medium',
+                        (formData.metaDescription || '').length >= 120 &&
+                          (formData.metaDescription || '').length <= 160
+                          ? 'text-emerald-600'
+                          : 'text-amber-600'
+                      )}
+                    >
+                      {(formData.metaDescription || '').length} / 160 chars (Optimal: 120–160)
+                    </span>
+                  </div>
+                  <textarea
+                    className="form-textarea text-xs"
+                    rows={3}
+                    value={formData.metaDescription || ''}
+                    onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                    placeholder="Compelling 1–2 sentence summary for search engine snippets..."
                   />
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5">
+                    <div
+                      className={cn(
+                        'h-full transition-all duration-200 rounded-full',
+                        (formData.metaDescription || '').length >= 120 &&
+                          (formData.metaDescription || '').length <= 160
+                          ? 'bg-emerald-500'
+                          : 'bg-amber-500'
+                      )}
+                      style={{
+                        width: `${Math.min(100, (((formData.metaDescription || '').length) / 165) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="form-label">Focus Keyword</label>
+                    <input
+                      className="form-input text-xs"
+                      placeholder="e.g. AI search architecture"
+                      value={formData.focusKeyword || ''}
+                      onChange={(e) => setFormData({ ...formData, focusKeyword: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Canonical URL Slug</label>
+                    <input
+                      className="form-input text-xs font-mono"
+                      value={formData.slug || ''}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Live Google SERP & Social Card Preview */}
+              <div className="card space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <Globe size={15} className="text-emerald-600" />
+                      Live Search &amp; Social Share Preview
+                    </h4>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Real-time preview of how your article renders on Google SERPs and OpenGraph social cards.
+                    </p>
+                  </div>
+                  <div className="inline-flex rounded-lg border border-[var(--color-border)] p-0.5 bg-[var(--color-bg-subtle)]">
+                    <button
+                      type="button"
+                      onClick={() => setSerpPreviewMode('google')}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md text-xs font-medium transition-colors',
+                        serpPreviewMode === 'google'
+                          ? 'bg-white text-[var(--color-text)] shadow-xs'
+                          : 'text-[var(--color-text-muted)]'
+                      )}
+                    >
+                      Google SERP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSerpPreviewMode('social')}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md text-xs font-medium transition-colors',
+                        serpPreviewMode === 'social'
+                          ? 'bg-white text-[var(--color-text)] shadow-xs'
+                          : 'text-[var(--color-text-muted)]'
+                      )}
+                    >
+                      OpenGraph / X Card
+                    </button>
+                  </div>
+                </div>
+
+                {serpPreviewMode === 'google' ? (
+                  <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <span className="w-5 h-5 rounded-full bg-emerald-900 text-amber-300 font-serif font-bold flex items-center justify-center text-[10px]">
+                        B
+                      </span>
+                      <div className="truncate">
+                        <span className="font-medium text-slate-800 block leading-tight">
+                          {blogData?.website?.name || 'BlogFlow AI Editorial'}
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          https://blogflow.ai › articles › {formData.slug || 'article-slug'}
+                        </span>
+                      </div>
+                    </div>
+                    <h5 className="text-[#1a0dab] text-base font-medium leading-snug hover:underline cursor-pointer pt-0.5 truncate">
+                      {formData.metaTitle || formData.title || 'Untitled Editorial Article'}
+                    </h5>
+                    <p className="text-xs text-[#4d5156] leading-relaxed line-clamp-2">
+                      {formData.metaDescription ||
+                        (formData.content || '').slice(0, 155) ||
+                        'Add a meta description to preview how your article summary appears in Google search results.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-slate-200 overflow-hidden bg-white max-w-lg">
+                    <div className="h-36 bg-gradient-to-br from-[#101E18] via-[#163F32] to-[#0A130F] p-5 flex flex-col justify-between text-[#F7F4EC]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#E5C98B] border border-[#E5C98B]/40 px-2 py-0.5 rounded-full">
+                          {formData.category || 'Editorial'}
+                        </span>
+                        <span className="text-[11px] font-serif text-[#E5C98B]">BlogFlow AI</span>
+                      </div>
+                      <p className="font-serif text-base font-semibold leading-snug line-clamp-2">
+                        {formData.metaTitle || formData.title || 'Untitled Editorial Article'}
+                      </p>
+                    </div>
+                    <div className="p-3.5 bg-slate-50 border-t border-slate-200 space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">
+                        blogflow.ai
+                      </span>
+                      <h5 className="text-xs font-bold text-slate-900 truncate">
+                        {formData.metaTitle || formData.title}
+                      </h5>
+                      <p className="text-[11px] text-slate-600 line-clamp-2">
+                        {formData.metaDescription || (formData.content || '').slice(0, 140)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Deep On-Page SEO Diagnostics & JSON-LD Schema Card */}
+              {seoDiagnostics && (
+                <div className="card space-y-4">
+                  <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                    <div>
+                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                        <ShieldCheck size={16} className="text-indigo-600" />
+                        On-Page SEO Diagnostics &amp; Keyword Telemetry
+                      </h4>
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        Computed across {seoDiagnostics.readabilityMetrics.wordCount} words (~
+                        {seoDiagnostics.readabilityMetrics.readingTimeMinutes} min read)
+                      </p>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-sm">
+                      SEO Score: {seoDiagnostics.seoScore}/100
+                    </div>
+                  </div>
+
+                  {/* Keyword & Structure Metric Pills */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <div className="p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                      <span className="text-[11px] text-[var(--color-text-muted)] block">Keyword Density</span>
+                      <span className="font-bold text-sm text-[var(--color-text)]">
+                        {seoDiagnostics.keywordMetrics.densityPercent}% ({seoDiagnostics.keywordMetrics.occurrences}×)
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                      <span className="text-[11px] text-[var(--color-text-muted)] block">In First 100 Words</span>
+                      <span
+                        className={cn(
+                          'font-bold text-sm',
+                          seoDiagnostics.keywordMetrics.foundInFirst100Words ? 'text-emerald-600' : 'text-amber-600'
+                        )}
+                      >
+                        {seoDiagnostics.keywordMetrics.foundInFirst100Words ? 'Yes · Verified' : 'Missing'}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                      <span className="text-[11px] text-[var(--color-text-muted)] block">In H2 Subheading</span>
+                      <span
+                        className={cn(
+                          'font-bold text-sm',
+                          seoDiagnostics.keywordMetrics.foundInH2 ? 'text-emerald-600' : 'text-amber-600'
+                        )}
+                      >
+                        {seoDiagnostics.keywordMetrics.foundInH2 ? 'Yes · Verified' : 'Recommend Adding'}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                      <span className="text-[11px] text-[var(--color-text-muted)] block">Heading Hierarchy</span>
+                      <span className="font-bold text-sm text-[var(--color-text)]">
+                        {seoDiagnostics.headingStructure.h2Count} H2 · {seoDiagnostics.headingStructure.h3Count} H3
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Passed & Improvement Checklist */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <h5 className="text-xs font-semibold uppercase text-emerald-700">
+                        Passed SEO Signals ({seoDiagnostics.actionableChecklist.passed.length})
+                      </h5>
+                      {seoDiagnostics.actionableChecklist.passed.map((item, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs text-[var(--color-text-secondary)]">
+                          <CheckCircle2 size={13} className="text-emerald-600 mt-0.5 shrink-0" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <h5 className="text-xs font-semibold uppercase text-amber-700">
+                        Optimization Opportunities ({seoDiagnostics.actionableChecklist.improvements.length})
+                      </h5>
+                      {seoDiagnostics.actionableChecklist.improvements.length === 0 ? (
+                        <p className="text-xs text-emerald-600 font-medium">
+                          All primary on-page SEO checks passed!
+                        </p>
+                      ) : (
+                        seoDiagnostics.actionableChecklist.improvements.map((item, i) => (
+                          <div key={i} className="flex items-start gap-2 text-xs text-[var(--color-text-secondary)]">
+                            <AlertTriangle size={13} className="text-amber-500 mt-0.5 shrink-0" />
+                            <span>{item}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Internal Linking Suggestions */}
+                  {seoDiagnostics.internalLinkingSuggestions.length > 0 && (
+                    <div className="pt-2 border-t border-[var(--color-border)]">
+                      <h5 className="text-xs font-semibold uppercase text-[var(--color-text-muted)] mb-2">
+                        Recommended Internal Link Anchor Topics
+                      </h5>
+                      <div className="flex flex-wrap gap-2">
+                        {seoDiagnostics.internalLinkingSuggestions.map((topic, i) => (
+                          <span
+                            key={i}
+                            className="text-xs px-2.5 py-1 rounded-md bg-indigo-50/70 border border-indigo-100 text-indigo-800"
+                          >
+                            🔗 {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Auto-Generated Schema.org JSON-LD Block */}
+                  <div className="pt-3 border-t border-[var(--color-border)] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className="text-xs font-semibold uppercase text-[var(--color-text)]">
+                          Auto-Generated Schema.org JSON-LD (BlogPosting + FAQPage)
+                        </h5>
+                        <p className="text-[11px] text-[var(--color-text-muted)]">
+                          Ready to embed in WordPress or custom CMS head for rich search result snippets.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard?.writeText(seoDiagnostics.schemaJsonLd);
+                          setCopiedSchema(true);
+                          setTimeout(() => setCopiedSchema(false), 2000);
+                        }}
+                        className="btn btn-secondary text-xs"
+                      >
+                        {copiedSchema ? (
+                          <>
+                            <Check size={13} className="text-emerald-600" /> Copied JSON-LD
+                          </>
+                        ) : (
+                          'Copy JSON-LD'
+                        )}
+                      </button>
+                    </div>
+                    <pre className="p-3 rounded-lg bg-slate-900 text-slate-100 font-mono text-[11px] overflow-x-auto max-h-48">
+                      {seoDiagnostics.schemaJsonLd}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

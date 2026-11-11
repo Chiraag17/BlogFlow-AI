@@ -2838,6 +2838,73 @@ function LandingFooter() {
   );
 }
 
+const LANDING_SCHEMA_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'How does BlogFlow AI prevent hallucinated statistics and broken citations?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Before Gemini drafts a single sentence, our Tavily-powered research agent extracts real-time sources, domain benchmarks, and academic references. Every claim in the generated manuscript is linked to a verified citation URL.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Can I review and edit articles before they publish to WordPress?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. BlogFlow AI features a human-in-the-loop approval checkpoint where editors inspect on-page SEO scores, readability grades, and inline citations before one-click encrypted WordPress REST API publishing.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What on-page SEO optimizations are included automatically?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Every article includes optimized Meta Titles (35-60 chars), Meta Descriptions (120-160 chars), focus keyword density tracking, H1/H2/H3 semantic hierarchy, internal linking suggestions, and Schema.org FAQ & Article JSON-LD.',
+          },
+        },
+      ],
+    },
+    {
+      '@type': 'HowTo',
+      name: 'How to Research, Draft, Review, and Publish SEO Articles with BlogFlow AI',
+      description:
+        'Four-stage AI editorial workflow from live web research to encrypted WordPress publishing.',
+      step: [
+        {
+          '@type': 'HowToStep',
+          position: 1,
+          name: 'Research & Citation Grounding',
+          text: 'Enter a topic or website URL to extract verified primary sources, competitor SERP gaps, and key insights.',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 2,
+          name: 'Long-Form Editorial Drafting',
+          text: 'Synthesize research dossiers into structured H2/H3 long-form prose with inline citations and FAQ blocks.',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 3,
+          name: 'On-Page SEO & Human Editorial Review',
+          text: 'Audit SEO score, keyword placement, and readability metrics before human sign-off.',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 4,
+          name: 'Encrypted CMS Publishing',
+          text: 'Dispatch the approved article, metadata, and JSON-LD schema directly to WordPress.',
+        },
+      ],
+    },
+  ],
+};
+
 /* ============================================================
    PAGE ROOT
    ============================================================ */
@@ -2854,6 +2921,10 @@ export default function LandingPage() {
 
   return (
     <div className="lp-root">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(LANDING_SCHEMA_JSON_LD) }}
+      />
       <LandingNavbar onReplayHero={handleReplayHero} />
       <main>
         <HeroSection

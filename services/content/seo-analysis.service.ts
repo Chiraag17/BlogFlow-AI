@@ -7,7 +7,6 @@
 
 import { Blog } from '@/types';
 import { geminiService } from '@/services/ai/gemini.service';
-import { promptService } from '@/services/ai/prompt.service';
 
 export interface SeoAnalysisResult {
   seoScore: number;
@@ -34,16 +33,27 @@ export interface SeoAnalysisResult {
     h3Count: number;
     status: 'good' | 'needs_improvement' | 'poor';
   };
+  readabilityMetrics: {
+    wordCount: number;
+    readingTimeMinutes: number;
+    avgSentenceWords: number;
+    status: 'optimal' | 'dense' | 'short';
+  };
   internalLinkingSuggestions: string[];
   actionableChecklist: {
     passed: string[];
     improvements: string[];
   };
+  schemaJsonLd: string;
+}
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export class SeoAnalysisService {
   /**
-   * Computes comprehensive SEO diagnostics on an article.
+   * Computes comprehensive SEO diagnostics and Schema.org JSON-LD on an article.
    */
   public async analyzeSeo(blog: Partial<Blog>): Promise<SeoAnalysisResult> {
     const content = blog.content || '';
@@ -51,9 +61,25 @@ export class SeoAnalysisService {
     const focusKeyword = (blog.focusKeyword || '').toLowerCase().trim();
     const metaTitle = blog.metaTitle || title;
     const metaDescription = blog.metaDescription || '';
+    const slug =
+      blog.slug ||
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
 
     const words = content.trim().split(/\s+/).filter(Boolean);
     const totalWords = words.length || 1;
+    const readingTimeMinutes = Math.max(1, Math.ceil(totalWords / 225));
+    const sentences = content
+      .split(/[.!?]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const avgSentenceWords = Number(
+      (totalWords / Math.max(1, sentences.length)).toFixed(1)
+    );
+    const readabilityStatus: 'optimal' | 'dense' | 'short' =
+      totalWords < 300 ? 'short' : avgSentenceWords <= 22 ? 'optimal' : 'dense';
 
     // Keyword metrics
     let occurrences = 0;
@@ -62,7 +88,8 @@ export class SeoAnalysisService {
 
     if (focusKeyword) {
       const lowerContent = content.toLowerCase();
-      occurrences = (lowerContent.match(new RegExp(focusKeyword, 'g')) || []).length;
+      const safeRegex = new RegExp(escapeRegExp(focusKeyword), 'g');
+      occurrences = (lowerContent.match(safeRegex) || []).length;
 
       const first100 = words.slice(0, 100).join(' ').toLowerCase();
       foundInFirst100Words = first100.includes(focusKeyword);
@@ -103,12 +130,12 @@ export class SeoAnalysisService {
     }
 
     if (focusKeyword) {
-      if (title.toLowerCase().includes(focusKeyword)) {
+      if (title.toLowerCase().includes(focusKeyword) || metaTitle.toLowerCase().includes(focusKeyword)) {
         score += 5;
-        passed.push(`Focus keyword "${focusKeyword}" is present in the main title.`);
+        passed.push(`Focus keyword "${focusKeyword}" is present in the title.`);
       } else {
         score -= 10;
-        improvements.push(`Include focus keyword "${focusKeyword}" in the article title.`);
+        improvements.push(`Include focus keyword "${focusKeyword}" in the article or meta title.`);
       }
 
       if (foundInFirst100Words) {
@@ -116,6 +143,13 @@ export class SeoAnalysisService {
         passed.push('Focus keyword appears in the introductory 100 words.');
       } else {
         improvements.push('Include the focus keyword in the first paragraph for stronger relevance signaling.');
+      }
+
+      if (foundInH2) {
+        score += 3;
+        passed.push('Focus keyword is reinforced in at least one H2 subheading.');
+      } else {
+        improvements.push('Include the focus keyword or a close variant in at least one H2 heading.');
       }
     }
 
@@ -150,17 +184,62 @@ Return JSON: { "suggestions": ["topic/anchor 1", "topic/anchor 2", "topic/anchor
       // Fallback
     }
 
+    // Build ready-to-embed Schema.org BlogPosting + FAQPage JSON-LD
+    const graphEntities: Record<string, unknown>[] = [
+      {
+        '@type': 'BlogPosting',
+        headline: metaTitle || title,
+        description: metaDescription || content.slice(0, 155).trim(),
+        keywords: focusKeyword || undefined,
+        wordCount: totalWords,
+        articleSection: blog.category || 'Editorial',
+        url: `https://blogflow.ai/articles/${slug}`,
+        datePublished: blog.createdAt || new Date().toISOString(),
+        dateModified: new Date().toISOString(),
+        author: {
+          '@type': 'Organization',
+          name: 'BlogFlow AI Editorial Studio',
+        },
+      },
+    ];
+
+    if (blog.faqs && blog.faqs.length > 0) {
+      const validFaqs = blog.faqs.filter((f) => f.question && f.answer);
+      if (validFaqs.length > 0) {
+        graphEntities.push({
+          '@type': 'FAQPage',
+          mainEntity: validFaqs.map((f) => ({
+            '@type': 'Question',
+            name: f.question,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: f.answer,
+            },
+          })),
+        });
+      }
+    }
+
+    const schemaJsonLd = JSON.stringify(
+      {
+        '@context': 'https://schema.org',
+        '@graph': graphEntities,
+      },
+      null,
+      2
+    );
+
     return {
       seoScore: Math.min(98, Math.max(35, score)),
       titleAnalysis: {
         length: metaTitle.length,
-        hasKeyword: Boolean(focusKeyword && title.toLowerCase().includes(focusKeyword)),
+        hasKeyword: Boolean(focusKeyword && (title.toLowerCase().includes(focusKeyword) || metaTitle.toLowerCase().includes(focusKeyword))),
         recommendation: metaTitle.length > 60 ? 'Shorten to prevent truncation on mobile SERPs.' : undefined,
       },
       metaDescriptionAnalysis: {
         length: metaDescription.length,
         isOptimal: metaDescription.length >= 120 && metaDescription.length <= 165,
-        recommendation: metaDescription.length < 120 ? 'Expand description with specific benefits.' : undefined,
+        recommendation: metaDescription.length < 120 ? 'Expand description with specific benefits (120-160 chars).' : undefined,
       },
       keywordMetrics: {
         focusKeyword,
@@ -175,11 +254,18 @@ Return JSON: { "suggestions": ["topic/anchor 1", "topic/anchor 2", "topic/anchor
         h3Count: h3Matches.length,
         status: headingStatus,
       },
+      readabilityMetrics: {
+        wordCount: totalWords,
+        readingTimeMinutes,
+        avgSentenceWords,
+        status: readabilityStatus,
+      },
       internalLinkingSuggestions,
       actionableChecklist: {
         passed,
         improvements,
       },
+      schemaJsonLd,
     };
   }
 }

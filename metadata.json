@@ -1,6 +1,6 @@
 {
   "name": "BlogFlow AI",
-  "description": "Automate blog creation with AI. Research topics, generate SEO-optimized content, manage approvals, and publish directly to your CMS.",
+  "description": "Transform any topic or website into citation-grounded, SEO-optimized articles with live web research, editorial review, and WordPress publishing.",
   "requestFramePermissions": [],
   "capabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
