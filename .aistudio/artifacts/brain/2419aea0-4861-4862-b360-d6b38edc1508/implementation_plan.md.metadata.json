@@ -1,6 +1,0 @@
-{
-  "summary":  "Comprehensive SEO implementation plan covering site-wide technical SEO (OpenGraph, Twitter cards, canonical URLs, dynamic opengraph-image.tsx, sitemap.ts, robots.ts, and Schema.org JSON-LD for SoftwareApplication + FAQPage) and in-app blog SEO tools (live Google SERP & social card preview, deep on-page keyword/heading diagnostics via /api/ai/analyze-seo, and exportable Article + FAQPage JSON-LD schema).",
-  "updatedAt":  "2026-11-11T07:56:49.948438931Z",
-  "requestFeedback":  true,
-  "userFacing":  true
-}

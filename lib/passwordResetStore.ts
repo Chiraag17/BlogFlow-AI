@@ -12,16 +12,30 @@ interface OtpRecord {
   used: boolean;
 }
 
+export interface AuthUserRecord {
+  id: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  role: string;
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var passwordResetOtpStore: Map<string, OtpRecord> | undefined;
+  // eslint-disable-next-line no-var
+  var fallbackAuthUserStore: Map<string, AuthUserRecord> | undefined;
 }
 
 const otpStore: Map<string, OtpRecord> =
   globalThis.passwordResetOtpStore ?? new Map<string, OtpRecord>();
 
+const fallbackUsers: Map<string, AuthUserRecord> =
+  globalThis.fallbackAuthUserStore ?? new Map<string, AuthUserRecord>();
+
 if (process.env.NODE_ENV !== "production") {
   globalThis.passwordResetOtpStore = otpStore;
+  globalThis.fallbackAuthUserStore = fallbackUsers;
 }
 
 function getSigningSecret(): string {
@@ -40,23 +54,113 @@ function createHmacSignature(payload: string): string {
 }
 
 /**
- * Ensures the Demo Studio user exists in the database so 1-click Demo Login
- * and Demo Forgot Password flows always work out of the box.
+ * Finds a user by email in Prisma, falling back to the in-memory store if DB is unreachable.
  */
-export async function ensureDemoAccountExists() {
-  const existing = await prisma.user.findUnique({
-    where: { email: DEMO_STUDIO_EMAIL },
-  });
+export async function findUserWithFallback(
+  email: string
+): Promise<AuthUserRecord | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (dbUser) {
+      const record: AuthUserRecord = {
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name ?? "",
+        passwordHash: dbUser.passwordHash ?? "",
+        role: dbUser.role ?? "USER",
+      };
+      fallbackUsers.set(normalizedEmail, record);
+      return record;
+    }
+  } catch (err) {
+    console.warn("[Auth Store] Prisma lookup fallback active:", err);
+  }
+  return fallbackUsers.get(normalizedEmail) ?? null;
+}
+
+/**
+ * Creates a user in Prisma, falling back to the in-memory store if DB is unreachable.
+ */
+export async function createUserWithFallback(data: {
+  email: string;
+  name: string;
+  passwordHash: string;
+}): Promise<AuthUserRecord> {
+  const normalizedEmail = data.email.trim().toLowerCase();
+  try {
+    const created = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        name: data.name,
+        passwordHash: data.passwordHash,
+      },
+    });
+    const record: AuthUserRecord = {
+      id: created.id,
+      email: created.email,
+      name: created.name ?? data.name,
+      passwordHash: created.passwordHash ?? data.passwordHash,
+      role: created.role ?? "USER",
+    };
+    fallbackUsers.set(normalizedEmail, record);
+    return record;
+  } catch (err) {
+    console.warn("[Auth Store] Prisma create fallback active:", err);
+    const record: AuthUserRecord = {
+      id: `usr_${crypto.randomBytes(8).toString("hex")}`,
+      email: normalizedEmail,
+      name: data.name,
+      passwordHash: data.passwordHash,
+      role: "USER",
+    };
+    fallbackUsers.set(normalizedEmail, record);
+    return record;
+  }
+}
+
+/**
+ * Updates a user's passwordHash in Prisma and the fallback store.
+ */
+export async function updateUserPasswordWithFallback(
+  email: string,
+  passwordHash: string
+): Promise<boolean> {
+  const normalizedEmail = email.trim().toLowerCase();
+  let updated = false;
+  try {
+    await prisma.user.update({
+      where: { email: normalizedEmail },
+      data: { passwordHash },
+    });
+    updated = true;
+  } catch (err) {
+    console.warn("[Auth Store] Prisma update fallback active:", err);
+  }
+  const existing = fallbackUsers.get(normalizedEmail);
+  if (existing) {
+    fallbackUsers.set(normalizedEmail, { ...existing, passwordHash });
+    updated = true;
+  }
+  return updated;
+}
+
+/**
+ * Ensures the Demo Studio user exists in the database or fallback store so 1-click Demo Login,
+ * 6-Digit OTP Login, and Demo Forgot Password flows always work out of the box.
+ */
+export async function ensureDemoAccountExists(): Promise<AuthUserRecord> {
+  const existing = await findUserWithFallback(DEMO_STUDIO_EMAIL);
   if (existing) {
     return existing;
   }
   const passwordHash = await bcrypt.hash(DEMO_STUDIO_DEFAULT_PASSWORD, 12);
-  return prisma.user.create({
-    data: {
-      email: DEMO_STUDIO_EMAIL,
-      name: "Aria Vance",
-      passwordHash,
-    },
+  return createUserWithFallback({
+    email: DEMO_STUDIO_EMAIL,
+    name: "Aria Vance",
+    passwordHash,
   });
 }
 

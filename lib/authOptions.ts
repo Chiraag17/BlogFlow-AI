@@ -3,12 +3,13 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { checkRateLimit } from "@/services/security/rate-limiter";
 import {
   DEMO_STUDIO_EMAIL,
   ensureDemoAccountExists,
+  findUserWithFallback,
+  verifyPasswordResetChallenge,
 } from "@/lib/passwordResetStore";
 
 const providers: NextAuthOptions["providers"] = [
@@ -17,34 +18,60 @@ const providers: NextAuthOptions["providers"] = [
     credentials: {
       email: { label: "Email", type: "email", placeholder: "email@example.com" },
       password: { label: "Password", type: "password" },
+      otp: { label: "6-Digit Code", type: "text" },
+      resetToken: { label: "OTP Session Token", type: "text" },
     },
     async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) return null;
-      if (credentials.password.length > 72) return null;
+      if (!credentials?.email) return null;
 
       const normalizedEmail = credentials.email.trim().toLowerCase();
-      const rateLimit = checkRateLimit(`auth:login:${normalizedEmail}`, 15, 10 * 60 * 1000);
+      const rateLimit = checkRateLimit(`auth:login:${normalizedEmail}`, 20, 10 * 60 * 1000);
       if (!rateLimit.allowed) {
         throw new Error("Too many login attempts. Please try again in a few minutes.");
       }
+
+      // 1. Passwordless 6-Digit OTP Email Sign-In
+      if (credentials.otp && credentials.resetToken) {
+        if (normalizedEmail === DEMO_STUDIO_EMAIL) {
+          await ensureDemoAccountExists();
+        }
+        const verification = verifyPasswordResetChallenge(
+          normalizedEmail,
+          credentials.otp,
+          credentials.resetToken,
+          true
+        );
+        if (!verification.valid) {
+          return null;
+        }
+        const otpUser = await findUserWithFallback(normalizedEmail);
+        if (!otpUser) return null;
+        return {
+          id: otpUser.id,
+          name: otpUser.name || "Editorial Creator",
+          email: otpUser.email,
+          role: otpUser.role,
+        };
+      }
+
+      // 2. Standard Password or Instant Demo Studio Access
+      if (!credentials.password || credentials.password.length > 72) return null;
 
       if (normalizedEmail === DEMO_STUDIO_EMAIL) {
         const demoUser = await ensureDemoAccountExists();
         if (credentials.password === "__DEMO_STUDIO_ACCESS__") {
           return {
             id: demoUser.id,
-            name: demoUser.name ?? "Aria Vance",
+            name: demoUser.name || "Aria Vance",
             email: demoUser.email,
             role: demoUser.role,
           };
         }
       }
 
-      const user = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
-      });
+      const user = await findUserWithFallback(normalizedEmail);
       if (user?.passwordHash && (await bcrypt.compare(credentials.password, user.passwordHash))) {
-        return { id: user.id, name: user.name ?? "", email: user.email, role: user.role };
+        return { id: user.id, name: user.name || "", email: user.email, role: user.role };
       }
       return null;
     },

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIdentifier } from "@/services/security/rate-limiter";
-import { verifyPasswordResetChallenge } from "@/lib/passwordResetStore";
+import {
+  findUserWithFallback,
+  updateUserPasswordWithFallback,
+  verifyPasswordResetChallenge,
+} from "@/lib/passwordResetStore";
 
 const VerifyOtpOnlySchema = z.object({
   action: z.literal("verify_otp"),
@@ -23,7 +26,7 @@ const ResetPasswordSchema = z.object({
 export async function POST(request: Request) {
   try {
     const clientKey = getClientIdentifier(request);
-    const rateLimit = checkRateLimit(`auth:reset:${clientKey}`, 10, 10 * 60 * 1000);
+    const rateLimit = checkRateLimit(`auth:reset:${clientKey}`, 12, 10 * 60 * 1000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many verification attempts. Please wait a few minutes." },
@@ -62,11 +65,11 @@ export async function POST(request: Request) {
       });
     }
 
-    // Step 3: Verify OTP + update passwordHash in PostgreSQL
+    // Step 3: Verify OTP + update passwordHash in PostgreSQL / fallback store
     const parsedReset = ResetPasswordSchema.safeParse(body);
     if (!parsedReset.success) {
       return NextResponse.json(
-        { error: "Password must be between 8 and 72 characters." },
+        { error: "New password must be between 8 and 72 characters." },
         { status: 400 }
       );
     }
@@ -81,10 +84,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { id: true, email: true },
-    });
+    const user = await findUserWithFallback(email);
 
     if (!user) {
       return NextResponse.json(
@@ -94,10 +94,7 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({
-      where: { email },
-      data: { passwordHash },
-    });
+    await updateUserPasswordWithFallback(email, passwordHash);
 
     return NextResponse.json({
       ok: true,

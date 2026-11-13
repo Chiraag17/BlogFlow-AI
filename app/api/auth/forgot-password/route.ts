@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIdentifier } from "@/services/security/rate-limiter";
 import {
   DEMO_STUDIO_EMAIL,
   ensureDemoAccountExists,
+  findUserWithFallback,
   generatePasswordResetChallenge,
 } from "@/lib/passwordResetStore";
 
@@ -15,7 +15,7 @@ const ForgotPasswordSchema = z.object({
 export async function POST(request: Request) {
   try {
     const clientKey = getClientIdentifier(request);
-    const rateLimit = checkRateLimit(`auth:forgot:${clientKey}`, 8, 10 * 60 * 1000);
+    const rateLimit = checkRateLimit(`auth:forgot:${clientKey}`, 10, 10 * 60 * 1000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many recovery requests. Please wait a few minutes." },
@@ -42,10 +42,7 @@ export async function POST(request: Request) {
       await ensureDemoAccountExists();
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { id: true, email: true, name: true },
-    });
+    const user = await findUserWithFallback(email);
 
     if (!user) {
       return NextResponse.json(

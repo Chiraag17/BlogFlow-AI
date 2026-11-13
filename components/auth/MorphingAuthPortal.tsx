@@ -117,17 +117,19 @@ const MODE_COPY: Record<
 };
 
 function computePasswordStrength(pw: string) {
-  if (!pw) return { score: 0, label: '', color: '#8A8477' };
-  let score = 0;
-  if (pw.length >= 6) score += 1;
-  if (pw.length >= 10) score += 1;
-  if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) score += 1;
-  if (/[^A-Za-z0-9]/.test(pw)) score += 1;
+  const rules = [
+    { id: 'length', label: '8+ chars', met: pw.length >= 8 },
+    { id: 'case', label: 'Upper & lower', met: /[a-z]/.test(pw) && /[A-Z]/.test(pw) },
+    { id: 'number', label: 'Number', met: /[0-9]/.test(pw) },
+    { id: 'symbol', label: 'Symbol', met: /[^A-Za-z0-9]/.test(pw) },
+  ];
+  if (!pw) return { score: 0, label: '', color: '#8A8477', rules };
+  const score = rules.filter((r) => r.met).length;
 
-  if (score <= 1) return { score: 1, label: 'Weak', color: '#B85D3B' };
-  if (score === 2) return { score: 2, label: 'Fair', color: '#C8A15A' };
-  if (score === 3) return { score: 3, label: 'Good', color: '#2A6B53' };
-  return { score: 4, label: 'Strong', color: '#163F32' };
+  if (score <= 1) return { score: 1, label: 'Weak', color: '#B85D3B', rules };
+  if (score === 2) return { score: 2, label: 'Fair', color: '#C8A15A', rules };
+  if (score === 3) return { score: 3, label: 'Good', color: '#2A6B53', rules };
+  return { score: 4, label: 'Strong', color: '#52B788', rules };
 }
 
 export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortalProps) {
@@ -153,6 +155,21 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
+  // Passwordless 6-Digit OTP Login state
+  const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
+  const [loginOtpStep, setLoginOtpStep] = useState<'request' | 'verify'>('request');
+  const [loginOtpDigits, setLoginOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [loginOtpToken, setLoginOtpToken] = useState('');
+  const [loginOtpPreview, setLoginOtpPreview] = useState<string | null>(null);
+
+  // OAuth Provider Availability state
+  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean }>({
+    google: false,
+    github: false,
+  });
+  const [oauthNotice, setOauthNotice] = useState<'Google' | 'GitHub' | null>(null);
 
   // Forgot Password multi-step state
   const [forgotStep, setForgotStep] = useState<ForgotStep>(1);
@@ -171,6 +188,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const [shakeKey, setShakeKey] = useState(0);
 
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const loginOtpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cubeStageRef = useRef<HTMLDivElement>(null);
@@ -196,6 +214,19 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
   useEffect(() => {
     setMounted(true);
+    fetch('/api/auth/providers-status')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data === 'object') {
+          setOauthStatus({
+            google: Boolean(data.google),
+            github: Boolean(data.github),
+          });
+        }
+      })
+      .catch(() => {
+        // Keep safe defaults
+      });
   }, []);
 
   useEffect(() => {
@@ -243,6 +274,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   // Calculate form completion percentage (0..1)
   const completionPct = useMemo(() => {
     if (mode === 'login') {
+      if (loginMethod === 'otp') {
+        let pct = 0;
+        if (email.trim().includes('@')) pct += 0.5;
+        if (loginOtpDigits.join('').length === 6) pct += 0.5;
+        return pct;
+      }
       let pct = 0;
       if (email.trim().length > 3) pct += 0.5;
       if (password.length >= 6) pct += 0.5;
@@ -252,12 +289,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       let pct = 0;
       if (name.trim().length >= 2) pct += 0.25;
       if (email.trim().includes('@')) pct += 0.25;
-      if (password.length >= 6) pct += 0.25;
-      if (confirmPassword.length >= 6 && confirmPassword === password) pct += 0.25;
+      if (password.length >= 8) pct += 0.25;
+      if (confirmPassword.length >= 8 && confirmPassword === password) pct += 0.25;
       return pct;
     }
     return (forgotStep - 1) / 3;
-  }, [mode, name, email, password, confirmPassword, forgotStep]);
+  }, [mode, loginMethod, loginOtpDigits, name, email, password, confirmPassword, forgotStep]);
 
   // Spawn Golden Keystroke Energy Particles flowing from the active input card into the 3D Cube
   const spawnKeystrokeParticles = useCallback((count = 2) => {
@@ -669,6 +706,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const switchMode = (nextMode: AuthMode) => {
     setError('');
     setSuccessMsg('');
+    setOauthNotice(null);
     setManualFaceOverride(null);
     setFocusedField(null);
     setMode(nextMode);
@@ -678,6 +716,12 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       setForgotEmail(email || '');
       setOtpDigits(['', '', '', '', '', '']);
       setOtpPreview(null);
+    }
+  };
+
+  const handlePasswordKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof e.getModifierState === 'function') {
+      setCapsLockOn(e.getModifierState('CapsLock'));
     }
   };
 
@@ -705,6 +749,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setOauthNotice(null);
     setLoading(true);
     pulseCube(true);
 
@@ -716,7 +761,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
       });
 
       if (res?.error) {
-        triggerError('Invalid email or password. Please try again.');
+        triggerError('Invalid email or password. You can also sign in with a 6-digit email code.');
         setLoading(false);
       } else {
         triggerWarpToStudio();
@@ -727,16 +772,130 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     }
   };
 
+  // --- Passwordless 6-Digit OTP Sign-In Handlers ---
+  const handleRequestLoginOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setError('');
+    setOauthNotice(null);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
+      triggerError('Please enter a valid email address to receive your 6-digit login code.');
+      return;
+    }
+
+    setLoading(true);
+    pulseCube(true);
+    try {
+      const res = await fetch('/api/auth/otp-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        triggerError(data.error || 'Could not issue 6-digit login code.');
+        setLoading(false);
+        return;
+      }
+
+      setLoginOtpToken(data.resetToken);
+      setLoginOtpPreview(data.otpPreview || null);
+      setLoginOtpDigits(['', '', '', '', '', '']);
+      setLoginOtpStep('verify');
+      setManualFaceOverride('seal');
+    } catch {
+      triggerError('Network error while requesting 6-digit login code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginOtpChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const next = [...loginOtpDigits];
+    next[index] = digit;
+    setLoginOtpDigits(next);
+    setError('');
+    pulseCube(true);
+
+    if (digit && index < 5) {
+      loginOtpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleLoginOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !loginOtpDigits[index] && index > 0) {
+      loginOtpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleLoginOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const next = ['', '', '', '', '', ''];
+    for (let i = 0; i < 6; i++) {
+      next[i] = pasted[i] || '';
+    }
+    setLoginOtpDigits(next);
+    pulseCube(true);
+    const focusIdx = Math.min(5, pasted.length);
+    loginOtpInputRefs.current[focusIdx]?.focus();
+  };
+
+  const handleVerifyLoginOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    const otp = loginOtpDigits.join('');
+    if (otp.length !== 6) {
+      triggerError('Please enter all 6 digits of your sign-in code.');
+      return;
+    }
+
+    setLoading(true);
+    pulseCube(true);
+    try {
+      const res = await signIn('credentials', {
+        redirect: false,
+        email: email.trim().toLowerCase(),
+        otp,
+        resetToken: loginOtpToken,
+      });
+
+      if (res?.error) {
+        triggerError('Invalid or expired 6-digit code. Please check the code or request a new one.');
+        setLoading(false);
+      } else {
+        triggerWarpToStudio();
+      }
+    } catch {
+      triggerError('Could not verify your 6-digit login code.');
+      setLoading(false);
+    }
+  };
+
+  const handleOAuthSignIn = (provider: 'google' | 'github') => {
+    setError('');
+    pulseCube(true);
+    if (oauthStatus[provider]) {
+      signIn(provider, { callbackUrl: targetRedirect });
+      return;
+    }
+    setOauthNotice(provider === 'google' ? 'Google' : 'GitHub');
+  };
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setOauthNotice(null);
 
     if (name.trim().length < 2) {
-      triggerError('Please enter your name.');
+      triggerError('Please enter your name (at least 2 characters).');
       return;
     }
-    if (password.length < 6) {
-      triggerError('Password must be at least 6 characters long.');
+    if (password.length < 8) {
+      triggerError('Password must be at least 8 characters long.');
       return;
     }
     if (password !== confirmPassword) {
@@ -785,6 +944,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
   const handleDemoAccess = async () => {
     setError('');
+    setOauthNotice(null);
     setDemoLoading(true);
     setManualFaceOverride('seal');
     pulseCube(true);
@@ -918,8 +1078,8 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
     e.preventDefault();
     setError('');
 
-    if (newPassword.length < 6) {
-      triggerError('New password must be at least 6 characters.');
+    if (newPassword.length < 8) {
+      triggerError('New password must be at least 8 characters long.');
       return;
     }
     if (newPassword !== confirmNewPassword) {
@@ -1476,18 +1636,34 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
             transition={{ duration: 0.4 }}
             className="relative"
           >
-            {/* Card Container */}
+            {/* Card Container with Brushed-Brass Double Bezel & Completion Rim */}
             <div
-              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 backdrop-blur-xl ${
+              className={`relative rounded-2xl border p-6 sm:p-8 transition-colors duration-500 backdrop-blur-xl overflow-hidden ${
                 isDark
-                  ? 'bg-[#0B1914]/85 border-[#C8A15A]/25 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.8)]'
-                  : 'bg-[#FCFBF7]/90 border-[#163F32]/15 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.12)]'
+                  ? 'bg-[#0B1914]/88 border-[#C8A15A]/30 shadow-[0_28px_70px_-15px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(229,201,139,0.2)]'
+                  : 'bg-[#FCFBF7]/92 border-[#163F32]/20 shadow-[0_24px_60px_-15px_rgba(22,63,50,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]'
               }`}
             >
+              {/* Top Completion Progress Hairline */}
+              <div
+                className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden"
+                style={{
+                  background: isDark
+                    ? 'rgba(200, 161, 90, 0.12)'
+                    : 'rgba(22, 63, 50, 0.08)',
+                }}
+              >
+                <motion.div
+                  className="h-full bg-gradient-to-r from-[#163F32] via-[#C8A15A] to-[#E5C98B]"
+                  animate={{ width: `${Math.max(8, Math.round(completionPct * 100))}%` }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                />
+              </div>
+
               {/* Mode Switcher Tabs (Sign In vs Sign Up) */}
               {mode !== 'forgot' ? (
                 <div
-                  className={`relative grid grid-cols-2 p-1 rounded-xl border mb-6 ${
+                  className={`relative grid grid-cols-2 p-1 rounded-xl border mb-5 ${
                     isDark
                       ? 'bg-[#06100C] border-[#C8A15A]/15'
                       : 'bg-[#EFECE1] border-[#163F32]/10'
@@ -1573,7 +1749,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    className={`mb-5 p-3.5 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
+                    className={`mb-4 p-3.5 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
                       isDark
                         ? 'bg-[#3A1818]/90 border-[#D97757]/50 text-[#FCDAD0]'
                         : 'bg-[#FDF2EE] border-[#B85D3B]/40 text-[#7A2E18]'
@@ -1584,12 +1760,71 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   </motion.div>
                 )}
 
+                {oauthNotice && !error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className={`mb-4 p-3.5 rounded-xl border text-xs leading-relaxed space-y-2.5 ${
+                      isDark
+                        ? 'bg-[#12261F]/95 border-[#C8A15A]/45 text-[#F7F4EC]'
+                        : 'bg-[#F5F2E8] border-[#163F32]/25 text-[#18211D]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <KeyRound className="w-4 h-4 shrink-0 mt-0.5 text-[#C8A15A]" />
+                        <div>
+                          <p className="font-semibold">
+                            {oauthNotice} OAuth client credentials are not configured in this preview environment.
+                          </p>
+                          <p className={`mt-0.5 ${isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'}`}>
+                            Sign in immediately using a passwordless 6-digit email code or launch the instant Demo Studio.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setOauthNotice(null)}
+                        className="text-[11px] opacity-70 hover:opacity-100 cursor-pointer px-1"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOauthNotice(null);
+                          setMode('login');
+                          setLoginMethod('otp');
+                          setLoginOtpStep('request');
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-[#163F32] text-[#F7F4EC] border border-[#C8A15A]/40 hover:bg-[#1D5241] cursor-pointer"
+                      >
+                        Use 6-Digit Email Code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDemoAccess}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border cursor-pointer ${
+                          isDark
+                            ? 'border-[#C8A15A]/35 text-[#E5C98B] hover:bg-[#C8A15A]/15'
+                            : 'border-[#163F32]/25 text-[#163F32] hover:bg-[#163F32]/10'
+                        }`}
+                      >
+                        Try Demo Account
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
                 {successMsg && !error && (
                   <motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    className={`mb-5 p-3.5 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
+                    className={`mb-4 p-3.5 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
                       isDark
                         ? 'bg-[#123328]/90 border-[#C8A15A]/50 text-[#E5C98B]'
                         : 'bg-[#EAF2EE] border-[#163F32]/30 text-[#123328]'
@@ -1605,171 +1840,405 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
               <AnimatePresence mode="wait">
                 {/* ==================== LOGIN VIEW ==================== */}
                 {mode === 'login' && (
-                  <motion.form
-                    key="login-form"
+                  <motion.div
+                    key="login-view"
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 12 }}
                     transition={{ duration: 0.2 }}
-                    onSubmit={handleLoginSubmit}
                     className="space-y-4"
                   >
-                    {/* Email Field */}
-                    <div>
-                      <label
-                        className={`block text-xs font-medium mb-1.5 ${
-                          isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                    {/* Sign-In Method Selector: Password vs. 6-Digit Email Code */}
+                    <div
+                      className={`grid grid-cols-2 gap-1 p-1 rounded-lg border text-[11px] font-medium ${
+                        isDark
+                          ? 'bg-[#06100C]/90 border-[#C8A15A]/20'
+                          : 'bg-[#F3EFE4] border-[#163F32]/12'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginMethod('password');
+                          setError('');
+                        }}
+                        className={`py-1.5 px-2.5 rounded-md flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          loginMethod === 'password'
+                            ? isDark
+                              ? 'bg-[#12261F] text-[#E5C98B] border border-[#C8A15A]/35 shadow-xs'
+                              : 'bg-white text-[#163F32] border border-[#163F32]/20 shadow-xs'
+                            : isDark
+                            ? 'text-[#8FA59B] hover:text-[#F7F4EC]'
+                            : 'text-[#615B4E] hover:text-[#18211D]'
                         }`}
                       >
-                        Email
-                      </label>
-                      <div className="relative">
-                        <Mail
-                          className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
-                            focusedField === 'email'
-                              ? 'text-[#C8A15A]'
-                              : isDark
-                              ? 'text-[#8FA59B]'
-                              : 'text-[#615B4E]'
-                          }`}
-                        />
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onFocus={() => {
-                            setFocusedField('email');
-                            pulseCube(false);
-                          }}
-                          onBlur={() => setFocusedField(null)}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            pulseCube(true);
-                          }}
-                          placeholder="you@example.com"
-                          className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
-                            isDark
-                              ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
-                              : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
-                          }`}
-                        />
-                      </div>
+                        <Lock className="w-3 h-3" />
+                        <span>Password</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginMethod('otp');
+                          setError('');
+                        }}
+                        className={`py-1.5 px-2.5 rounded-md flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          loginMethod === 'otp'
+                            ? isDark
+                              ? 'bg-[#12261F] text-[#E5C98B] border border-[#C8A15A]/35 shadow-xs'
+                              : 'bg-white text-[#163F32] border border-[#163F32]/20 shadow-xs'
+                            : isDark
+                            ? 'text-[#8FA59B] hover:text-[#F7F4EC]'
+                            : 'text-[#615B4E] hover:text-[#18211D]'
+                        }`}
+                      >
+                        <KeyRound className="w-3 h-3" />
+                        <span>6-Digit Email Code</span>
+                      </button>
+                    </div>
 
-                      {/* Domain Quick-Buttons */}
-                      <AnimatePresence>
-                        {showDomainSuggestions && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="flex flex-wrap items-center gap-1.5 pt-2 overflow-hidden"
+                    {loginMethod === 'password' ? (
+                      <form onSubmit={handleLoginSubmit} className="space-y-4">
+                        {/* Email Field */}
+                        <div>
+                          <label
+                            className={`block text-xs font-medium mb-1.5 ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
                           >
-                            {EMAIL_DOMAINS.map((dom) => (
-                              <button
-                                key={dom}
-                                type="button"
-                                onClick={() => applyEmailDomain(dom)}
-                                className={`text-[11px] font-mono px-2 py-0.5 rounded border transition-colors cursor-pointer ${
-                                  isDark
-                                    ? 'bg-[#12261F] border-[#C8A15A]/30 text-[#E5C98B] hover:border-[#C8A15A]'
-                                    : 'bg-[#EFECE1] border-[#163F32]/20 text-[#163F32] hover:bg-[#163F32] hover:text-[#F7F4EC]'
+                            Email
+                          </label>
+                          <div className="relative">
+                            <Mail
+                              className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                                focusedField === 'email'
+                                  ? 'text-[#C8A15A]'
+                                  : isDark
+                                  ? 'text-[#8FA59B]'
+                                  : 'text-[#615B4E]'
+                              }`}
+                            />
+                            <input
+                              type="email"
+                              required
+                              value={email}
+                              onFocus={() => {
+                                setFocusedField('email');
+                                pulseCube(false);
+                              }}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => {
+                                setEmail(e.target.value);
+                                pulseCube(true);
+                              }}
+                              placeholder="you@example.com"
+                              className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          </div>
+
+                          {/* Domain Quick-Buttons */}
+                          <AnimatePresence>
+                            {showDomainSuggestions && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="flex flex-wrap items-center gap-1.5 pt-2 overflow-hidden"
+                              >
+                                {EMAIL_DOMAINS.map((dom) => (
+                                  <button
+                                    key={dom}
+                                    type="button"
+                                    onClick={() => applyEmailDomain(dom)}
+                                    className={`text-[11px] font-mono px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                                      isDark
+                                        ? 'bg-[#12261F] border-[#C8A15A]/30 text-[#E5C98B] hover:border-[#C8A15A]'
+                                        : 'bg-[#EFECE1] border-[#163F32]/20 text-[#163F32] hover:bg-[#163F32] hover:text-[#F7F4EC]'
+                                    }`}
+                                  >
+                                    {dom}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Password Field */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <label
+                                className={`block text-xs font-medium ${
+                                  isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
                                 }`}
                               >
-                                {dom}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                                Password
+                              </label>
+                              {capsLockOn && focusedField === 'password' && (
+                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#C8A15A]/20 text-[#E5C98B] border border-[#C8A15A]/40">
+                                  CAPS LOCK ON
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => switchMode('forgot')}
+                              className={`text-xs underline underline-offset-4 transition-colors cursor-pointer ${
+                                isDark
+                                  ? 'text-[#E5C98B] hover:text-[#F7F4EC]'
+                                  : 'text-[#163F32] hover:text-[#9A732E]'
+                              }`}
+                            >
+                              Forgot password?
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <Lock
+                              className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                                focusedField === 'password'
+                                  ? 'text-[#C8A15A]'
+                                  : isDark
+                                  ? 'text-[#8FA59B]'
+                                  : 'text-[#615B4E]'
+                              }`}
+                            />
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              required
+                              value={password}
+                              onFocus={() => {
+                                setFocusedField('password');
+                                pulseCube(false);
+                              }}
+                              onBlur={() => setFocusedField(null)}
+                              onKeyUp={handlePasswordKeyEvent}
+                              onKeyDown={handlePasswordKeyEvent}
+                              onChange={(e) => {
+                                setPassword(e.target.value);
+                                pulseCube(true);
+                              }}
+                              placeholder="••••••••"
+                              className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((v) => !v)}
+                              aria-label={showPassword ? 'Hide password' : 'Show password'}
+                              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer ${
+                                isDark
+                                  ? 'text-[#8FA59B] hover:text-[#F7F4EC]'
+                                  : 'text-[#615B4E] hover:text-[#18211D]'
+                              }`}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
 
-                    {/* Password Field */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          className={`block text-xs font-medium ${
-                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                          }`}
-                        >
-                          Password
-                        </label>
+                        {/* Primary Submit CTA */}
                         <button
-                          type="button"
-                          onClick={() => switchMode('forgot')}
-                          className={`text-xs underline underline-offset-4 transition-colors cursor-pointer ${
-                            isDark
-                              ? 'text-[#E5C98B] hover:text-[#F7F4EC]'
-                              : 'text-[#163F32] hover:text-[#9A732E]'
-                          }`}
+                          type="submit"
+                          disabled={loading || demoLoading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
-                          Forgot password?
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Lock
-                          className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
-                            focusedField === 'password'
-                              ? 'text-[#C8A15A]'
-                              : isDark
-                              ? 'text-[#8FA59B]'
-                              : 'text-[#615B4E]'
-                          }`}
-                        />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          value={password}
-                          onFocus={() => {
-                            setFocusedField('password');
-                            pulseCube(false);
-                          }}
-                          onBlur={() => setFocusedField(null)}
-                          onChange={(e) => {
-                            setPassword(e.target.value);
-                            pulseCube(true);
-                          }}
-                          placeholder="••••••••"
-                          className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
-                            isDark
-                              ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
-                              : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
-                          }`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((v) => !v)}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer ${
-                            isDark
-                              ? 'text-[#8FA59B] hover:text-[#F7F4EC]'
-                              : 'text-[#615B4E] hover:text-[#18211D]'
-                          }`}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-4 h-4" />
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
                           ) : (
-                            <Eye className="w-4 h-4" />
+                            <>
+                              <span>Sign In</span>
+                              <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                            </>
                           )}
                         </button>
-                      </div>
-                    </div>
+                      </form>
+                    ) : loginOtpStep === 'request' ? (
+                      <form onSubmit={handleRequestLoginOtp} className="space-y-4">
+                        <div>
+                          <label
+                            className={`block text-xs font-medium mb-1.5 ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
+                          >
+                            Email Address
+                          </label>
+                          <div className="relative">
+                            <Mail
+                              className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                                focusedField === 'email'
+                                  ? 'text-[#C8A15A]'
+                                  : isDark
+                                  ? 'text-[#8FA59B]'
+                                  : 'text-[#615B4E]'
+                              }`}
+                            />
+                            <input
+                              type="email"
+                              required
+                              value={email}
+                              onFocus={() => {
+                                setFocusedField('email');
+                                pulseCube(false);
+                              }}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => {
+                                setEmail(e.target.value);
+                                pulseCube(true);
+                              }}
+                              placeholder="you@example.com"
+                              className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/20 text-[#18211D] placeholder-[#8A8477] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          </div>
+                          <p
+                            className={`mt-2 text-[11px] leading-relaxed ${
+                              isDark ? 'text-[#8FA59B]' : 'text-[#615B4E]'
+                            }`}
+                          >
+                            We will generate a one-time 6-digit verification code so you can sign in without a password.
+                          </p>
+                        </div>
 
-                    {/* Primary Submit CTA */}
-                    <button
-                      type="submit"
-                      disabled={loading || demoLoading}
-                      className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
-                      ) : (
-                        <>
-                          <span>Sign In</span>
-                          <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
-                        </>
-                      )}
-                    </button>
-                  </motion.form>
+                        <button
+                          type="submit"
+                          disabled={loading || demoLoading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
+                          ) : (
+                            <>
+                              <span>Send 6-Digit Login Code</span>
+                              <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerifyLoginOtp} className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span
+                              className={`text-xs font-semibold ${
+                                isDark ? 'text-[#F7F4EC]' : 'text-[#18211D]'
+                              }`}
+                            >
+                              Enter 6-Digit Sign-In Code
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setLoginOtpStep('request')}
+                              className="text-[11px] underline opacity-75 hover:opacity-100 cursor-pointer"
+                            >
+                              Change email
+                            </button>
+                          </div>
+                          <p
+                            className={`text-xs ${
+                              isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
+                            }`}
+                          >
+                            Code issued for <span className="font-semibold underline">{email}</span>
+                          </p>
+                        </div>
+
+                        {loginOtpPreview && (
+                          <div
+                            className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
+                              isDark
+                                ? 'bg-[#12261F] border-[#C8A15A]/40 text-[#E5C98B]'
+                                : 'bg-[#EFECE1] border-[#163F32]/25 text-[#163F32]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <KeyRound className="w-4 h-4 shrink-0 text-[#C8A15A]" />
+                              <span>
+                                Instant Code:{' '}
+                                <strong className="font-mono tracking-widest text-sm">
+                                  {loginOtpPreview}
+                                </strong>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLoginOtpDigits(loginOtpPreview.split(''));
+                                pulseCube(true);
+                              }}
+                              className="text-xs font-medium px-2.5 py-1 rounded bg-[#163F32] text-[#F7F4EC] hover:opacity-90 cursor-pointer"
+                            >
+                              Auto-fill
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-6 gap-2 pt-1">
+                          {loginOtpDigits.map((digit, idx) => (
+                            <input
+                              key={idx}
+                              ref={(el) => {
+                                loginOtpInputRefs.current[idx] = el;
+                              }}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onFocus={() => setFocusedField('otp')}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => handleLoginOtpChange(idx, e.target.value)}
+                              onKeyDown={(e) => handleLoginOtpKeyDown(idx, e)}
+                              onPaste={idx === 0 ? handleLoginOtpPaste : undefined}
+                              className={`w-full aspect-square text-center text-lg font-mono font-bold rounded-xl border transition-all focus:outline-none ${
+                                isDark
+                                  ? 'bg-[#06100C] border-[#C8A15A]/30 text-[#E5C98B] focus:border-[#C8A15A]'
+                                  : 'bg-[#F7F4EC] border-[#163F32]/25 text-[#163F32] focus:border-[#163F32] focus:bg-white'
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-end text-xs">
+                          <button
+                            type="button"
+                            onClick={() => handleRequestLoginOtp()}
+                            className="inline-flex items-center gap-1 underline opacity-75 hover:opacity-100 cursor-pointer"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Resend code
+                          </button>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading || demoLoading}
+                          className="w-full py-3.5 px-5 rounded-xl font-semibold text-sm text-[#F7F4EC] bg-[#163F32] hover:bg-[#1D5241] border border-[#C8A15A]/45 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E5C98B]" />
+                          ) : (
+                            <>
+                              <span>Verify & Sign In</span>
+                              <ArrowRight className="w-4 h-4 text-[#E5C98B]" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    )}
+                  </motion.div>
                 )}
 
                 {/* ==================== REGISTER VIEW ==================== */}
@@ -1895,13 +2364,20 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                     {/* Passwords Row */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label
-                          className={`block text-xs font-medium mb-1.5 ${
-                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                          }`}
-                        >
-                          Password
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            className={`block text-xs font-medium ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
+                          >
+                            Password
+                          </label>
+                          {capsLockOn && (focusedField === 'password' || focusedField === 'confirm') && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#C8A15A]/20 text-[#E5C98B] border border-[#C8A15A]/40">
+                              CAPS
+                            </span>
+                          )}
+                        </div>
                         <div className="relative">
                           <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#615B4E]" />
                           <input
@@ -1913,11 +2389,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               pulseCube(false);
                             }}
                             onBlur={() => setFocusedField(null)}
+                            onKeyUp={handlePasswordKeyEvent}
+                            onKeyDown={handlePasswordKeyEvent}
                             onChange={(e) => {
                               setPassword(e.target.value);
                               pulseCube(true);
                             }}
-                            placeholder="Min 6 chars"
+                            placeholder="Min 8 chars"
                             className={`w-full pl-10 pr-9 py-2.5 rounded-xl border text-sm transition-all focus:outline-none ${
                               isDark
                                 ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] placeholder-[#6E857B] focus:border-[#C8A15A]'
@@ -1940,13 +2418,26 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       </div>
 
                       <div>
-                        <label
-                          className={`block text-xs font-medium mb-1.5 ${
-                            isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                          }`}
-                        >
-                          Confirm Password
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            className={`block text-xs font-medium ${
+                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                            }`}
+                          >
+                            Confirm Password
+                          </label>
+                          {confirmPassword.length > 0 && (
+                            <span
+                              className={`text-[10px] font-medium ${
+                                confirmPassword === password
+                                  ? 'text-[#52B788]'
+                                  : 'text-[#D97757]'
+                              }`}
+                            >
+                              {confirmPassword === password ? '✓ Match' : 'No match'}
+                            </span>
+                          )}
+                        </div>
                         <div className="relative">
                           <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#615B4E]" />
                           <input
@@ -1958,6 +2449,8 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               pulseCube(false);
                             }}
                             onBlur={() => setFocusedField(null)}
+                            onKeyUp={handlePasswordKeyEvent}
+                            onKeyDown={handlePasswordKeyEvent}
                             onChange={(e) => {
                               setConfirmPassword(e.target.value);
                               pulseCube(true);
@@ -1973,9 +2466,9 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                       </div>
                     </div>
 
-                    {/* Password Strength Meter */}
+                    {/* Password Strength Meter & Live 4-Rule Checklist */}
                     {password.length > 0 && (
-                      <div className="space-y-1 pt-0.5">
+                      <div className="space-y-2 pt-0.5">
                         <div className="flex items-center justify-between text-xs">
                           <span className={isDark ? 'text-[#8FA59B]' : 'text-[#615B4E]'}>
                             Password strength
@@ -1998,6 +2491,25 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                                     : 'rgba(22,63,50,0.12)',
                               }}
                             />
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5">
+                          {pwStrength.rules.map((rule) => (
+                            <div
+                              key={rule.id}
+                              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border transition-colors ${
+                                rule.met
+                                  ? isDark
+                                    ? 'bg-[#12261F]/90 border-[#52B788]/40 text-[#95D5B2]'
+                                    : 'bg-[#EAF2EE] border-[#163F32]/25 text-[#163F32]'
+                                  : isDark
+                                  ? 'bg-[#06100C]/60 border-white/10 text-[#6E857B]'
+                                  : 'bg-[#F3EFE4]/70 border-[#163F32]/10 text-[#8A8477]'
+                              }`}
+                            >
+                              <CheckCircle2 className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{rule.label}</span>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -2223,7 +2735,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               isDark ? 'text-[#9DB1A8]' : 'text-[#4A5A52]'
                             }`}
                           >
-                            Code verified. Enter your new password below.
+                            Code verified. Enter your new password (at least 8 characters) below.
                           </p>
                         </div>
 
@@ -2243,11 +2755,13 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               value={newPassword}
                               onFocus={() => setFocusedField('password')}
                               onBlur={() => setFocusedField(null)}
+                              onKeyUp={handlePasswordKeyEvent}
+                              onKeyDown={handlePasswordKeyEvent}
                               onChange={(e) => {
                                 setNewPassword(e.target.value);
                                 pulseCube(true);
                               }}
-                              placeholder="At least 6 characters"
+                              placeholder="At least 8 characters"
                               className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm transition-all focus:outline-none ${
                                 isDark
                                   ? 'bg-[#06100C] border-[#C8A15A]/25 text-[#F7F4EC] focus:border-[#C8A15A]'
@@ -2258,13 +2772,26 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                         </div>
 
                         <div>
-                          <label
-                            className={`block text-xs font-medium mb-1.5 ${
-                              isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
-                            }`}
-                          >
-                            Confirm New Password
-                          </label>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label
+                              className={`block text-xs font-medium ${
+                                isDark ? 'text-[#D7E2DC]' : 'text-[#18211D]'
+                              }`}
+                            >
+                              Confirm New Password
+                            </label>
+                            {confirmNewPassword.length > 0 && (
+                              <span
+                                className={`text-[10px] font-medium ${
+                                  confirmNewPassword === newPassword
+                                    ? 'text-[#52B788]'
+                                    : 'text-[#D97757]'
+                                }`}
+                              >
+                                {confirmNewPassword === newPassword ? '✓ Passwords match' : 'No match yet'}
+                              </span>
+                            )}
+                          </div>
                           <div className="relative">
                             <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C8A15A]" />
                             <input
@@ -2273,6 +2800,8 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                               value={confirmNewPassword}
                               onFocus={() => setFocusedField('confirm')}
                               onBlur={() => setFocusedField(null)}
+                              onKeyUp={handlePasswordKeyEvent}
+                              onKeyDown={handlePasswordKeyEvent}
                               onChange={(e) => {
                                 setConfirmNewPassword(e.target.value);
                                 pulseCube(true);
@@ -2372,7 +2901,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
                   <div className="grid grid-cols-2 gap-2.5">
                     <button
                       type="button"
-                      onClick={() => signIn('google', { callbackUrl: targetRedirect })}
+                      onClick={() => handleOAuthSignIn('google')}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
                           ? 'bg-[#06100C] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
@@ -2385,7 +2914,7 @@ export function MorphingAuthPortal({ initialMode = 'login' }: MorphingAuthPortal
 
                     <button
                       type="button"
-                      onClick={() => signIn('github', { callbackUrl: targetRedirect })}
+                      onClick={() => handleOAuthSignIn('github')}
                       className={`py-2.5 px-3 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         isDark
                           ? 'bg-[#06100C] border-[#C8A15A]/20 text-[#D7E2DC] hover:border-[#C8A15A]/50'
