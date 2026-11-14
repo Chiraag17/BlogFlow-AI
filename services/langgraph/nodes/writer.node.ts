@@ -3,6 +3,7 @@ import { blogGenerationService } from '@/services/content/blog-generation.servic
 import { prisma } from '@/lib/prisma';
 import { BlogStatus } from '@prisma/client';
 import { BlogArticleSection } from '@/types';
+import { serverFallbackStore } from '@/lib/serverFallbackStore';
 
 export async function writerNode(state: WorkflowGraphState): Promise<Partial<WorkflowGraphState>> {
   console.log(`[Agent 2: Content Writer Agent] Generating complete article for topic: "${state.topic}"`);
@@ -24,7 +25,6 @@ export async function writerNode(state: WorkflowGraphState): Promise<Partial<Wor
       contentPreferences: [],
     };
 
-    // Generate complete article using existing Gemini BlogGenerationService
     const blogDraft = await blogGenerationService.generateCompleteBlog(
       {
         websiteId: state.websiteId,
@@ -40,41 +40,28 @@ export async function writerNode(state: WorkflowGraphState): Promise<Partial<Wor
       state.researchReport
     );
 
-    // Persist to PostgreSQL if available
-    try {
-      if (state.websiteId) {
-        const fullContent = [
-          `## ${blogDraft.title}`,
-          blogDraft.subtitle ? `*${blogDraft.subtitle}*\n` : '',
-          blogDraft.introduction,
-          ...blogDraft.sections.map((s: BlogArticleSection) => `### ${s.heading}\n\n${s.content}`),
-          `### Conclusion\n\n${blogDraft.conclusion}`,
-        ].join('\n\n');
+    const fullContent = [
+      `## ${blogDraft.title}`,
+      blogDraft.subtitle ? `*${blogDraft.subtitle}*\n` : '',
+      blogDraft.introduction,
+      ...blogDraft.sections.map((s: BlogArticleSection) => `### ${s.heading}\n\n${s.content}`),
+      `### Conclusion\n\n${blogDraft.conclusion}`,
+    ].join('\n\n');
 
-        const savedBlog = await prisma.blog.upsert({
-          where: { slug: blogDraft.slug },
-          update: {
-            title: blogDraft.title,
-            subtitle: blogDraft.subtitle,
-            content: fullContent,
-            introduction: blogDraft.introduction,
-            conclusion: blogDraft.conclusion,
-            faqs: blogDraft.faqs as any,
-            metaTitle: blogDraft.seo.metaTitle,
-            metaDescription: blogDraft.seo.metaDescription,
-            focusKeyword: blogDraft.seo.focusKeyword,
-            secondaryKeywords: blogDraft.seo.secondaryKeywords as any,
-            category: websiteContext.contentCategories?.[0] || 'General',
-            estimatedReadingTime: blogDraft.estimatedReadingTime || 5,
-            researchReportId: state.researchReport?.id || null,
-            status: BlogStatus.QUALITY_CHECK,
-          },
-          create: {
+    // Prevent cross-website slug collisions by scoping slug cleanly
+    const uniqueSlug = `${blogDraft.slug}-${Date.now().toString(36)}`;
+    blogDraft.slug = uniqueSlug;
+
+    let persistedInDb = false;
+    if (process.env.DATABASE_URL && state.websiteId) {
+      try {
+        const savedBlog = await prisma.blog.create({
+          data: {
             websiteId: state.websiteId,
             researchReportId: state.researchReport?.id || null,
             title: blogDraft.title,
             subtitle: blogDraft.subtitle,
-            slug: blogDraft.slug,
+            slug: uniqueSlug,
             content: fullContent,
             introduction: blogDraft.introduction,
             conclusion: blogDraft.conclusion,
@@ -88,12 +75,32 @@ export async function writerNode(state: WorkflowGraphState): Promise<Partial<Wor
             status: BlogStatus.QUALITY_CHECK,
           },
         });
-
-        // Attach blog ID to blog draft
         (blogDraft as any).id = savedBlog.id;
+        persistedInDb = true;
+      } catch (dbErr) {
+        console.warn('[Agent 2] DB save fallback activated:', dbErr);
       }
-    } catch (dbErr) {
-      console.warn('[Agent 2] DB save warning (continuing with graph state):', dbErr);
+    }
+
+    if (!persistedInDb && state.websiteId) {
+      const fbBlog = serverFallbackStore.createBlog({
+        websiteId: state.websiteId,
+        title: blogDraft.title,
+        subtitle: blogDraft.subtitle,
+        slug: uniqueSlug,
+        content: fullContent,
+        introduction: blogDraft.introduction,
+        conclusion: blogDraft.conclusion,
+        faqs: blogDraft.faqs,
+        metaTitle: blogDraft.seo.metaTitle,
+        metaDescription: blogDraft.seo.metaDescription,
+        focusKeyword: blogDraft.seo.focusKeyword,
+        secondaryKeywords: blogDraft.seo.secondaryKeywords,
+        category: websiteContext.contentCategories?.[0] || 'General',
+        estimatedReadingTime: blogDraft.estimatedReadingTime || 5,
+        status: BlogStatus.PENDING_APPROVAL,
+      });
+      (blogDraft as any).id = fbBlog.id;
     }
 
     return {

@@ -2,12 +2,18 @@ import { prisma } from '@/lib/prisma';
 import { BlogStatus, ApprovalStatus } from '@prisma/client';
 import { resumeWorkflowDecision } from '../langgraph/workflow.graph';
 import { DbWebsiteService } from './website.service';
+import { isDatabaseUnavailableError } from '@/lib/authSecret';
+import { serverFallbackStore } from '@/lib/serverFallbackStore';
 
 export class DbApprovalService {
   /**
    * Retrieves all blogs awaiting human review for the user's accessible websites.
    */
   public static async getPendingApprovals(userId?: string | null) {
+    if (!process.env.DATABASE_URL) {
+      return serverFallbackStore.getPendingApprovals(userId);
+    }
+
     try {
       const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
       return await prisma.blog.findMany({
@@ -31,8 +37,11 @@ export class DbApprovalService {
         orderBy: { updatedAt: 'desc' },
       });
     } catch (err) {
+      if (isDatabaseUnavailableError(err)) {
+        return serverFallbackStore.getPendingApprovals(userId);
+      }
       console.warn('[DbApprovalService] DB query fallback:', err);
-      return [];
+      return serverFallbackStore.getPendingApprovals(userId);
     }
   }
 
@@ -40,6 +49,10 @@ export class DbApprovalService {
    * Retrieves review history across accessible articles.
    */
   public static async getApprovalHistory(userId?: string | null) {
+    if (!process.env.DATABASE_URL) {
+      return serverFallbackStore.getApprovalHistory(userId);
+    }
+
     try {
       const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
       return await prisma.approval.findMany({
@@ -63,13 +76,13 @@ export class DbApprovalService {
       });
     } catch (err) {
       console.warn('[DbApprovalService] getApprovalHistory fallback:', err);
-      return [];
+      return serverFallbackStore.getApprovalHistory(userId);
     }
   }
 
   /**
    * Handles human approval decision: APPROVE, REJECT, or REQUEST_REVISION.
-   * Resumes LangGraph workflow thread if associated.
+   * Resumes LangGraph workflow thread if associated, and falls back gracefully when DB is offline.
    */
   public static async processDecision(params: {
     blogId: string;
@@ -90,94 +103,134 @@ export class DbApprovalService {
       // Outside request context
     }
 
-    // 1. Fetch blog and active workflow execution thread
-    const blog = await prisma.blog.findUnique({
-      where: { id: blogId },
-      include: {
-        workflowExecutions: {
-          where: { status: 'PAUSED' },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-      },
-    });
-
-    if (!blog) {
-      throw new Error('Blog not found.');
-    }
-
-    if (verifiedUserId) {
-      const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(verifiedUserId);
-      if (accessibleWebsiteIds.length > 0 && !accessibleWebsiteIds.includes(blog.websiteId)) {
-        throw new Error('Forbidden: You do not have permission to review this article.');
+    if (!process.env.DATABASE_URL) {
+      const fallbackBlog = serverFallbackStore.getBlogById(blogId);
+      if (!fallbackBlog) {
+        throw new Error('Blog not found.');
       }
-    }
-
-    let newBlogStatus: BlogStatus = BlogStatus.PENDING_APPROVAL;
-    let approvalStatus: ApprovalStatus = ApprovalStatus.PENDING;
-
-    if (decision === 'APPROVE') {
-      newBlogStatus = BlogStatus.APPROVED;
-      approvalStatus = ApprovalStatus.APPROVED;
-    } else if (decision === 'REJECT') {
-      newBlogStatus = BlogStatus.REJECTED;
-      approvalStatus = ApprovalStatus.REJECTED;
-    } else if (decision === 'REQUEST_REVISION') {
-      newBlogStatus = BlogStatus.CHANGES_REQUESTED;
-      approvalStatus = ApprovalStatus.REVISION_REQUESTED;
-    }
-
-    // Verify reviewer exists in User table if verifiedUserId is provided
-    let validReviewerId: string | undefined = undefined;
-    if (verifiedUserId) {
-      const userExists = await prisma.user.findUnique({
-        where: { id: verifiedUserId },
-        select: { id: true },
+      if (verifiedUserId) {
+        const accessibleWebsiteIds = serverFallbackStore.getAccessibleWebsiteIds(verifiedUserId);
+        if (accessibleWebsiteIds.length > 0 && !accessibleWebsiteIds.includes(fallbackBlog.websiteId)) {
+          throw new Error('Forbidden: You do not have permission to review this article.');
+        }
+      }
+      return serverFallbackStore.processApprovalDecision({
+        blogId,
+        decision,
+        comments,
+        reviewerId: verifiedUserId,
       });
-      if (userExists) {
-        validReviewerId = userExists.id;
-      }
     }
 
-    // 2. Update PostgreSQL database records
-    const [updatedBlog, approvalRecord] = await prisma.$transaction([
-      prisma.blog.update({
+    try {
+      // 1. Fetch blog and active workflow execution thread
+      const blog = await prisma.blog.findUnique({
         where: { id: blogId },
-        data: { status: newBlogStatus },
-      }),
-      prisma.approval.create({
-        data: {
-          blogId,
-          reviewerId: validReviewerId,
-          status: approvalStatus,
-          comments: comments || `Human decision recorded: ${decision}`,
-          reviewedAt: new Date(),
+        include: {
+          workflowExecutions: {
+            where: { status: 'PAUSED' },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
         },
-      }),
-    ]);
+      });
 
-    // 3. Resume LangGraph workflow execution if thread exists
-    let graphResumeResult = null;
-    const threadId = blog.workflowExecutions[0]?.graphThreadId;
-    if (threadId) {
-      try {
-        console.log(`[Approval Service] Resuming LangGraph thread ${threadId} after human decision.`);
-        graphResumeResult = await resumeWorkflowDecision({
-          threadId,
+      if (!blog) {
+        throw new Error('Blog not found.');
+      }
+
+      if (verifiedUserId) {
+        const accessibleWebsiteIds = await DbWebsiteService.getAccessibleWebsiteIds(verifiedUserId);
+        if (accessibleWebsiteIds.length > 0 && !accessibleWebsiteIds.includes(blog.websiteId)) {
+          throw new Error('Forbidden: You do not have permission to review this article.');
+        }
+      }
+
+      let newBlogStatus: BlogStatus = BlogStatus.PENDING_APPROVAL;
+      let approvalStatus: ApprovalStatus = ApprovalStatus.PENDING;
+
+      if (decision === 'APPROVE') {
+        newBlogStatus = BlogStatus.APPROVED;
+        approvalStatus = ApprovalStatus.APPROVED;
+      } else if (decision === 'REJECT') {
+        newBlogStatus = BlogStatus.REJECTED;
+        approvalStatus = ApprovalStatus.REJECTED;
+      } else if (decision === 'REQUEST_REVISION') {
+        newBlogStatus = BlogStatus.CHANGES_REQUESTED;
+        approvalStatus = ApprovalStatus.REVISION_REQUESTED;
+      }
+
+      // Verify reviewer exists in User table if verifiedUserId is provided
+      let validReviewerId: string | undefined = undefined;
+      if (verifiedUserId) {
+        const userExists = await prisma.user.findUnique({
+          where: { id: verifiedUserId },
+          select: { id: true },
+        });
+        if (userExists) {
+          validReviewerId = userExists.id;
+        }
+      }
+
+      // 2. Update PostgreSQL database records
+      const [updatedBlog, approvalRecord] = await prisma.$transaction([
+        prisma.blog.update({
+          where: { id: blogId },
+          data: { status: newBlogStatus },
+        }),
+        prisma.approval.create({
+          data: {
+            blogId,
+            reviewerId: validReviewerId,
+            status: approvalStatus,
+            comments: comments || `Human decision recorded: ${decision}`,
+            reviewedAt: new Date(),
+          },
+        }),
+      ]);
+
+      // 3. Resume LangGraph workflow execution if thread exists
+      let graphResumeResult = null;
+      const threadId = blog.workflowExecutions[0]?.graphThreadId;
+      if (threadId) {
+        try {
+          graphResumeResult = await resumeWorkflowDecision({
+            threadId,
+            decision,
+            comments,
+            reviewerId: validReviewerId,
+          });
+        } catch (graphErr) {
+          console.warn(`[Approval Service] Graph resumption notice:`, graphErr);
+        }
+      }
+
+      return {
+        success: true,
+        blog: updatedBlog,
+        approval: approvalRecord,
+        graphResume: graphResumeResult,
+      };
+    } catch (err) {
+      if (isDatabaseUnavailableError(err)) {
+        const fallbackBlog = serverFallbackStore.getBlogById(blogId);
+        if (!fallbackBlog) {
+          throw new Error('Blog not found.');
+        }
+        if (verifiedUserId) {
+          const accessibleWebsiteIds = serverFallbackStore.getAccessibleWebsiteIds(verifiedUserId);
+          if (accessibleWebsiteIds.length > 0 && !accessibleWebsiteIds.includes(fallbackBlog.websiteId)) {
+            throw new Error('Forbidden: You do not have permission to review this article.');
+          }
+        }
+        return serverFallbackStore.processApprovalDecision({
+          blogId,
           decision,
           comments,
-          reviewerId: validReviewerId,
+          reviewerId: verifiedUserId,
         });
-      } catch (graphErr) {
-        console.warn(`[Approval Service] Graph resumption notice:`, graphErr);
       }
+      throw err;
     }
-
-    return {
-      success: true,
-      blog: updatedBlog,
-      approval: approvalRecord,
-      graphResume: graphResumeResult,
-    };
   }
 }

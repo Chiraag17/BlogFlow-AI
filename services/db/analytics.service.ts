@@ -1,16 +1,30 @@
 import { prisma } from '@/lib/prisma';
 import { BlogStatus } from '@prisma/client';
+import { isDatabaseUnavailableError } from '@/lib/authSecret';
+import { serverFallbackStore } from '@/lib/serverFallbackStore';
+import { DbWebsiteService } from './website.service';
 
 export class DbAnalyticsService {
   /**
-   * Retrieves high-level analytics and metrics for the dashboard.
-   * Optimized to query efficiently without exhausting database connection pools.
+   * Retrieves high-level analytics and metrics for the dashboard scoped to accessible websites.
+   * Uses live PostgreSQL queries when connected and fails over seamlessly when offline.
    */
-  public static async getOverviewMetrics() {
+  public static async getOverviewMetrics(userId?: string | null) {
+    if (!process.env.DATABASE_URL) {
+      return serverFallbackStore.getAnalyticsOverview(userId);
+    }
+
     try {
-      // 1. Group blogs by status in a single query instead of multiple concurrent counts
+      const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
+      const blogWhere = accessibleIds.length > 0 ? { websiteId: { in: accessibleIds } } : {};
+      const websiteWhere =
+        accessibleIds.length > 0
+          ? { id: { in: accessibleIds }, connectionStatus: 'ACTIVE' }
+          : { connectionStatus: 'ACTIVE' };
+
       const statusGroups = await prisma.blog.groupBy({
         by: ['status'],
+        where: blogWhere,
         _count: { id: true },
       });
 
@@ -31,13 +45,12 @@ export class DbAnalyticsService {
         }
       }
 
-      // 2. Query website count
       const connectedWebsites = await prisma.website.count({
-        where: { connectionStatus: 'ACTIVE' },
+        where: websiteWhere,
       });
 
-      // 3. Fetch recent blogs and recent activity in sequence to avoid connection pool pressure
       const recentBlogs = await prisma.blog.findMany({
+        where: blogWhere,
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -47,6 +60,7 @@ export class DbAnalyticsService {
       });
 
       const recentWorkflows = await prisma.workflowExecution.findMany({
+        where: blogWhere,
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -55,7 +69,6 @@ export class DbAnalyticsService {
         },
       });
 
-      // Calculate generation trend for last 7 days
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const now = new Date();
       const weeklyTrends = Array.from({ length: 7 }, (_, i) => {
@@ -69,6 +82,7 @@ export class DbAnalyticsService {
 
       return {
         isDatabaseConnected: true,
+        fallbackActive: false,
         stats: {
           totalBlogs,
           pendingApprovals,
@@ -96,9 +110,11 @@ export class DbAnalyticsService {
         })),
       };
     } catch (err: unknown) {
+      if (isDatabaseUnavailableError(err)) {
+        return serverFallbackStore.getAnalyticsOverview(userId);
+      }
       const message = err instanceof Error ? err.message : String(err);
       console.error('[DbAnalyticsService] Database query error:', message);
-      // Re-throw so API route returns real 500 error instead of misleading fake data
       throw new Error(`Analytics database query failed: ${message}`);
     }
   }

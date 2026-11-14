@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WordPressService } from '@/services/cms/wordpress.service';
 import { DbWebsiteService } from '@/services/db/website.service';
-import { prisma } from '@/lib/prisma';
-import { headers } from 'next/headers';
+import { DbBlogService } from '@/services/db/blog.service';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function POST(
   req: NextRequest,
@@ -11,7 +11,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
-    const userId = (await headers()).get('x-user-id') || undefined;
+    const userId = await getAuthenticatedUserId();
 
     if (!body.scheduledDate) {
       return NextResponse.json(
@@ -20,13 +20,15 @@ export async function POST(
       );
     }
 
-    const blog = await prisma.blog.findUnique({
-      where: { id },
-      include: {
-        website: { include: { cmsIntegrations: { select: { id: true, connectionStatus: true } } } },
-        approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
-      },
-    });
+    const parsedDate = new Date(body.scheduledDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid scheduledDate format.' },
+        { status: 400 }
+      );
+    }
+
+    const blog = await DbBlogService.getBlogById(id);
 
     if (!blog) {
       return NextResponse.json({ success: false, error: 'Article not found.' }, { status: 404 });
@@ -40,7 +42,7 @@ export async function POST(
       );
     }
 
-    const latestApproval = blog.approvals[0];
+    const latestApproval = blog.approvals?.[0];
     const isApproved =
       blog.status === 'APPROVED' ||
       blog.status === 'SCHEDULED' ||
@@ -56,11 +58,11 @@ export async function POST(
       );
     }
 
-    const validIntegrations = blog.website.cmsIntegrations;
+    const validIntegrations = blog.website?.cmsIntegrations || [];
     let integrationId: string | undefined;
 
     if (body.integrationId) {
-      const matched = validIntegrations.find((c) => c.id === body.integrationId);
+      const matched = validIntegrations.find((c: any) => c.id === body.integrationId);
       if (!matched) {
         return NextResponse.json(
           { success: false, error: 'Forbidden: Specified CMS integration does not belong to this website.' },
@@ -69,7 +71,7 @@ export async function POST(
       }
       integrationId = matched.id;
     } else {
-      integrationId = validIntegrations.find((c) => c.connectionStatus === 'CONNECTED')?.id;
+      integrationId = validIntegrations.find((c: any) => c.connectionStatus === 'CONNECTED')?.id;
     }
 
     if (!integrationId) {

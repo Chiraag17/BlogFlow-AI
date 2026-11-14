@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { DbApprovalService } from '@/services/db/approval.service';
-import { headers } from 'next/headers';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function GET() {
   try {
-    const userId = (await headers()).get('x-user-id') || undefined;
+    const userId = await getAuthenticatedUserId();
     const [pendingBlogs, approvalHistory] = await Promise.all([
       DbApprovalService.getPendingApprovals(userId),
       DbApprovalService.getApprovalHistory(userId),

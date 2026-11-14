@@ -60,23 +60,25 @@ export async function findUserWithFallback(
   email: string
 ): Promise<AuthUserRecord | null> {
   const normalizedEmail = email.trim().toLowerCase();
-  try {
-    const dbUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-    if (dbUser) {
-      const record: AuthUserRecord = {
-        id: dbUser.id,
-        email: dbUser.email,
-        name: dbUser.name ?? "",
-        passwordHash: dbUser.passwordHash ?? "",
-        role: dbUser.role ?? "USER",
-      };
-      fallbackUsers.set(normalizedEmail, record);
-      return record;
+  if (process.env.DATABASE_URL) {
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+      });
+      if (dbUser) {
+        const record: AuthUserRecord = {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name ?? "",
+          passwordHash: dbUser.passwordHash ?? "",
+          role: dbUser.role ?? "USER",
+        };
+        fallbackUsers.set(normalizedEmail, record);
+        return record;
+      }
+    } catch (err) {
+      console.warn("[Auth Store] Prisma lookup fallback active:", err);
     }
-  } catch (err) {
-    console.warn("[Auth Store] Prisma lookup fallback active:", err);
   }
   return fallbackUsers.get(normalizedEmail) ?? null;
 }
@@ -90,35 +92,37 @@ export async function createUserWithFallback(data: {
   passwordHash: string;
 }): Promise<AuthUserRecord> {
   const normalizedEmail = data.email.trim().toLowerCase();
-  try {
-    const created = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        name: data.name,
-        passwordHash: data.passwordHash,
-      },
-    });
-    const record: AuthUserRecord = {
-      id: created.id,
-      email: created.email,
-      name: created.name ?? data.name,
-      passwordHash: created.passwordHash ?? data.passwordHash,
-      role: created.role ?? "USER",
-    };
-    fallbackUsers.set(normalizedEmail, record);
-    return record;
-  } catch (err) {
-    console.warn("[Auth Store] Prisma create fallback active:", err);
-    const record: AuthUserRecord = {
-      id: `usr_${crypto.randomBytes(8).toString("hex")}`,
-      email: normalizedEmail,
-      name: data.name,
-      passwordHash: data.passwordHash,
-      role: "USER",
-    };
-    fallbackUsers.set(normalizedEmail, record);
-    return record;
+  if (process.env.DATABASE_URL) {
+    try {
+      const created = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          name: data.name,
+          passwordHash: data.passwordHash,
+        },
+      });
+      const record: AuthUserRecord = {
+        id: created.id,
+        email: created.email,
+        name: created.name ?? data.name,
+        passwordHash: created.passwordHash ?? data.passwordHash,
+        role: created.role ?? "USER",
+      };
+      fallbackUsers.set(normalizedEmail, record);
+      return record;
+    } catch (err) {
+      console.warn("[Auth Store] Prisma create fallback active:", err);
+    }
   }
+  const record: AuthUserRecord = {
+    id: `usr_${crypto.randomBytes(8).toString("hex")}`,
+    email: normalizedEmail,
+    name: data.name,
+    passwordHash: data.passwordHash,
+    role: "USER",
+  };
+  fallbackUsers.set(normalizedEmail, record);
+  return record;
 }
 
 /**
@@ -130,14 +134,16 @@ export async function updateUserPasswordWithFallback(
 ): Promise<boolean> {
   const normalizedEmail = email.trim().toLowerCase();
   let updated = false;
-  try {
-    await prisma.user.update({
-      where: { email: normalizedEmail },
-      data: { passwordHash },
-    });
-    updated = true;
-  } catch (err) {
-    console.warn("[Auth Store] Prisma update fallback active:", err);
+  if (process.env.DATABASE_URL) {
+    try {
+      await prisma.user.update({
+        where: { email: normalizedEmail },
+        data: { passwordHash },
+      });
+      updated = true;
+    } catch (err) {
+      console.warn("[Auth Store] Prisma update fallback active:", err);
+    }
   }
   const existing = fallbackUsers.get(normalizedEmail);
   if (existing) {

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DbBlogService } from '@/services/db/blog.service';
 import { DbWebsiteService } from '@/services/db/website.service';
-import { headers } from 'next/headers';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = (await headers()).get('x-user-id') || undefined;
+    const userId = await getAuthenticatedUserId();
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || undefined;
     const status = (searchParams.get('status') as any) || undefined;
@@ -27,8 +27,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = (await headers()).get('x-user-id') || undefined;
-    const body = await req.json();
+    const userId = await getAuthenticatedUserId();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
     const {
       websiteId,
       title,
@@ -89,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Article successfully saved to PostgreSQL database.',
+      message: 'Article successfully saved.',
       data: blog,
     });
   } catch (err: unknown) {
@@ -97,4 +101,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to save article' }, { status: 500 });
   }
 }
-

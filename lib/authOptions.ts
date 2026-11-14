@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import { checkRateLimit } from "@/services/security/rate-limiter";
+import { getNextAuthSecret } from "@/lib/authSecret";
 import {
   DEMO_STUDIO_EMAIL,
   ensureDemoAccountExists,
@@ -127,6 +128,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET || "blogflow-ai-dev-secret-key-2026",
+  secret: getNextAuthSecret(),
 };
+
 

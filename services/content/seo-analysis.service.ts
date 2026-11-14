@@ -173,7 +173,6 @@ export class SeoAnalysisService {
 Return JSON: { "suggestions": ["topic/anchor 1", "topic/anchor 2", "topic/anchor 3"] }`;
         const res = await geminiService.generateStructuredJson<{ suggestions: string[] }>({
           prompt,
-          temperature: 0.3,
           maxOutputTokens: 500,
         });
         if (res.suggestions && res.suggestions.length > 0) {

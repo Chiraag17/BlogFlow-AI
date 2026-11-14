@@ -1,15 +1,12 @@
 /**
- * WordPress CMS Integration & Publishing Service
+ * WordPress CMS Publishing Adapter
  *
- * Implements Agent 4 (Publishing Agent) of the BlogFlow AI architecture.
- * Connects to WordPress REST API using Application Passwords, verifies
- * approval checkpoint status, and dispatches articles for live publishing or scheduling.
+ * Delegates directly to the hardened WordPressService while supporting
+ * typed Blog objects for legacy callers like POST /api/publish.
  */
 
-import { Blog, PublishingRecord } from '@/types';
-import { validateExternalUrl } from '../security/url-validator';
-
-const REQUEST_TIMEOUT_MS = 15000;
+import { Blog } from '@/types';
+import { WordPressService } from '@/services/cms/wordpress.service';
 
 export interface WordPressConfig {
   siteUrl: string;
@@ -32,15 +29,15 @@ export interface PublishResult {
   error?: string;
 }
 
-export class WordPressService {
+export class WordPressLegacyService {
   /**
-   * Publishes or schedules an article to WordPress REST API.
-   * Enforces the human-in-the-loop approval constraint: only 'approved' articles may be published live.
+   * Publishes or schedules an article via WordPress REST API.
+   * Enforces the human-in-the-loop approval constraint and returns real API errors
+   * rather than simulating success when credentials are missing or invalid.
    */
   async publishArticle(options: PublishOptions): Promise<PublishResult> {
     const { blog, config, status, scheduledDate } = options;
 
-    // Guardrail: Enforce approval requirement
     if (blog.status !== 'approved' && status !== 'draft') {
       return {
         success: false,
@@ -49,107 +46,96 @@ export class WordPressService {
       };
     }
 
-    let cleanSiteUrl: string;
-    try {
-      cleanSiteUrl = validateExternalUrl(config.siteUrl).toString().replace(/\/+$/, '');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
+    if (!config.applicationPassword || config.applicationPassword.includes('xxxx')) {
       return {
         success: false,
         status: 'failed',
-        error: message,
+        error: 'A valid WordPress Application Password is required to publish articles.',
       };
     }
 
-    const endpoint = `${cleanSiteUrl}/wp-json/wp/v2/posts`;
-
-    // Attempt live REST API dispatch if real application password provided
-    if (config.applicationPassword && !config.applicationPassword.includes('xxxx')) {
-      try {
-        const authHeader = 'Basic ' + Buffer.from(`${config.username}:${config.applicationPassword}`).toString('base64');
-        const payload: Record<string, any> = {
-          title: blog.title,
-          content: blog.content,
-          slug: blog.slug,
-          excerpt: blog.metaDescription,
-          status,
-        };
-
-        if (status === 'future' && scheduledDate) {
-          payload.date = scheduledDate;
-        }
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: authHeader,
-          },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            success: true,
-            publishedUrl: data.link || `${cleanSiteUrl}/${blog.slug}`,
-            wpPostId: data.id,
-            status: status === 'future' ? 'scheduled' : 'published',
-          };
-        }
-      } catch (err) {
-        console.warn('Live WordPress dispatch failed, falling back to mock simulator:', err);
-      }
+    let cleanSiteUrl: string;
+    try {
+      cleanSiteUrl = WordPressService.normalizeUrl(config.siteUrl);
+    } catch (err: unknown) {
+      return {
+        success: false,
+        status: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
 
-    // High quality simulation for local development / testing
-    const simulatedUrl = `${cleanSiteUrl}/${blog.slug}`;
-    return {
-      success: true,
-      publishedUrl: simulatedUrl,
-      wpPostId: Math.floor(1000 + Math.random() * 9000),
-      status: status === 'future' ? 'scheduled' : 'published',
-    };
+    try {
+      const authHeader = WordPressService.getBasicAuthHeader(
+        config.username,
+        config.applicationPassword
+      );
+      const endpoint = `${cleanSiteUrl}/wp-json/wp/v2/posts`;
+      const payload: Record<string, any> = {
+        title: blog.title,
+        content: blog.content,
+        slug: blog.slug,
+        excerpt: blog.metaDescription,
+        status,
+      };
+
+      if (status === 'future' && scheduledDate) {
+        payload.date = new Date(scheduledDate).toISOString();
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+          'User-Agent': 'BlogFlow-AI/1.0',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        return {
+          success: false,
+          status: 'failed',
+          error: `WordPress API rejected publish request (HTTP ${response.status}): ${errorText.slice(0, 200) || response.statusText}`,
+        };
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        publishedUrl: data.link || `${cleanSiteUrl}/${blog.slug}`,
+        wpPostId: data.id,
+        status: status === 'future' ? 'scheduled' : 'published',
+      };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        status: 'failed',
+        error: `WordPress request failed: ${err instanceof Error ? err.message : String(err)}`,
+      };
+    }
   }
 
   /**
-   * Verifies connectivity to the target WordPress site's REST API.
+   * Verifies authenticated connectivity to the target WordPress site's REST API.
    */
-  async testConnection(config: WordPressConfig): Promise<{ success: boolean; siteName?: string; error?: string }> {
-    let cleanSiteUrl: string;
-    try {
-      cleanSiteUrl = validateExternalUrl(config.siteUrl).toString().replace(/\/+$/, '');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        success: false,
-        error: message,
-      };
-    }
-
-    try {
-      const response = await fetch(`${cleanSiteUrl}/wp-json`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          success: true,
-          siteName: data.name || 'WordPress Site',
-        };
-      }
-    } catch {
-      // Fallback
-    }
-
-    // Simulated successful connection for demo purposes
+  async testConnection(
+    config: WordPressConfig
+  ): Promise<{ success: boolean; siteName?: string; error?: string }> {
+    const result = await WordPressService.testConnection({
+      siteUrl: config.siteUrl,
+      username: config.username,
+      applicationPassword: config.applicationPassword,
+    });
     return {
-      success: true,
-      siteName: `${config.username}'s WordPress Site`,
+      success: result.success,
+      siteName: result.user?.name || result.siteName,
+      error: result.error,
     };
   }
 }
 
-export const wordPressService = new WordPressService();
+export const wordPressService = new WordPressLegacyService();

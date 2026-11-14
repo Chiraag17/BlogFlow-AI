@@ -1,6 +1,6 @@
 import { WorkflowGraphState } from '../workflow.state';
 import { WordPressService } from '../../cms/wordpress.service';
-import { prisma } from '@/lib/prisma';
+import { DbBlogService } from '@/services/db/blog.service';
 
 export async function publisherNode(state: WorkflowGraphState): Promise<Partial<WorkflowGraphState>> {
   console.log('[Agent 4: Publishing Agent] Starting publishing workflow');
@@ -13,24 +13,16 @@ export async function publisherNode(state: WorkflowGraphState): Promise<Partial<
     };
   }
 
-  // 1. Independent Database-Level Verification
-  // The publishing agent MUST independently verify approval in PostgreSQL
-  const dbBlog = await prisma.blog.findUnique({
-    where: { id: blogId },
-    include: {
-      approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
-      website: { include: { cmsIntegrations: true } },
-    },
-  });
+  const dbBlog = await DbBlogService.getBlogById(blogId);
 
   if (!dbBlog) {
     return {
-      error: 'Security Check Failed: Blog record not found in PostgreSQL.',
+      error: 'Security Check Failed: Blog record not found.',
       currentStage: 'publishing_failed',
     };
   }
 
-  const latestApproval = dbBlog.approvals[0];
+  const latestApproval = dbBlog.approvals?.[0];
   const isApproved =
     dbBlog.status === 'APPROVED' ||
     dbBlog.status === 'SCHEDULED' ||
@@ -43,16 +35,16 @@ export async function publisherNode(state: WorkflowGraphState): Promise<Partial<
     };
   }
 
-  // 2. Resolve CMS Integration
+  const integrations = dbBlog.website?.cmsIntegrations || [];
   const integrationId =
-    state.integrationId || dbBlog.website.cmsIntegrations.find((c) => c.connectionStatus === 'CONNECTED')?.id;
+    state.integrationId ||
+    integrations.find((c: any) => c.connectionStatus === 'CONNECTED')?.id;
 
   if (!integrationId) {
-    console.log('[Agent 4] No active CMS integration configured. Blog remains approved for manual publish.');
     return {
       publishingResult: {
         success: true,
-        message: 'Blog is APPROVED. Connect WordPress in Settings to enable automated remote publishing.',
+        message: 'Blog is APPROVED. Connect WordPress in Integrations to enable automated remote publishing.',
         status: 'approved_ready_for_cms',
       },
       currentStage: 'publishing_completed',
@@ -60,7 +52,6 @@ export async function publisherNode(state: WorkflowGraphState): Promise<Partial<
     };
   }
 
-  // 3. Publish to WordPress using WordPressService
   try {
     const result = await WordPressService.publishPost({
       blogId,
@@ -75,8 +66,6 @@ export async function publisherNode(state: WorkflowGraphState): Promise<Partial<
         currentStage: 'publishing_failed',
       };
     }
-
-    console.log(`[Agent 4: Publishing Agent] Successfully published to WordPress! URL: ${result.publishedUrl}`);
 
     return {
       publishingResult: result,

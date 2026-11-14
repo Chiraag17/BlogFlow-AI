@@ -64,6 +64,12 @@ if (process.env.NODE_ENV !== 'production') {
  * Returns true if connected, false otherwise with real error message.
  */
 export async function checkDatabaseConnection(): Promise<{ connected: boolean; error?: string }> {
+  if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.trim()) {
+    return {
+      connected: false,
+      error: 'DATABASE_URL is not configured. Running with in-memory fallback store.',
+    };
+  }
   try {
     await prisma.$queryRaw`SELECT 1 as ping`;
     return { connected: true };
@@ -72,3 +78,4 @@ export async function checkDatabaseConnection(): Promise<{ connected: boolean; e
     return { connected: false, error: message };
   }
 }
+

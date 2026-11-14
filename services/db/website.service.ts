@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { validateExternalUrl } from '@/services/security/url-validator';
+import { isDatabaseUnavailableError } from '@/lib/authSecret';
+import { serverFallbackStore } from '@/lib/serverFallbackStore';
 
 const SAFE_CMS_INTEGRATION_SELECT = {
   id: true,
@@ -16,10 +18,13 @@ const SAFE_CMS_INTEGRATION_SELECT = {
 export class DbWebsiteService {
   /**
    * Retrieves websites associated with the user.
-   * If the authenticated user has no personal websites yet, falls back to seeded demo websites
-   * so the workspace remains functional until they add their own website.
+   * Falls back to seeded demo websites (or the in-memory fallback store if DB is offline).
    */
   public static async getWebsites(userId?: string) {
+    if (!process.env.DATABASE_URL) {
+      return serverFallbackStore.getWebsites(userId);
+    }
+
     try {
       const includeConfig = {
         cmsIntegrations: {
@@ -42,24 +47,28 @@ export class DbWebsiteService {
           return userWebsites;
         }
 
-        // Demo fallback when the user has not created any personal websites yet
-        return await prisma.website.findMany({
+        const demoWebsites = await prisma.website.findMany({
           where: {
             user: { email: 'demo@blogflow.ai' },
           },
           include: includeConfig,
           orderBy: { createdAt: 'desc' },
         });
+        return demoWebsites.length > 0 ? demoWebsites : serverFallbackStore.getWebsites(userId);
       }
 
-      return await prisma.website.findMany({
+      const demoWebsites = await prisma.website.findMany({
         where: {
           user: { email: 'demo@blogflow.ai' },
         },
         include: includeConfig,
         orderBy: { createdAt: 'desc' },
       });
+      return demoWebsites.length > 0 ? demoWebsites : serverFallbackStore.getWebsites(userId);
     } catch (err: unknown) {
+      if (isDatabaseUnavailableError(err)) {
+        return serverFallbackStore.getWebsites(userId);
+      }
       const message = err instanceof Error ? err.message : String(err);
       console.error('[DbWebsiteService] Failed to fetch websites from database:', message);
       throw new Error('Database error fetching websites');
@@ -76,8 +85,12 @@ export class DbWebsiteService {
   }
 
   public static async getWebsiteById(id: string) {
+    if (!process.env.DATABASE_URL) {
+      return serverFallbackStore.getWebsiteById(id);
+    }
+
     try {
-      return await prisma.website.findUnique({
+      const site = await prisma.website.findUnique({
         where: { id },
         include: {
           cmsIntegrations: {
@@ -87,7 +100,11 @@ export class DbWebsiteService {
           blogs: { take: 10, orderBy: { createdAt: 'desc' } },
         },
       });
+      return site ?? serverFallbackStore.getWebsiteById(id);
     } catch (err: unknown) {
+      if (isDatabaseUnavailableError(err)) {
+        return serverFallbackStore.getWebsiteById(id);
+      }
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[DbWebsiteService] Failed to fetch website ${id}:`, message);
       throw new Error('Database error fetching website');
@@ -110,13 +127,28 @@ export class DbWebsiteService {
     }
 
     const validatedUrl = validateExternalUrl(data.url);
+    const cleanUrl = validatedUrl.toString().replace(/\/$/, '');
+
+    if (!process.env.DATABASE_URL) {
+      return serverFallbackStore.createWebsite({
+        userId: data.userId,
+        name: data.name,
+        url: cleanUrl,
+        niche: data.niche,
+        targetAudience: data.targetAudience,
+        writingTone: data.writingTone,
+        preferredKeywords: data.preferredKeywords,
+        excludedTopics: data.excludedTopics,
+        websiteContext: data.websiteContext,
+      });
+    }
 
     try {
       return await prisma.website.create({
         data: {
           userId: data.userId,
           name: data.name.trim(),
-          url: validatedUrl.toString().replace(/\/$/, ''),
+          url: cleanUrl,
           niche: data.niche.trim(),
           targetAudience: data.targetAudience.trim(),
           writingTone: data.writingTone.trim(),
@@ -127,6 +159,19 @@ export class DbWebsiteService {
         },
       });
     } catch (err: unknown) {
+      if (isDatabaseUnavailableError(err)) {
+        return serverFallbackStore.createWebsite({
+          userId: data.userId,
+          name: data.name,
+          url: cleanUrl,
+          niche: data.niche,
+          targetAudience: data.targetAudience,
+          writingTone: data.writingTone,
+          preferredKeywords: data.preferredKeywords,
+          excludedTopics: data.excludedTopics,
+          websiteContext: data.websiteContext,
+        });
+      }
       const message = err instanceof Error ? err.message : String(err);
       console.error('[DbWebsiteService] Failed to create website in database:', message);
       throw new Error('Database error creating website');
@@ -134,11 +179,22 @@ export class DbWebsiteService {
   }
 
   public static async deleteWebsite(id: string) {
+    if (!process.env.DATABASE_URL) {
+      const deleted = serverFallbackStore.deleteWebsite(id);
+      if (!deleted) throw new Error('Website not found');
+      return { id };
+    }
+
     try {
       return await prisma.website.delete({
         where: { id },
       });
     } catch (err: unknown) {
+      if (isDatabaseUnavailableError(err)) {
+        const deleted = serverFallbackStore.deleteWebsite(id);
+        if (!deleted) throw new Error('Website not found');
+        return { id };
+      }
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[DbWebsiteService] Failed to delete website ${id}:`, message);
       throw new Error('Database error deleting website');

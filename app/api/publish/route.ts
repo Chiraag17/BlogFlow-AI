@@ -3,11 +3,15 @@ import { wordPressService } from '@/services/cms/wordpress-service';
 import { DbBlogService } from '@/services/db/blog.service';
 import { DbWebsiteService } from '@/services/db/website.service';
 import { validateExternalUrl } from '@/services/security/url-validator';
-import { headers } from 'next/headers';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
+    }
+
     const { action, blog, config, status, scheduledDate } = body;
 
     if (config?.siteUrl) {
@@ -20,14 +24,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'test_connection') {
-      if (!config?.siteUrl || !config?.username) {
+      if (!config?.siteUrl || !config?.username || !config?.applicationPassword) {
         return NextResponse.json(
-          { error: 'Missing WordPress site URL or username' },
+          { error: 'Missing WordPress site URL, username, or application password.' },
           { status: 400 }
         );
       }
       const conn = await wordPressService.testConnection(config);
-      return NextResponse.json(conn);
+      return NextResponse.json(conn, { status: conn.success ? 200 : 400 });
     }
 
     if (!blog || !config) {
@@ -38,9 +42,8 @@ export async function POST(req: NextRequest) {
     }
 
     const requestedStatus = status || 'publish';
-    const userId = (await headers()).get('x-user-id') || undefined;
+    const userId = await getAuthenticatedUserId();
 
-    // Enforce PostgreSQL-verified approval and ownership rather than trusting client JSON
     if (!blog.id) {
       return NextResponse.json(
         { error: 'Blog ID is required for publishing verification.' },
@@ -73,7 +76,7 @@ export async function POST(req: NextRequest) {
     if (requestedStatus !== 'draft' && !isDbApproved) {
       return NextResponse.json(
         {
-          error: `Policy violation: Article "${dbBlog.title}" has database status "${dbBlog.status}". Only approved articles can be published to WordPress.`,
+          error: `Policy violation: Article "${dbBlog.title}" has status "${dbBlog.status}". Only approved articles can be published to WordPress.`,
         },
         { status: 403 }
       );
@@ -96,7 +99,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 403 });
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     return NextResponse.json(result);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DbApprovalService } from '@/services/db/approval.service';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function POST(
   req: NextRequest,
@@ -8,6 +9,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
+    const userId = await getAuthenticatedUserId();
 
     if (!body.comments && !body.instructions) {
       return NextResponse.json(
@@ -20,7 +22,7 @@ export async function POST(
       blogId: id,
       decision: 'REQUEST_REVISION',
       comments: body.comments || body.instructions,
-      reviewerId: body.reviewerId,
+      reviewerId: userId || body.reviewerId,
     });
 
     return NextResponse.json({
@@ -30,6 +32,11 @@ export async function POST(
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    const status = message.startsWith('Forbidden')
+      ? 403
+      : message.toLowerCase().includes('not found')
+      ? 404
+      : 500;
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }

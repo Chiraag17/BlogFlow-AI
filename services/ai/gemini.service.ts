@@ -1,12 +1,12 @@
 /**
  * Centralized Google Gemini AI Service
  *
- * Provides a unified, resilient interface to Google's Gemini models using the official SDK.
+ * Provides a unified, resilient interface to Google's Gemini models using the official @google/genai SDK.
  * Features:
- * - Environment-driven configuration (GEMINI_API_KEY, GEMINI_MODEL)
- * - Safe credential handling (never exposed to client)
- * - Exponential backoff retry for transient network/rate-limit errors
- * - Timeout protection via AbortController
+ * - Default model: gemini-4-hydrogen (configurable via GEMINI_MODEL)
+ * - Compliant SDK headers (User-Agent: aistudio-build)
+ * - Automatic omission of deprecated sampling params (temperature) for Gemini 4 models
+ * - Exponential backoff retry & timeout protection
  * - Structured JSON parsing and validation
  */
 
@@ -29,20 +29,32 @@ export class GeminiService {
 
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY || '';
-    this.defaultModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    this.defaultModel = process.env.GEMINI_MODEL || 'gemini-4-hydrogen';
 
-    if (this.apiKey) {
+    if (this.isConfigured()) {
       try {
-        this.aiClient = new GoogleGenAI({ apiKey: this.apiKey });
+        this.aiClient = this.createClient();
       } catch (err) {
         console.error('Failed to initialize Google Gen AI client:', err);
       }
     }
   }
 
+  private createClient(): GoogleGenAI {
+    return new GoogleGenAI({
+      apiKey: this.apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
+  }
+
   /** Check if the Gemini API key is configured */
   public isConfigured(): boolean {
-    return Boolean(this.apiKey && this.apiKey.trim().length > 0 && !this.apiKey.includes('your_'));
+    const key = process.env.GEMINI_API_KEY || this.apiKey || '';
+    return Boolean(key && key.trim().length > 0 && !key.includes('your_'));
   }
 
   /** Get the configured model name */
@@ -57,21 +69,20 @@ export class GeminiService {
     const {
       prompt,
       systemInstruction,
-      temperature = 0.7,
+      temperature,
       maxOutputTokens = 4096,
       responseMimeType = 'text/plain',
       timeoutMs = 60000,
       retries = 3,
     } = options;
 
+    this.apiKey = process.env.GEMINI_API_KEY || this.apiKey;
     if (!this.isConfigured()) {
-      throw new Error(
-        'Gemini API key is not configured. Please set GEMINI_API_KEY in your .env.local file or configure it in Settings.'
-      );
+      throw new Error('Gemini API key is not configured.');
     }
 
     if (!this.aiClient) {
-      this.aiClient = new GoogleGenAI({ apiKey: this.apiKey });
+      this.aiClient = this.createClient();
     }
 
     let attempt = 0;
@@ -85,9 +96,14 @@ export class GeminiService {
         );
 
         const config: Record<string, any> = {
-          temperature,
           maxOutputTokens,
         };
+
+        // Gemini 4 models deprecate temperature/topP/topK — only attach for non-Gemini-4 models
+        const isGemini4 = this.defaultModel.startsWith('gemini-4');
+        if (!isGemini4 && typeof temperature === 'number') {
+          config.temperature = temperature;
+        }
 
         if (systemInstruction) {
           config.systemInstruction = systemInstruction;
@@ -115,14 +131,12 @@ export class GeminiService {
         lastError = err;
         const errMsg = err?.message || String(err);
 
-        // Don't retry on permanent authentication errors
         if (errMsg.includes('API_KEY_INVALID') || errMsg.includes('401') || errMsg.includes('invalid api key')) {
-          throw new Error('Invalid Gemini API Key. Please verify your GEMINI_API_KEY in .env.local.');
+          throw new Error('Invalid Gemini API Key. Please verify your GEMINI_API_KEY configuration.');
         }
 
-        // Retry on rate limits (429) or transient 5xx errors with exponential backoff
         if (attempt < retries) {
-          const delayMs = Math.pow(2, attempt) * 1000;
+          const delayMs = Math.pow(2, attempt) * 500;
           await new Promise((res) => setTimeout(res, delayMs));
         }
       }
@@ -146,7 +160,6 @@ export class GeminiService {
 
     let cleaned = rawText.trim();
 
-    // Strip markdown code fences if present (```json ... ```)
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
@@ -163,7 +176,9 @@ export class GeminiService {
 
       return parsed as T;
     } catch (parseError: any) {
-      throw new Error(`Failed to parse structured JSON from Gemini output: ${parseError.message}\nRaw text: ${cleaned.slice(0, 300)}...`);
+      throw new Error(
+        `Failed to parse structured JSON from Gemini output: ${parseError.message}\nRaw text: ${cleaned.slice(0, 300)}...`
+      );
     }
   }
 }

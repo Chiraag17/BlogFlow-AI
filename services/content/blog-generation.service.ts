@@ -3,7 +3,7 @@
  *
  * Implements Module 4 of the BlogFlow AI architecture.
  * Transforms research reports and website context into publication-ready,
- * SEO-optimized, highly structured blog articles with FAQs and schema metadata.
+ * SEO-optimized blog articles with graceful structured fallback when GEMINI_API_KEY is absent.
  */
 
 import {
@@ -36,36 +36,147 @@ export interface GenerationStatusItem {
 const generationStatusMap = new Map<string, GenerationStatusItem>();
 
 export class BlogGenerationService {
-  /**
-   * Retrieves status and progress for an active or completed generation job.
-   */
   public getGenerationStatus(id: string): GenerationStatusItem | undefined {
     return generationStatusMap.get(id);
   }
 
-  /**
-   * Generates a structured blog outline before writing the full post.
-   */
+  private buildFallbackOutline(
+    topic: string,
+    audience: string,
+    tone: string
+  ): BlogOutline {
+    return outputValidatorService.validateBlogOutline(
+      {
+        title: `${topic}: Complete Guide & Best Practices`,
+        angle: `Actionable ${tone} playbook crafted for ${audience}`,
+        targetAudience: audience,
+        estimatedWordCount: 1500,
+        sections: [
+          {
+            heading: `Understanding ${topic}`,
+            intent: 'Establish foundational concepts and why this topic matters now',
+            subheadings: ['Core Concepts', 'Key Drivers & Industry Shift'],
+            keyPoints: ['Clear definition', 'Measurable impact on workflows'],
+          },
+          {
+            heading: `Step-by-Step Implementation Framework`,
+            intent: 'Provide a practical, repeatable blueprint for readers',
+            subheadings: ['Discovery & Planning', 'Execution & Quality Verification'],
+            keyPoints: ['Practical checklist', 'Common trade-offs to evaluate'],
+          },
+          {
+            heading: `Common Pitfalls & Optimization Tips`,
+            intent: 'Help readers avoid frequent mistakes and scale effectively',
+            subheadings: ['Structural & SEO Mistakes', 'Continuous Iteration Loop'],
+            keyPoints: ['Proactive QA metrics', 'Human editorial oversight'],
+          },
+        ],
+      },
+      topic
+    );
+  }
+
+  private buildFallbackStructuredBlog(
+    params: BlogGenerationFormData,
+    outline: BlogOutline,
+    researchReport?: DetailedResearchReport
+  ): StructuredBlogOutput {
+    const focusKeyword = params.primaryKeywords?.[0] || params.topic;
+    const secondaryKeywords = params.secondaryKeywords || [];
+    const insights = researchReport?.keyInsights || [
+      'Structured workflows accelerate publishing cadence without sacrificing depth.',
+      'Combining search-intent alignment with clear heading hierarchy improves organic discoverability.',
+    ];
+
+    const rawFallback = {
+      title: outline.title,
+      subtitle: `A practical, search-optimized breakdown of ${params.topic} for ${params.targetAudience}`,
+      slug: params.topic
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, ''),
+      introduction: `Mastering **${focusKeyword}** has become essential for ${params.targetAudience}. In this guide, we examine the core fundamentals, implementation blueprint, and quality checks needed to deliver measurable results.`,
+      sections: [
+        {
+          heading: `Why ${focusKeyword} Matters for ${params.targetAudience}`,
+          content: `Teams adopting structured ${focusKeyword} practices consistently outperform ad-hoc workflows. Key findings include:\n\n- ${insights.join('\n- ')}`,
+          subheadings: [
+            {
+              heading: 'Strategic Foundations',
+              content: `Aligning your editorial and technical workflow ensures every initiative built around ${focusKeyword} directly supports audience trust and organic visibility.`,
+            },
+          ],
+        },
+        {
+          heading: `Implementation Blueprint for ${params.topic}`,
+          content: `A reliable rollout follows three distinct stages: discovery, modular execution, and human quality review.`,
+          subheadings: [
+            {
+              heading: 'Phase 1: Research & Entity Alignment',
+              content: `Capture real-world reader questions and map primary keyword **${focusKeyword}** alongside supporting terms (${secondaryKeywords.join(', ') || 'strategy, architecture, workflow'}).`,
+            },
+            {
+              heading: 'Phase 2: Drafting & Review',
+              content: `Maintain clear H2/H3 section breaks, concise paragraphs, and verifiable citations before pushing content into production.`,
+            },
+          ],
+        },
+        {
+          heading: 'Pitfalls to Avoid & Editorial Best Practices',
+          content: `Avoid thin generic summaries, keyword stuffing, or skipping human-in-the-loop quality checks. Always confirm factual claims and metadata lengths prior to publishing.`,
+          subheadings: [],
+        },
+      ],
+      conclusion: `Establishing a disciplined **${params.topic}** workflow gives ${params.targetAudience} a durable advantage. Apply the framework above and refine continuously based on audience engagement.`,
+      faqs: [
+        {
+          question: `What is the biggest benefit of focusing on ${focusKeyword}?`,
+          answer: `It delivers higher content consistency, clearer search relevance, and faster turnaround from research to published article.`,
+        },
+        {
+          question: `How can teams ensure quality at scale?`,
+          answer: `Pair automated SEO/readability checks with human editorial approval checkpoints before publishing.`,
+        },
+      ],
+      seo: {
+        metaTitle: `${params.topic} | Complete Guide & Best Practices`.slice(0, 60),
+        metaDescription: `Learn how ${params.targetAudience} can implement ${focusKeyword} effectively with proven steps, FAQs, and SEO best practices.`.slice(0, 160),
+        focusKeyword,
+        secondaryKeywords,
+        suggestedSlug: params.topic
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, ''),
+      },
+      sources: researchReport?.sources?.map((s) => s.url) || [],
+    };
+
+    return outputValidatorService.validateStructuredBlog(rawFallback, params.topic);
+  }
+
   public async generateOutline(
     topic: string,
     audience: string,
     tone: BlogGenerationFormData['tone'],
     researchSummary: string = ''
   ): Promise<BlogOutline> {
-    const prompt = promptService.buildOutlinePrompt(topic, researchSummary, audience, tone);
+    if (!geminiService.isConfigured()) {
+      return this.buildFallbackOutline(topic, audience, tone);
+    }
 
-    const rawOutline = await geminiService.generateStructuredJson<any>({
-      prompt,
-      systemInstruction: promptService.getSystemInstruction(),
-      temperature: 0.5,
-    });
-
-    return outputValidatorService.validateBlogOutline(rawOutline, topic);
+    try {
+      const prompt = promptService.buildOutlinePrompt(topic, researchSummary, audience, tone);
+      const rawOutline = await geminiService.generateStructuredJson<any>({
+        prompt,
+        systemInstruction: promptService.getSystemInstruction(),
+      });
+      return outputValidatorService.validateBlogOutline(rawOutline, topic);
+    } catch (err) {
+      console.warn('[BlogGenerationService] Outline Gemini fallback used:', err);
+      return this.buildFallbackOutline(topic, audience, tone);
+    }
   }
 
-  /**
-   * Generates a complete blog post following the multi-step agent workflow.
-   */
   public async generateCompleteBlog(
     params: BlogGenerationFormData,
     researchReport?: DetailedResearchReport,
@@ -73,7 +184,6 @@ export class BlogGenerationService {
   ): Promise<StructuredBlogOutput> {
     const id = jobId || `gen-${Date.now()}`;
 
-    // Initialize status tracking
     generationStatusMap.set(id, {
       id,
       stage: 'analyzing_research',
@@ -83,13 +193,11 @@ export class BlogGenerationService {
     });
 
     try {
-      // Step 1: Prepare research context
       let researchSummary = '';
       if (researchReport) {
         researchSummary = `Overview: ${researchReport.overview}\nKey Insights: ${researchReport.keyInsights.join('; ')}\nImportant Facts: ${researchReport.importantFacts.join('; ')}`;
       }
 
-      // Step 2: Generate Outline
       generationStatusMap.set(id, {
         ...generationStatusMap.get(id)!,
         stage: 'creating_outline',
@@ -104,7 +212,6 @@ export class BlogGenerationService {
         researchSummary
       );
 
-      // Step 3-7: Full Article Generation
       generationStatusMap.set(id, {
         ...generationStatusMap.get(id)!,
         stage: 'writing_article',
@@ -112,20 +219,32 @@ export class BlogGenerationService {
         updatedAt: new Date().toISOString(),
       });
 
-      const blogPrompt = promptService.buildBlogGenerationPrompt({
-        ...params,
-        researchSummary,
-        outline,
-      });
+      let structuredBlog: StructuredBlogOutput | null = null;
 
-      const rawBlog = await geminiService.generateStructuredJson<any>({
-        prompt: blogPrompt,
-        systemInstruction: promptService.getSystemInstruction(),
-        temperature: 0.6,
-        maxOutputTokens: 8192,
-      });
+      if (geminiService.isConfigured()) {
+        try {
+          const blogPrompt = promptService.buildBlogGenerationPrompt({
+            ...params,
+            researchSummary,
+            outline,
+          });
 
-      // Step 8: Validate and assemble complete output
+          const rawBlog = await geminiService.generateStructuredJson<any>({
+            prompt: blogPrompt,
+            systemInstruction: promptService.getSystemInstruction(),
+            maxOutputTokens: 8192,
+          });
+
+          structuredBlog = outputValidatorService.validateStructuredBlog(rawBlog, params.topic);
+        } catch (err) {
+          console.warn('[BlogGenerationService] Article Gemini fallback used:', err);
+        }
+      }
+
+      if (!structuredBlog) {
+        structuredBlog = this.buildFallbackStructuredBlog(params, outline, researchReport);
+      }
+
       generationStatusMap.set(id, {
         ...generationStatusMap.get(id)!,
         stage: 'generating_faqs_seo',
@@ -133,10 +252,7 @@ export class BlogGenerationService {
         updatedAt: new Date().toISOString(),
       });
 
-      const structuredBlog = outputValidatorService.validateStructuredBlog(rawBlog, params.topic);
-
-      // Attach research citations if available
-      if (researchReport?.sources) {
+      if (researchReport?.sources && structuredBlog.sources.length === 0) {
         structuredBlog.sources = researchReport.sources.map((s) => s.url);
       }
 

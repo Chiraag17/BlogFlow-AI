@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DbBlogService } from '@/services/db/blog.service';
 import { DbWebsiteService } from '@/services/db/website.service';
 import { calculateReadingTime } from '@/lib/utils';
-import { headers } from 'next/headers';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const userId = (await headers()).get('x-user-id') || undefined;
+    const userId = await getAuthenticatedUserId();
     const blog = await DbBlogService.getBlogById(id);
 
     if (!blog) {
@@ -35,14 +35,17 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
+    }
 
     const existingBlog = await DbBlogService.getBlogById(id);
     if (!existingBlog) {
       return NextResponse.json({ success: false, error: 'Blog not found' }, { status: 404 });
     }
 
-    const userId = (await headers()).get('x-user-id') || undefined;
+    const userId = await getAuthenticatedUserId();
     const accessibleIds = await DbWebsiteService.getAccessibleWebsiteIds(userId);
     if (accessibleIds.length > 0 && !accessibleIds.includes(existingBlog.websiteId)) {
       return NextResponse.json({ success: false, error: 'Forbidden: You do not own this website' }, { status: 403 });
@@ -82,7 +85,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: 'Article updated successfully in PostgreSQL.',
+      message: 'Article updated successfully.',
       data: updatedBlog,
     });
   } catch (err: unknown) {

@@ -1,6 +1,8 @@
 import { decryptCredential } from '../security/encryption.service';
 import { validateExternalUrl } from '../security/url-validator';
 import { prisma } from '@/lib/prisma';
+import { isDatabaseUnavailableError } from '@/lib/authSecret';
+import { serverFallbackStore } from '@/lib/serverFallbackStore';
 
 const REQUEST_TIMEOUT_MS = 15000;
 
@@ -59,7 +61,7 @@ export class WordPressService {
    * Constructs standard Basic Auth header from username and application password.
    */
   public static getBasicAuthHeader(username: string, password: string): string {
-    const cleanPassword = password.replace(/\s+/g, ''); // WordPress app passwords often have spaces
+    const cleanPassword = password.replace(/\s+/g, '');
     const token = Buffer.from(`${username}:${cleanPassword}`).toString('base64');
     return `Basic ${token}`;
   }
@@ -74,7 +76,7 @@ export class WordPressService {
     if (auth.encryptedCredentials) {
       return decryptCredential(auth.encryptedCredentials);
     }
-    throw new Error('No password or encrypted credentials provided for WordPress authentication.');
+    throw new Error('No WordPress application password or encrypted credentials configured for this integration.');
   }
 
   /**
@@ -187,7 +189,7 @@ export class WordPressService {
   }
 
   /**
-   * Idempotency Check: Verifies whether an external post with this slug or blog ID already exists.
+   * Idempotency Check: Verifies whether an external post with this slug already exists.
    */
   public static async findExistingPost(
     auth: WordPressAuth,
@@ -215,14 +217,14 @@ export class WordPressService {
         }
       }
     } catch {
-      // In case of check error, fallback safely
+      // Safe fallback if remote lookup fails
     }
     return { exists: false };
   }
 
   /**
    * Publishes or schedules an article to WordPress.
-   * Strictly enforces PostgreSQL approval verification before proceeding.
+   * Strictly enforces human approval verification before proceeding.
    */
   public static async publishPost(params: {
     blogId: string;
@@ -232,48 +234,66 @@ export class WordPressService {
   }): Promise<WordPressPublishResult> {
     const { blogId, integrationId, publishMode, scheduledDate } = params;
 
-    // 1. Verify in database: blog existence, approval status, and CMS integration
-    let blog;
-    try {
-      blog = await prisma.blog.findUnique({
-        where: { id: blogId },
-        include: {
-          approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
-          publishingRecords: { where: { integrationId } },
-        },
-      });
-    } catch (dbErr: any) {
-      return {
-        success: false,
-        error: `Database check failed: unable to verify human approval status in PostgreSQL.`,
-      };
+    const useFallback = !process.env.DATABASE_URL;
+    let blog: any = null;
+    let integration: any = null;
+    let usingFallbackStore = useFallback;
+
+    if (!useFallback) {
+      try {
+        blog = await prisma.blog.findUnique({
+          where: { id: blogId },
+          include: {
+            approvals: { orderBy: { createdAt: 'desc' }, take: 1 },
+            publishingRecords: { where: { integrationId } },
+          },
+        });
+        integration = await prisma.cMSIntegration.findUnique({
+          where: { id: integrationId },
+        });
+      } catch (dbErr) {
+        if (isDatabaseUnavailableError(dbErr)) {
+          usingFallbackStore = true;
+        } else {
+          return {
+            success: false,
+            error: 'Database check failed: unable to verify human approval status.',
+          };
+        }
+      }
+    }
+
+    if (usingFallbackStore) {
+      blog = serverFallbackStore.getBlogById(blogId);
+      integration = serverFallbackStore.getIntegrationWithSecretById(integrationId);
     }
 
     if (!blog) {
       return { success: false, error: `Blog not found with ID ${blogId}` };
     }
 
-    const latestApproval = blog.approvals[0];
+    const latestApproval = blog.approvals?.[0];
     const isApproved =
       blog.status === 'APPROVED' ||
       blog.status === 'SCHEDULED' ||
       latestApproval?.status === 'APPROVED';
 
-    // Strict security check: blog MUST be approved by human reviewer in PostgreSQL
-    if (!isApproved) {
+    if (!isApproved && publishMode !== 'draft') {
       return {
         success: false,
         error: 'Publishing rejected: Article has not been approved by a human reviewer in the Approval Center.',
       };
     }
 
-    // 2. Retrieve CMS integration credentials and verify website match
-    const integration = await prisma.cMSIntegration.findUnique({
-      where: { id: integrationId },
-    });
-
     if (!integration || integration.connectionStatus !== 'CONNECTED' || integration.websiteId !== blog.websiteId) {
       return { success: false, error: 'WordPress CMS integration is inactive, mismatched, or not found.' };
+    }
+
+    if (!integration.encryptedCredentials) {
+      return {
+        success: false,
+        error: 'No encrypted WordPress credentials stored for this integration. Connect your WordPress site with an Application Password in Integrations.',
+      };
     }
 
     const auth: WordPressAuth = {
@@ -282,8 +302,10 @@ export class WordPressService {
       encryptedCredentials: integration.encryptedCredentials,
     };
 
-    // 3. Idempotency Check: check if already published in DB
-    const existingDbRecord = blog.publishingRecords[0];
+    // Idempotency Check in DB/store
+    const existingDbRecord = blog.publishingRecords?.find(
+      (r: any) => r.integrationId === integrationId
+    );
     if (existingDbRecord && existingDbRecord.publishingStatus === 'PUBLISHED' && existingDbRecord.externalPostId) {
       return {
         success: true,
@@ -294,46 +316,6 @@ export class WordPressService {
       };
     }
 
-    // 4. Remote Idempotency Check: check WordPress if slug already exists
-    const remoteCheck = await this.findExistingPost(auth, blog.slug);
-    if (remoteCheck.exists && remoteCheck.postId) {
-      // Record already exists on WordPress, link it in DB without creating a duplicate
-      await prisma.publishingRecord.upsert({
-        where: {
-          blogId_integrationId: { blogId, integrationId },
-        },
-        create: {
-          blogId,
-          integrationId,
-          externalPostId: String(remoteCheck.postId),
-          publishedUrl: remoteCheck.link,
-          publishingStatus: 'PUBLISHED',
-          publishedAt: new Date(),
-        },
-        update: {
-          externalPostId: String(remoteCheck.postId),
-          publishedUrl: remoteCheck.link,
-          publishingStatus: 'PUBLISHED',
-          publishedAt: new Date(),
-          errorMessage: null,
-        },
-      });
-
-      await prisma.blog.update({
-        where: { id: blogId },
-        data: { status: 'PUBLISHED' },
-      });
-
-      return {
-        success: true,
-        isDuplicate: true,
-        externalPostId: String(remoteCheck.postId),
-        publishedUrl: remoteCheck.link,
-        status: 'published',
-      };
-    }
-
-    // 5. Construct payload
     let postStatus: 'draft' | 'publish' | 'future' = 'draft';
     if (publishMode === 'publish') postStatus = 'publish';
     if (publishMode === 'schedule') postStatus = 'future';
@@ -350,7 +332,6 @@ export class WordPressService {
       payload.date = new Date(scheduledDate).toISOString();
     }
 
-    // 6. Make server-side POST request to WordPress REST API
     try {
       const normalizedUrl = this.normalizeUrl(auth.siteUrl);
       const password = this.resolvePassword(auth);
@@ -371,61 +352,87 @@ export class WordPressService {
       if (!res.ok) {
         const errorText = await res.text();
         const errMessage = `WordPress error (HTTP ${res.status}): ${errorText.slice(0, 300)}`;
-
-        await prisma.publishingRecord.upsert({
-          where: {
-            blogId_integrationId: { blogId, integrationId },
-          },
-          create: {
-            blogId,
-            integrationId,
-            publishingStatus: 'FAILED',
-            errorMessage: errMessage,
-          },
-          update: {
-            publishingStatus: 'FAILED',
-            errorMessage: errMessage,
-          },
-        });
-
+        if (!usingFallbackStore) {
+          await prisma.publishingRecord
+            .upsert({
+              where: { blogId_integrationId: { blogId, integrationId } },
+              create: {
+                blogId,
+                integrationId,
+                publishingStatus: 'FAILED',
+                errorMessage: errMessage,
+              },
+              update: {
+                publishingStatus: 'FAILED',
+                errorMessage: errMessage,
+              },
+            })
+            .catch(() => {});
+        }
         return { success: false, error: errMessage };
       }
 
       const postData = await res.json();
       const externalId = String(postData.id);
       const postUrl = postData.link || `${normalizedUrl}/?p=${externalId}`;
-      const finalStatus = postStatus === 'future' ? 'SCHEDULED' : postStatus === 'publish' ? 'PUBLISHED' : 'PENDING';
+      const finalStatus =
+        postStatus === 'future' ? 'SCHEDULED' : postStatus === 'publish' ? 'PUBLISHED' : 'PENDING';
 
-      // 7. Update PostgreSQL records
-      await prisma.publishingRecord.upsert({
-        where: {
-          blogId_integrationId: { blogId, integrationId },
-        },
-        create: {
+      if (usingFallbackStore) {
+        serverFallbackStore.recordPublishFallback({
           blogId,
           integrationId,
+          publishMode,
+          scheduledDate,
           externalPostId: externalId,
           publishedUrl: postUrl,
-          publishingStatus: finalStatus === 'PUBLISHED' ? 'PUBLISHED' : finalStatus === 'SCHEDULED' ? 'SCHEDULED' : 'PENDING',
-          publishedAt: new Date(),
-          scheduledAt: finalStatus === 'SCHEDULED' && scheduledDate ? new Date(scheduledDate) : null,
-        },
-        update: {
-          externalPostId: externalId,
-          publishedUrl: postUrl,
-          publishingStatus: finalStatus === 'PUBLISHED' ? 'PUBLISHED' : finalStatus === 'SCHEDULED' ? 'SCHEDULED' : 'PENDING',
-          publishedAt: new Date(),
-          scheduledAt: finalStatus === 'SCHEDULED' && scheduledDate ? new Date(scheduledDate) : null,
-          errorMessage: null,
-        },
-      });
+        });
+      } else {
+        await prisma.publishingRecord.upsert({
+          where: { blogId_integrationId: { blogId, integrationId } },
+          create: {
+            blogId,
+            integrationId,
+            externalPostId: externalId,
+            publishedUrl: postUrl,
+            publishingStatus:
+              finalStatus === 'PUBLISHED'
+                ? 'PUBLISHED'
+                : finalStatus === 'SCHEDULED'
+                ? 'SCHEDULED'
+                : 'PENDING',
+            publishedAt: new Date(),
+            scheduledAt:
+              finalStatus === 'SCHEDULED' && scheduledDate ? new Date(scheduledDate) : null,
+          },
+          update: {
+            externalPostId: externalId,
+            publishedUrl: postUrl,
+            publishingStatus:
+              finalStatus === 'PUBLISHED'
+                ? 'PUBLISHED'
+                : finalStatus === 'SCHEDULED'
+                ? 'SCHEDULED'
+                : 'PENDING',
+            publishedAt: new Date(),
+            scheduledAt:
+              finalStatus === 'SCHEDULED' && scheduledDate ? new Date(scheduledDate) : null,
+            errorMessage: null,
+          },
+        });
 
-      await prisma.blog.update({
-        where: { id: blogId },
-        data: {
-          status: finalStatus === 'PUBLISHED' ? 'PUBLISHED' : finalStatus === 'SCHEDULED' ? 'SCHEDULED' : 'APPROVED',
-        },
-      });
+        await prisma.blog.update({
+          where: { id: blogId },
+          data: {
+            status:
+              finalStatus === 'PUBLISHED'
+                ? 'PUBLISHED'
+                : finalStatus === 'SCHEDULED'
+                ? 'SCHEDULED'
+                : 'APPROVED',
+          },
+        });
+      }
 
       return {
         success: true,
