@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import './landing.css';
 import Link from 'next/link';
@@ -611,6 +611,151 @@ function HeroMuseumDustCanvas({ isShatter }: { isShatter: boolean }) {
     <canvas
       ref={canvasRef}
       className="pointer-events-none absolute inset-0 w-full h-full z-[1]"
+      aria-hidden="true"
+    />
+  );
+}
+
+/**
+ * Hot-Metal Linotype Letter Stamping Effect
+ * Each letter drops from above with a micro-bounce and tiny brass spark on impact.
+ * Only plays on the 'split' phase transition (Act III reveal).
+ */
+function HotMetalKineticText({
+  text,
+  as: Tag = 'span',
+  className = '',
+  style,
+  isRevealed,
+  baseDelay = 0,
+  ...rest
+}: {
+  text: string;
+  as?: 'span' | 'em' | 'h1';
+  className?: string;
+  style?: React.CSSProperties;
+  isRevealed: boolean;
+  baseDelay?: number;
+} & Omit<React.HTMLAttributes<HTMLElement>, 'children'>) {
+  const letters = useMemo(() => text.split(''), [text]);
+  // Stagger: each letter lands 38ms after the previous
+  const STAGGER = 0.038;
+
+  return (
+    <Tag
+      {...rest}
+      className={`inline-flex flex-wrap font-[300] kinetic-text-root ${className}`}
+      style={{
+        '--hover-padding': 'calc(1em / 14)',
+        '--text-stroke-width': 'calc(1em * 125 / 6000)',
+        ...style,
+      } as React.CSSProperties}
+    >
+      {letters.map((letter, i) => {
+        const delay = baseDelay + i * STAGGER;
+        const isSpace = letter === ' ';
+
+        if (isSpace) {
+          return (
+            <span key={i} className="inline-block" aria-hidden="true">
+              &nbsp;
+            </span>
+          );
+        }
+
+        return (
+          <span
+            key={i}
+            aria-hidden="true"
+            className="kinetic-char relative inline-block [will-change:font-weight,-webkit-text-stroke-width,padding] [-webkit-text-stroke-color:transparent] [-webkit-text-stroke-width:var(--text-stroke-width)] [transition:font-weight_0.35s_ease,_-webkit-text-stroke-color_0.35s_ease,_padding_0.35s_ease] hover:[padding-inline:var(--hover-padding)] hover:font-[900] hover:[-webkit-text-stroke-color:currentColor] hover:[-webkit-text-stroke-width:calc(var(--text-stroke-width)*2)] has-[+span+span:hover]:font-[400] has-[+span:hover]:[padding-inline:var(--hover-padding)] has-[+span:hover]:font-[600] [:hover+&]:[padding-inline:var(--hover-padding)] [:hover+&]:font-[600] [:hover+span+&]:font-[400]"
+            style={{ display: 'inline-block' }}
+          >
+            {/* The letter itself with stamping animation */}
+            <motion.span
+              initial={isRevealed ? { y: -28, opacity: 0, scale: 1.15 } : false}
+              animate={
+                isRevealed
+                  ? { y: [null, 0, -3, 0.5, 0], opacity: 1, scale: [null, 1, 1.04, 0.98, 1] }
+                  : {}
+              }
+              transition={{
+                duration: 0.32,
+                delay,
+                ease: [0.22, 1, 0.36, 1],
+                times: [0, 0.55, 0.72, 0.88, 1],
+              }}
+              className="inline-block"
+            >
+              {letter}
+            </motion.span>
+
+            {/* Micro brass spark on letter impact */}
+            {isRevealed && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.3 }}
+                animate={{ opacity: [0, 0.95, 0], scale: [0.3, 1.4, 0.6] }}
+                transition={{
+                  duration: 0.28,
+                  delay: delay + 0.12,
+                  ease: 'easeOut',
+                }}
+                className="pointer-events-none absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-1.5 rounded-full"
+                style={{
+                  background:
+                    'radial-gradient(ellipse at center, rgba(255, 253, 247, 0.95) 0%, rgba(229, 201, 139, 0.8) 50%, transparent 100%)',
+                  boxShadow: '0 0 8px rgba(229, 201, 139, 0.9), 0 0 3px rgba(255, 253, 247, 0.7)',
+                }}
+                aria-hidden="true"
+              />
+            )}
+          </span>
+        );
+      })}
+      <span className="sr-only">{text}</span>
+    </Tag>
+  );
+}
+
+/**
+ * Full-Screen Camera Flash on Shatter Impact (Act II → Act III)
+ * Single-frame white flash that sells the violence of the cube shatter.
+ */
+function HeroShatterFlash({ isShatter, replayKey }: { isShatter: boolean; replayKey: number }) {
+  return (
+    <AnimatePresence>
+      {isShatter && (
+        <motion.div
+          key={`shatter-flash-${replayKey}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.82, 0.55, 0] }}
+          exit={{ opacity: 0 }}
+          transition={{
+            duration: 0.22,
+            times: [0, 0.18, 0.45, 1],
+            ease: 'easeOut',
+          }}
+          className="pointer-events-none fixed inset-0 z-50"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 46%, rgba(255, 253, 247, 0.95) 0%, rgba(229, 201, 139, 0.6) 40%, rgba(255, 250, 240, 0.3) 70%, transparent 100%)',
+            mixBlendMode: 'screen',
+          }}
+          aria-hidden="true"
+        />
+      )}
+    </AnimatePresence>
+  );
+}
+
+/**
+ * Cinematic Film Grain Overlay — ultra-subtle animated noise
+ * Runs at ~0.04 opacity so users feel it subconsciously, never consciously.
+ * Uses CSS animation to shift a repeating SVG noise pattern.
+ */
+function HeroFilmGrain() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-[2] lp-film-grain"
       aria-hidden="true"
     />
   );
@@ -1241,6 +1386,9 @@ function HeroSection({
     >
       <div className="lp-hero-bg" aria-hidden="true" />
 
+      {/* Cinematic Film Grain Overlay — ultra-subtle animated noise texture */}
+      <HeroFilmGrain />
+
       {/* Warm Museum Spotlight Environment + Realistic Floor Reflection Pool + 60fps 3D Dust Motes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
         {/* Top-Down Conical Museum Spotlight Beam */}
@@ -1311,6 +1459,9 @@ function HeroSection({
       </motion.div>
 
       {/* ACT I & II: 3D Gutenberg Cube Molten Kintsugi Seams, Volumetric God-Rays & Magnetic 3D Shard Forge */}
+
+      {/* SHATTER IMPACT CAMERA FLASH — full-screen white flash on cube detonation */}
+      <HeroShatterFlash isShatter={heroStage === 'shatter'} replayKey={replayKey} />
       <AnimatePresence>
         {showCubeOverlay && (
           <motion.div
@@ -1431,7 +1582,7 @@ function HeroSection({
                       : 'hover:text-[var(--lp-primary)]'
                   }`}
                 >
-                  <KineticText text="Research." as="span" className="inline-flex cursor-pointer font-serif" />
+                  <HotMetalKineticText text="Research." as="span" className="inline-flex cursor-pointer font-serif" isRevealed={heroStage === 'split'} baseDelay={0} />
                   {activeDeskStage === 'research' && (
                     <motion.span
                       layoutId="hero-headline-stage-underline"
@@ -1459,7 +1610,7 @@ function HeroSection({
                       : 'hover:text-[var(--lp-primary)]'
                   }`}
                 >
-                  <KineticText text="Think." as="span" className="inline-flex cursor-pointer font-serif" />
+                  <HotMetalKineticText text="Think." as="span" className="inline-flex cursor-pointer font-serif" isRevealed={heroStage === 'split'} baseDelay={0.35} />
                   {activeDeskStage === 'draft' && (
                     <motion.span
                       layoutId="hero-headline-stage-underline"
@@ -1484,10 +1635,12 @@ function HeroSection({
                 title="Inspect Stage 04: Brass Approval Seal & Bound Folio on 3D Desk"
                 className="relative inline-flex cursor-pointer font-serif focus:outline-none mt-1"
               >
-                <KineticText
+                <HotMetalKineticText
                   text="Publish."
                   as="em"
                   className="italic text-[var(--lp-primary)] inline-flex cursor-pointer font-serif"
+                  isRevealed={heroStage === 'split'}
+                  baseDelay={0.58}
                 />
                 {(activeDeskStage === 'publish' || activeDeskStage === 'review') && (
                   <motion.span

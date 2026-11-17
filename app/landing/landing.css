@@ -890,6 +890,37 @@
   50% { opacity: 1; transform: scale(1.05); }
 }
 
+/* ============================================================
+   CINEMATIC FILM GRAIN OVERLAY
+   Ultra-subtle animated noise that gives the hero a celluloid feel.
+   Uses an inline SVG filter for performant GPU-composited grain.
+   ============================================================ */
+.lp-film-grain {
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: filmGrainDrift 0.12s steps(2) infinite;
+}
+
+.dark .lp-film-grain {
+  opacity: 0.055;
+  mix-blend-mode: soft-light;
+}
+
+@keyframes filmGrainDrift {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(-2.5%, -1.5%); }
+  100% { transform: translate(1.5%, -3%); }
+}
+
+/* Reduce grain motion for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .lp-film-grain {
+    animation: none;
+  }
+}
+
 .lp-hero-inner {
   position: relative;
   z-index: 2;
