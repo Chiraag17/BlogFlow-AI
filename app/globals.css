@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
    BlogFlow AI - Global Styles & Design System
@@ -8,6 +9,7 @@
 
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root {
+  color-scheme: light;
   /* Light theme colors */
   --color-bg: #F6F3EC;               /* Paper background */
   --color-bg-subtle: #F6F3EC;        /* Subtle background for surfaces */
@@ -59,6 +61,7 @@
 
 /* Dark mode overrides via .dark class */
 .dark {
+  color-scheme: dark;
   --color-bg: #101714;               /* Deep forest / midnight editorial studio */
   --color-bg-subtle: #0D1310;        /* Deep studio canvas */
   --color-bg-muted: #1B2621;         /* Elevated hover surface */
@@ -94,59 +97,68 @@ html.theme-transition *::after {
 }
 
 /* --- Base Styles --- */
-* {
-  box-sizing: border-box;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* --- Scrollbar Styling --- */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(184, 213, 197, 0.24);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(184, 213, 197, 0.42);
+  }
+
+  /* --- Focus Ring --- */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 }
 
-html {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer components {
+  .font-editorial {
+    font-family: 'Fraunces', Georgia, serif;
+  }
 
-body {
-  background-color: var(--color-bg-subtle);
-  color: var(--color-text);
-  line-height: 1.6;
-  margin: 0;
-}
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 
-.font-editorial {
-  font-family: 'Fraunces', Georgia, serif;
-}
-
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-/* --- Scrollbar Styling --- */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* --- Focus Ring --- */
-*:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-/* --- Sidebar & Layout --- */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
+  /* --- Sidebar & Layout --- */
+  .app-layout {
+    display: flex;
+    min-height: 100vh;
+  }
 
 .sidebar {
   width: var(--sidebar-width);
@@ -236,6 +248,9 @@ body {
 
 .main-area {
   flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   margin-left: var(--sidebar-width);
   transition: margin-left var(--transition-slow);
   min-height: 100vh;
@@ -895,7 +910,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-text);
-  color: white;
+  color: var(--color-bg);
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
@@ -979,6 +994,24 @@ body {
     0 18px 28px -6px rgba(22, 63, 50, 0.16);
 }
 
+.dark .folio-card-3d {
+  box-shadow:
+    0 2px 0 0 var(--color-bg-muted),
+    0 3px 0 0 var(--color-border),
+    0 5px 0 -1px var(--color-surface),
+    0 6px 0 -1px var(--color-border),
+    0 10px 24px -6px rgba(0, 0, 0, 0.48);
+}
+
+.dark .folio-card-3d:hover {
+  box-shadow:
+    0 3px 0 0 var(--color-bg-muted),
+    0 4px 0 0 var(--color-border),
+    0 7px 0 -1px var(--color-surface),
+    0 8px 0 -1px var(--color-accent),
+    0 18px 32px -6px rgba(0, 0, 0, 0.65);
+}
+
 /* 3D Stamp & Glide Animation when Approving / Publishing a Folio */
 @keyframes folioStampGlide {
   0% {
@@ -1021,5 +1054,6 @@ body {
   transform-origin: center top;
   transform-style: preserve-3d;
   animation: unfoldBroadsheet3D 460ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 }
 

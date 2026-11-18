@@ -198,8 +198,7 @@ export default function EditorialOrrery3D({
 
     const scene = new THREE.Scene();
     const bgHex = stateRef.current.isDark ? 0x101714 : 0xf4f0e6;
-    scene.background = new THREE.Color(bgHex);
-    scene.fog = new THREE.FogExp2(bgHex, 0.065);
+    scene.fog = new THREE.FogExp2(bgHex, 0.055);
 
     const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 50);
     camera.position.set(0, 3.3, 6.2);
@@ -207,11 +206,13 @@ export default function EditorialOrrery3D({
 
     const renderer = new THREE.WebGLRenderer({
       antialias: !isSoftwareGl,
+      alpha: true,
       powerPreference: 'high-performance',
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.12;
+    renderer.toneMappingExposure = stateRef.current.isDark ? 1.15 : 1.08;
+    renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = !isSoftwareGl;
@@ -572,15 +573,15 @@ export default function EditorialOrrery3D({
       const elapsed = clock.getElapsedTime();
       const st = stateRef.current;
 
-      // Sync theme background smoothly
+      // Sync fog and lighting cleanly with theme mode
       const targetHex = st.isDark ? 0x101714 : 0xf4f0e6;
       bgColorObj.setHex(targetHex);
-      if (scene.background instanceof THREE.Color) {
-        scene.background.lerp(bgColorObj, 1 - Math.exp(-6 * dt));
-      }
       if (scene.fog instanceof THREE.FogExp2) {
-        scene.fog.color.lerp(bgColorObj, 1 - Math.exp(-6 * dt));
+        scene.fog.color.copy(bgColorObj);
       }
+      hemiLight.intensity = st.isDark ? 1.05 : 0.9;
+      rimLight.intensity = st.isDark ? 1.55 : 1.25;
+      renderer.toneMappingExposure = st.isDark ? 1.16 : 1.08;
 
       // Decay typing energy smoothly
       st.typingEnergy = THREE.MathUtils.damp(st.typingEnergy, 0, 3.2, dt);
@@ -695,7 +696,11 @@ export default function EditorialOrrery3D({
   }, []);
 
   return (
-    <div className="relative w-full h-[272px] rounded-xl border border-[var(--color-border)] overflow-hidden bg-[#F4F0E6] dark:bg-[#101714] select-none">
+    <div
+      data-testid="editorial-orrery"
+      data-theme={isDark ? 'dark' : 'light'}
+      className="relative w-full h-[272px] rounded-xl border border-[var(--color-border)] overflow-hidden bg-[#F4F0E6] dark:bg-[#101714] transition-colors duration-300 select-none"
+    >
       {/* Top-Right Compact Stamp Button */}
       <div className="absolute top-3 right-3.5 z-10 flex items-center justify-end pointer-events-none">
         <button
@@ -718,7 +723,7 @@ export default function EditorialOrrery3D({
 
       {/* Minimal 4-Stage Dock */}
       <div
-        className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-10 w-[92%] max-w-[400px] transition-transform duration-200"
+        className="absolute bottom-2.5 left-1/2 z-10 w-[94%] max-w-[410px] transition-transform duration-200"
         style={{
           transform: dockCollapsed
             ? 'translate(-50%, calc(100% - 22px))'
@@ -736,7 +741,7 @@ export default function EditorialOrrery3D({
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-[#F7F4EC] dark:bg-[#151E1A] border border-[var(--color-border)] shadow-md">
+        <div className="grid grid-cols-4 gap-0.5 sm:gap-1 p-1 rounded-lg bg-[#F7F4EC] dark:bg-[#151E1A] border border-[var(--color-border)] shadow-md">
           {STAGE_META.map((st) => {
             const active = activeStageIndex === st.index;
             return (
@@ -747,16 +752,16 @@ export default function EditorialOrrery3D({
                   onSelectStage(st.index);
                   setLocalStampCount((c) => c + 1);
                 }}
-                className={`px-2 py-1.5 rounded-md flex items-center justify-between transition-colors cursor-pointer ${
+                className={`px-1.5 sm:px-2 py-1.5 rounded-md flex items-center justify-between gap-1 transition-colors cursor-pointer min-w-0 ${
                   active
                     ? 'bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714]'
                     : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)]'
                 }`}
               >
-                <span className="text-[11px] font-semibold truncate">
+                <span className="text-[10px] sm:text-[11px] font-semibold truncate">
                   {st.label}
                 </span>
-                <span className="text-[10px] font-mono tabular-nums font-bold opacity-80">
+                <span className="text-[10px] font-mono tabular-nums font-bold opacity-80 shrink-0">
                   {stageCounts[st.index]}
                 </span>
               </button>

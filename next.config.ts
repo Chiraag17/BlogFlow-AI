@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 /** @type {NextConfig} */
 const nextConfig: NextConfig = {
+  output: "standalone",
   allowedDevOrigins: [
     "*.run.app",
     "*.asia-east1.run.app",

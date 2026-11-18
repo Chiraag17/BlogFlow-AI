@@ -24,8 +24,10 @@ export function setTheme(theme: 'light' | 'dark') {
     html.classList.add('theme-transition');
     if (theme === 'dark') {
       html.classList.add('dark');
+      html.style.colorScheme = 'dark';
     } else {
       html.classList.remove('dark');
+      html.style.colorScheme = 'light';
     }
     localStorage.setItem(THEME_KEY, theme);
     window.dispatchEvent(new CustomEvent('blogflow-theme-change', { detail: theme }));
@@ -48,8 +50,10 @@ export function useTheme() {
     setThemeState(initial);
     if (initial === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
     }
 
     const handleChange = (e: Event) => {
@@ -67,8 +71,10 @@ export function useTheme() {
         setThemeState(newTheme);
         if (newTheme === 'dark') {
           document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
         } else {
           document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
         }
       }
     };
@@ -82,7 +88,11 @@ export function useTheme() {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
+    const currentlyDark =
+      typeof document !== 'undefined'
+        ? document.documentElement.classList.contains('dark')
+        : theme === 'dark';
+    const next = currentlyDark ? 'light' : 'dark';
     setThemeState(next);
     setTheme(next);
   }, [theme]);

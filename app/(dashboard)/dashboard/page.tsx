@@ -23,6 +23,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  GalleryHorizontal,
+  List,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -40,22 +42,21 @@ import { DEMO_ANALYTICS } from '@/lib/mock-data';
 import { getStatusLabel, timeAgo, truncate } from '@/lib/utils';
 import { useTheme } from '@/lib/theme';
 import { BlogStatus } from '@/types';
+import {
+  buildTelemetryCsv,
+  filterDashboardBlogs,
+  getTelemetrySeries,
+  mapOrreryStageToStatus,
+  mapStatusToOrreryStage,
+} from '@/lib/dashboardUtils';
 import EditorialOrrery3D from '@/components/dashboard/EditorialOrrery3D';
 import GutenbergTypeBlock3D from '@/components/brand/GutenbergTypeBlock3D';
+import ManuscriptListView from '@/components/dashboard/ManuscriptListView';
 
 const TOPIC_PRESETS = [
   { label: 'Agentic RAG', topic: 'Agentic RAG Architectures in Production Systems' },
   { label: 'Zero-Trust Cloud', topic: 'Zero-Trust Cloud Security Posture in 2026' },
   { label: 'Edge Compute', topic: 'Edge Compute & Core Web Vitals Optimization Guide' },
-];
-
-const TELEMETRY_SERIES = [
-  { month: 'Apr', generated: 6, published: 4, seoAvg: 81, readabilityAvg: 78, words: 9400 },
-  { month: 'May', generated: 8, published: 6, seoAvg: 84, readabilityAvg: 80, words: 12800 },
-  { month: 'Jun', generated: 10, published: 8, seoAvg: 86, readabilityAvg: 82, words: 16200 },
-  { month: 'Jul', generated: 9, published: 7, seoAvg: 85, readabilityAvg: 84, words: 14500 },
-  { month: 'Aug', generated: 13, published: 10, seoAvg: 89, readabilityAvg: 86, words: 21400 },
-  { month: 'Sep', generated: 15, published: 12, seoAvg: 92, readabilityAvg: 88, words: 24800 },
 ];
 
 interface AtelierDustMote3D {
@@ -493,10 +494,10 @@ function MetricMonolith3D({
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       onClick={onClick}
-      className={`card p-5 relative cursor-pointer select-none transition-colors backdrop-blur-xl !bg-[var(--color-surface)]/72 dark:!bg-[#111B16]/70 ${
+      className={`card p-5 relative cursor-pointer select-none transition-colors backdrop-blur-xl bg-[var(--color-surface)]/88 dark:bg-[#151E1A]/85 ${
         active
           ? 'border-[#C8A15A] ring-1 ring-[#C8A15A]/45'
-          : 'border-[#C8A15A]/20 hover:border-[#C8A15A]/55'
+          : 'border-[var(--color-border)] hover:border-[#C8A15A]/55'
       }`}
       style={{
         transform: `perspective(1000px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) translateZ(${
@@ -698,7 +699,8 @@ export default function DashboardPage() {
   const [chartMetric, setChartMetric] = useState<'velocity' | 'seo' | 'words'>('velocity');
   const [timeframe, setTimeframe] = useState<'3M' | '6M'>('6M');
 
-  // 3D Coverflow Carousel Controls
+  // 3D Coverflow / List Queue Controls
+  const [queueViewMode, setQueueViewMode] = useState<'coverflow' | 'list'>('coverflow');
   const [statusFilter, setStatusFilter] = useState<'all' | BlogStatus>('all');
   const [siteFilter, setSiteFilter] = useState<string>('all');
   const [articleSearch, setArticleSearch] = useState('');
@@ -774,43 +776,28 @@ export default function DashboardPage() {
   }, [storeQualityReports]);
 
   // Map statusFilter <-> 3D Orrery stage index (0..3)
-  const activeStageIndex = useMemo(() => {
-    if (statusFilter === 'pending_approval' || statusFilter === 'draft') return 1;
-    if (statusFilter === 'approved') return 2;
-    if (statusFilter === 'published') return 3;
-    return 0;
-  }, [statusFilter]);
+  const activeStageIndex = useMemo(
+    () => mapStatusToOrreryStage(statusFilter),
+    [statusFilter]
+  );
 
   const handleSelectOrreryStage = (stageIndex: number) => {
-    const map: ('all' | BlogStatus)[] = ['all', 'pending_approval', 'approved', 'published'];
-    setStatusFilter(map[stageIndex] || 'all');
+    setStatusFilter(mapOrreryStageToStatus(stageIndex));
   };
 
   // Filtered Telemetry Data
-  const chartData = useMemo(() => {
-    if (timeframe === '3M') return TELEMETRY_SERIES.slice(-3);
-    return TELEMETRY_SERIES;
-  }, [timeframe]);
+  const chartData = useMemo(() => getTelemetrySeries(timeframe), [timeframe]);
 
   // Filtered Pipeline Articles
-  const filteredBlogs = useMemo(() => {
-    return allBlogs.filter((blog: any) => {
-      const normalizedStatus = (blog.status || '').toLowerCase();
-      if (statusFilter !== 'all' && normalizedStatus !== statusFilter) return false;
-      if (siteFilter !== 'all') {
-        const bSite = blog.websiteId || blog.websiteName;
-        if (bSite !== siteFilter && blog.websiteName !== siteFilter) return false;
-      }
-      if (articleSearch.trim()) {
-        const q = articleSearch.toLowerCase();
-        const matchTitle = (blog.title || '').toLowerCase().includes(q);
-        const matchSite = (blog.websiteName || '').toLowerCase().includes(q);
-        const matchCat = (blog.category || '').toLowerCase().includes(q);
-        if (!matchTitle && !matchSite && !matchCat) return false;
-      }
-      return true;
-    });
-  }, [allBlogs, statusFilter, siteFilter, articleSearch]);
+  const filteredBlogs = useMemo(
+    () =>
+      filterDashboardBlogs(allBlogs, {
+        statusFilter,
+        siteFilter,
+        articleSearch,
+      }),
+    [allBlogs, statusFilter, siteFilter, articleSearch]
+  );
 
   // Reset coverflow index when filter changes
   useEffect(() => {
@@ -847,11 +834,7 @@ export default function DashboardPage() {
 
   // CSV Export Handler
   const handleExportCsv = () => {
-    const headers = ['Month,Generated,Published,SEO,Readability,Words'];
-    const rows = chartData.map(
-      (r) => `${r.month},${r.generated},${r.published},${r.seoAvg},${r.readabilityAvg},${r.words}`
-    );
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    const csvContent = 'data:text/csv;charset=utf-8,' + buildTelemetryCsv(chartData);
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -894,7 +877,7 @@ export default function DashboardPage() {
   const tickColor = isDark ? '#8E9E95' : '#68736D';
 
   const frostedCardClass =
-    'card backdrop-blur-xl !bg-[var(--color-surface)]/72 dark:!bg-[#111B16]/70 border-[#C8A15A]/20 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.18)]';
+    'card backdrop-blur-xl bg-[var(--color-surface)]/86 dark:bg-[#151E1A]/82 border-[var(--color-border)] shadow-[0_14px_34px_-18px_rgba(22,63,50,0.14)] dark:shadow-[0_18px_40px_-16px_rgba(0,0,0,0.58)]';
 
   return (
     <div className="relative space-y-6 pb-8">
@@ -909,7 +892,7 @@ export default function DashboardPage() {
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[#163F32] text-[#F3F0E8] border border-[#C8A15A]/40 shadow-xl text-xs font-medium animate-slide-up">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[#163F32] text-[#F3F0E8] dark:bg-[#151E1A] dark:text-[#F3F0E8] border border-[#C8A15A]/45 shadow-xl text-xs font-medium animate-slide-up">
           <CheckCircle2 size={15} className="text-[#C8A15A] shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -922,7 +905,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left 7 Cols: Minimal Greeting + Single-Line Prompt Bar */}
           <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3.5">
                 <GutenbergTypeBlock3D
                   size={38}
@@ -943,7 +926,7 @@ export default function DashboardPage() {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Link href="/research" className="btn btn-secondary btn-sm">
                   <Search size={14} />
                   <span>Research</span>
@@ -958,7 +941,7 @@ export default function DashboardPage() {
             {/* Clean Single-Line Brief Launcher */}
             <form onSubmit={handleQuickDispatch} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                <div className="sm:col-span-6">
+                <div className="sm:col-span-5">
                   <input
                     id="quick-dispatch-input"
                     type="text"
@@ -972,14 +955,14 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                <div className="sm:col-span-3">
+                <div className="sm:col-span-4">
                   <select
                     value={selectedSiteId}
                     onChange={(e) => {
                       setSelectedSiteId(e.target.value);
                       setTypingPulse((c) => c + 1);
                     }}
-                    className="form-select h-11 text-sm"
+                    className="form-select h-11 text-sm pr-8"
                     aria-label="Target site"
                   >
                     {activeWebsites.map((site) => (
@@ -1119,12 +1102,12 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Search + Carousel Prev/Next Controls */}
-          <div className="flex items-center gap-2">
+          {/* Search + View Mode Toggle + Carousel Stepper */}
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search
                 size={14}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
               />
               <input
                 type="text"
@@ -1134,35 +1117,76 @@ export default function DashboardPage() {
                   setTypingPulse((c) => c + 1);
                 }}
                 placeholder="Search…"
+                aria-label="Search manuscripts"
                 className="form-input py-1.5 pl-8 pr-3 text-xs w-36 sm:w-44"
               />
             </div>
 
-            <div className="flex items-center gap-1">
+            {/* Coverflow | List Segmented Toggle */}
+            <div
+              role="group"
+              aria-label="Manuscript queue view"
+              className="inline-flex items-center p-0.5 rounded-lg bg-[var(--color-bg-muted)] border border-[var(--color-border)]"
+            >
               <button
                 type="button"
-                onClick={() => stepCoverflow(-1)}
-                aria-label="Previous manuscript"
-                className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text)] hover:border-[#C8A15A] transition-colors cursor-pointer"
+                onClick={() => setQueueViewMode('coverflow')}
+                aria-pressed={queueViewMode === 'coverflow'}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                  queueViewMode === 'coverflow'
+                    ? 'bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                }`}
               >
-                <ChevronLeft size={16} />
+                <GalleryHorizontal size={13} />
+                <span>Coverflow</span>
               </button>
-              <span className="text-xs font-mono tabular-nums px-2 text-[var(--color-text-muted)]">
-                {filteredBlogs.length > 0 ? `${safeCoverflowIndex + 1}/${filteredBlogs.length}` : '0/0'}
-              </span>
               <button
                 type="button"
-                onClick={() => stepCoverflow(1)}
-                aria-label="Next manuscript"
-                className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text)] hover:border-[#C8A15A] transition-colors cursor-pointer"
+                onClick={() => setQueueViewMode('list')}
+                aria-pressed={queueViewMode === 'list'}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                  queueViewMode === 'list'
+                    ? 'bg-[#163F32] text-[#F3F0E8] dark:bg-[#B8D5C5] dark:text-[#101714]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                }`}
               >
-                <ChevronRight size={16} />
+                <List size={13} />
+                <span>List</span>
               </button>
             </div>
+
+            {queueViewMode === 'coverflow' ? (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => stepCoverflow(-1)}
+                  aria-label="Previous manuscript"
+                  className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text)] hover:border-[#C8A15A] transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="text-xs font-mono tabular-nums px-2 text-[var(--color-text-muted)]">
+                  {filteredBlogs.length > 0 ? `${safeCoverflowIndex + 1}/${filteredBlogs.length}` : '0/0'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => stepCoverflow(1)}
+                  aria-label="Next manuscript"
+                  className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text)] hover:border-[#C8A15A] transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs font-mono tabular-nums px-2 text-[var(--color-text-muted)] whitespace-nowrap">
+                {filteredBlogs.length} {filteredBlogs.length === 1 ? 'item' : 'items'}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* 3D Coverflow Stage */}
+        {/* Manuscript Queue Stage: Coverflow or Editorial List */}
         {filteredBlogs.length === 0 ? (
           <div className="py-14 text-center">
             <p className="text-sm font-medium text-[var(--color-text)] mb-3">
@@ -1180,9 +1204,17 @@ export default function DashboardPage() {
               Reset
             </button>
           </div>
+        ) : queueViewMode === 'list' ? (
+          <ManuscriptListView
+            blogs={filteredBlogs}
+            stampingBlogId={stampingBlogId}
+            onPreview={(blog) => setInspectBlog(blog)}
+            onStatusUpdate={handleInlineStatusUpdate}
+          />
         ) : (
           <div
-            className="relative h-[300px] sm:h-[310px] w-full flex items-center justify-center select-none overflow-visible mt-2"
+            data-testid="manuscript-coverflow-view"
+            className="relative h-[324px] sm:h-[332px] w-full flex items-center justify-center select-none overflow-visible mt-2"
             style={{ perspective: '1400px' }}
             onPointerDown={(e) => {
               dragStartXRef.current = e.clientX;
@@ -1224,7 +1256,7 @@ export default function DashboardPage() {
                 const translateZ = isCenter ? 55 : -95 - Math.abs(offset) * 45;
                 const rotateY = offset * -36;
                 const scale = isCenter ? 1 : 0.84;
-                const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.68 : 0.35;
+                const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.76 : 0.4;
 
                 const ringRadius = 20;
                 const ringCirc = 2 * Math.PI * ringRadius;
@@ -1255,20 +1287,20 @@ export default function DashboardPage() {
                     }}
                     style={{
                       position: 'absolute',
-                      width: 'min(90vw, 410px)',
+                      width: 'min(86vw, 410px)',
                       zIndex: 20 - Math.abs(offset),
                       transformStyle: 'preserve-3d',
                     }}
-                    className={`rounded-2xl border p-6 transition-shadow backdrop-blur-xl ${
+                    className={`rounded-2xl border p-6 transition-shadow ${
                       isCenter ? 'cursor-default' : 'cursor-pointer'
                     } ${
                       isDark
                         ? isCenter
-                          ? 'bg-[#121D18]/88 border-[#C8A15A]/65 shadow-[0_26px_60px_-15px_rgba(0,0,0,0.85)]'
-                          : 'bg-[#0E1713]/75 border-[var(--color-border)]'
+                          ? 'bg-[#151E1A] border-[#D4AF67]/65 shadow-[0_26px_60px_-15px_rgba(0,0,0,0.85)]'
+                          : 'bg-[#101714]/92 border-[var(--color-border)]'
                         : isCenter
-                        ? 'bg-[#FCFBF7]/88 border-[#163F32]/45 shadow-[0_24px_55px_-15px_rgba(22,63,50,0.22)]'
-                        : 'bg-[#F5F2E9]/78 border-[var(--color-border)]'
+                        ? 'bg-[#FFFFFF] border-[#163F32]/40 shadow-[0_24px_55px_-15px_rgba(22,63,50,0.2)]'
+                        : 'bg-[#F9F6EE]/94 border-[var(--color-border)]'
                     }`}
                   >
                     {/* Top Row: Site + Status + 3D Circular SEO Gauge */}
@@ -1375,7 +1407,7 @@ export default function DashboardPage() {
         )}
 
         {/* Coverflow Dots Indicator */}
-        {filteredBlogs.length > 1 && (
+        {queueViewMode === 'coverflow' && filteredBlogs.length > 1 && (
           <div className="flex items-center justify-center gap-1.5 pt-2">
             {filteredBlogs.slice(0, 10).map((b: any, idx: number) => (
               <button
@@ -1617,7 +1649,7 @@ export default function DashboardPage() {
                   onClick={() => setSiteFilter(isSelected ? 'all' : site.name)}
                   className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#163F32] text-[#F3F0E8] border-[#C8A15A]'
+                      ? 'bg-[#163F32] text-[#F3F0E8] border-[#C8A15A] dark:bg-[#B8D5C5] dark:text-[#101714] dark:border-[#D4AF67]'
                       : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[#C8A15A]'
                   }`}
                 >
