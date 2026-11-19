@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { tavilyService } from '@/services/research/tavily-service';
+import { tavilyService } from '@/services/research/tavily.service';
 import { ApiResponse, ResearchTopic } from '@/types';
 
 export async function POST(req: NextRequest) {

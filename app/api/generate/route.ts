@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { geminiService } from '@/services/ai/gemini-service';
+import { blogGenerationService } from '@/services/content/blog-generation.service';
 import { BlogGenerationFormData, ApiResponse } from '@/types';
 import { checkRateLimit, getClientIdentifier } from '@/services/security/rate-limiter';
 import { headers } from 'next/headers';
@@ -35,7 +35,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const generated = await geminiService.generateBlog(body);
+    const structured = await blogGenerationService.generateCompleteBlog({
+      websiteId: body.websiteId,
+      researchId: body.researchId,
+      topic: body.topic,
+      category: body.category || 'General',
+      targetAudience: body.targetAudience || 'General Audience',
+      tone: body.tone || 'professional',
+      articleLength: body.articleLength || 'medium',
+      primaryKeywords: body.primaryKeywords || [body.topic],
+      secondaryKeywords: body.secondaryKeywords || [],
+      instructions: body.instructions || '',
+    });
+
+    const focusKeyword = body.primaryKeywords?.[0] || body.topic;
+    const secondaryKeywords = body.secondaryKeywords || [];
+
+    const generated = {
+      title: structured.title,
+      subtitle: structured.subtitle,
+      slug: structured.slug,
+      content: structured.fullMarkdown,
+      metaTitle: structured.seo.metaTitle,
+      metaDescription: structured.seo.metaDescription,
+      focusKeyword: structured.seo.focusKeyword || focusKeyword,
+      secondaryKeywords: structured.seo.secondaryKeywords || secondaryKeywords,
+      category: body.category || 'General',
+      tags: [body.category, ...(body.primaryKeywords || []), ...secondaryKeywords]
+        .filter(Boolean)
+        .slice(0, 5),
+      faqs: structured.faqs,
+      imageSuggestions: [
+        {
+          description: `Hero editorial visual illustrating ${focusKeyword}`,
+          altText: `${structured.title} overview diagram`,
+          placement: 'Directly beneath the Introduction section',
+        },
+      ],
+      wordCount: structured.wordCount,
+      readingTime: structured.estimatedReadingTime,
+    };
 
     return NextResponse.json<ApiResponse<typeof generated>>({
       success: true,

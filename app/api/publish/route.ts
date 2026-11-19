@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { wordPressService } from '@/services/cms/wordpress-service';
+import { WordPressService } from '@/services/cms/wordpress.service';
 import { DbBlogService } from '@/services/db/blog.service';
 import { DbWebsiteService } from '@/services/db/website.service';
 import { validateExternalUrl } from '@/services/security/url-validator';
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      const conn = await wordPressService.testConnection(config);
+      const conn = await WordPressService.testConnection(config);
       return NextResponse.json(conn, { status: conn.success ? 200 : 400 });
     }
 
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       status: isDbApproved ? ('approved' as const) : ('draft' as const),
     };
 
-    const result = await wordPressService.publishArticle({
+    const result = await WordPressService.publishLegacyArticle({
       blog: verifiedBlog,
       config,
       status: requestedStatus,
